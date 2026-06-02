@@ -159,58 +159,83 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
-      // 1. Create Razorpay order
-      const orderRes = await fetch("/api/razorpay", {
+      // 1. Create reservation + Razorpay order in one call
+      const reserveRes = await fetch("/api/reserve", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({
-          depositAmount: totalDeposit(),
-          totalAmount:   totalFull(),
-          email:         form.email,
-          phone:         form.phone,
-          items,
+          email: form.email,
+          name:  form.name,
+          phone: form.phone,
+          address: {
+            line1:   form.address1,
+            line2:   form.address2 || undefined,
+            city:    form.city,
+            state:   form.state,
+            pincode: form.pincode,
+          },
+          items: items.map((i) => ({
+            slug: i.product.slug,
+            size: i.size,
+            qty:  i.quantity,
+          })),
         }),
       });
 
-      if (!orderRes.ok) throw new Error("Could not create order. Try again.");
-      const { orderId, amount } = await orderRes.json() as { orderId: string; amount: number };
+      if (!reserveRes.ok) {
+        const { error } = await reserveRes.json() as { error: string };
+        throw new Error(error ?? "Could not create reservation. Try again.");
+      }
+
+      const { reservationId, razorpayOrderId, depositPaise, keyId } =
+        await reserveRes.json() as {
+          reservationId:   string;
+          razorpayOrderId: string;
+          depositPaise:    number;
+          keyId:           string;
+        };
 
       // 2. Load Razorpay SDK
       await loadRazorpaySDK();
 
       // 3. Open Razorpay checkout
       const rzp = new window.Razorpay({
-        key:         process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? "",
-        amount,
+        key:         keyId,
+        amount:      depositPaise,
         currency:    "INR",
         name:        "Drip Theka",
         description: "Pour #001 — 30% Deposit",
-        order_id:    orderId,
+        order_id:    razorpayOrderId,
         prefill: {
           name:    form.name,
           email:   form.email,
           contact: form.phone,
         },
         notes: {
-          address:  form.address1,
-          city:     form.city,
-          pincode:  form.pincode,
+          city:    form.city,
+          pincode: form.pincode,
         },
         theme: { color: "#004AAD" },
 
         handler: async (response: RazorpayResponse) => {
-          // 4. Verify on server
-          const verifyRes = await fetch("/api/reserve", {
+          // 4. Confirm payment — verifies signature + updates DB
+          const confirmRes = await fetch("/api/reserve/confirm", {
             method:  "POST",
             headers: { "Content-Type": "application/json" },
-            body:    JSON.stringify(response),
+            body:    JSON.stringify({
+              reservationId,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id:   response.razorpay_order_id,
+              razorpay_signature:  response.razorpay_signature,
+            }),
           });
 
-          if (verifyRes.ok) {
+          if (confirmRes.ok) {
+            const { orderNumber } = await confirmRes.json() as { orderNumber: string };
             clearCart();
             router.push(
-              `/checkout/success?orderId=${orderId}` +
-              `&deposit=${totalDeposit()}` +
+              `/checkout/success?orderNumber=${orderNumber}` +
+              `&deposit=${depositPaise}` +
               `&total=${totalFull()}`
             );
           } else {

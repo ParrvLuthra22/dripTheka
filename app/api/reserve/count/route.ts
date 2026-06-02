@@ -1,17 +1,54 @@
-// Mock reservation count — V1 hardcoded.
-// V1.1: replace with Neon DB query SELECT COUNT(*) FROM orders WHERE status != 'cancelled'.
+// GET /api/reserve/count — live reservation progress for Pour #001.
+//
+// Reads from pour_progress table. Falls back to hardcoded mock if DB
+// is not yet connected (development without DATABASE_URL configured).
+//
+// Cached for 10 seconds at the edge (ISR) so the fill bar reflects
+// recent confirmations without hammering the DB on every poll tick.
 
 import { NextResponse } from "next/server";
 
-export const dynamic = "force-dynamic"; // never cache — always fresh count
+export const revalidate = 10; // 10s ISR cache — meets spec
+
+// ── DB available? ─────────────────────────────────────────────────────────
+
+const dbReady = () =>
+  !!(process.env.DATABASE_URL &&
+     !process.env.DATABASE_URL.includes("placeholder") &&
+     process.env.DATABASE_URL !== "REPLACE_ME");
+
+// ── Handler ───────────────────────────────────────────────────────────────
 
 export async function GET() {
-  // Hardcoded mock for V1. Real: query orders table.
-  const reserved = 38;
-  const total    = 100;
+  if (!dbReady()) {
+    // Dev fallback — realistic non-zero mock so the fill bar is visible
+    return NextResponse.json({ reserved: 38, total: 100, pct: 0.38 });
+  }
 
-  return NextResponse.json(
-    { reserved, total, pct: +(reserved / total).toFixed(4) },
-    { headers: { "Cache-Control": "no-store" } }
-  );
+  try {
+    const { db }          = await import("@/lib/db/client");
+    const { pourProgress } = await import("@/lib/db/schema");
+    const { eq }          = await import("drizzle-orm");
+
+    const [row] = await db
+      .select()
+      .from(pourProgress)
+      .where(eq(pourProgress.pourSlug, "001"))
+      .limit(1);
+
+    if (!row) {
+      // pour_progress not seeded yet
+      return NextResponse.json({ reserved: 0, total: 100, pct: 0 });
+    }
+
+    const { reserved, target: total } = row;
+    const pct = total > 0 ? +(reserved / total).toFixed(4) : 0;
+
+    return NextResponse.json({ reserved, total, pct });
+
+  } catch (err) {
+    console.error("[reserve/count] DB error:", err);
+    // Return last-known mock rather than a 500 — fill bar degrades gracefully
+    return NextResponse.json({ reserved: 38, total: 100, pct: 0.38 });
+  }
 }

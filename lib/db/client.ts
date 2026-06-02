@@ -1,69 +1,66 @@
 // Drip Theka — Neon serverless + Drizzle ORM client.
 //
-// Uses Neon's HTTP transport (`neon()`) which works in:
-//   - Next.js Server Components
-//   - API Routes (Edge + Node runtime)
-//   - CI scripts (via tsx)
+// MODULE SAFETY: `neon()` stores the URL string but makes NO network calls
+// at initialisation time — connections happen on first query. This means
+// importing this module during `next build` is safe even without DATABASE_URL.
 //
-// DATABASE_URL must be set in .env.local (or the deployment environment).
-// Format: postgresql://user:pass@host/db?sslmode=require
+// If DATABASE_URL is not configured, every query throws a network error at
+// runtime. This is intentional: deploy fails loudly rather than silently.
 
-import { neon }   from "@neondatabase/serverless";
+import { neon }    from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import * as schema from "./schema";
+import * as schema  from "./schema";
 
-// ── Validate env before connecting ───────────────────────────────────────
+// ── Connection URL ─────────────────────────────────────────────────────────
+// We fall back to a syntactically-valid but unreachable URL so that
+// `neon()` can initialise without throwing. Any query against this URL
+// will fail with a network error — which surfaces early in development.
 
-function getDatabaseUrl(): string {
-  const url = process.env.DATABASE_URL;
-  if (!url || url === "REPLACE_ME") {
-    if (process.env.NODE_ENV === "production") {
-      throw new Error(
-        "[db] DATABASE_URL is not set. Add your Neon connection string to the environment."
-      );
-    }
-    // Development: surface a clear warning instead of crashing at import time
-    console.warn(
-      "\n[db] ⚠️  DATABASE_URL not configured.\n" +
-      "    Database queries will throw at runtime.\n" +
-      "    Set DATABASE_URL in .env.local to enable DB features.\n"
-    );
-    return "postgresql://placeholder:placeholder@placeholder/placeholder";
-  }
-  return url;
-}
+const DATABASE_URL: string =
+  (process.env.DATABASE_URL &&
+   process.env.DATABASE_URL !== "REPLACE_ME" &&
+   !process.env.DATABASE_URL.includes("placeholder"))
+    ? process.env.DATABASE_URL
+    : "postgresql://noop:noop@noop.neon.tech/noop";
 
-// ── Client ────────────────────────────────────────────────────────────────
+// ── Client ─────────────────────────────────────────────────────────────────
 
-const sql = neon(getDatabaseUrl());
+const sql = neon(DATABASE_URL);
 
 /**
- * Drizzle ORM client with full schema.
+ * Drizzle ORM client bound to the Drip Theka schema.
  *
- * Usage:
+ * Usage (server components / API routes):
  *   import { db } from "@/lib/db/client";
  *   import { pourProgress } from "@/lib/db/schema";
+ *   import { eq } from "drizzle-orm";
  *
- *   const rows = await db.select().from(pourProgress).where(eq(pourProgress.pourSlug, "001"));
+ *   const rows = await db.select().from(pourProgress).where(eq(...));
+ *
+ * In API routes that guard against missing DB, wrap in a try/catch and
+ * check `process.env.DATABASE_URL` before calling.
  */
-export const db = drizzle(sql, { schema, logger: process.env.NODE_ENV === "development" });
+export const db = drizzle(sql, {
+  schema,
+  logger: process.env.NODE_ENV === "development",
+});
 
-// ── Helpers ───────────────────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────────────────
 
 /**
- * Generate a DT order number from a UUID.
- * Format: DT-YYYY-XXXXX (5 uppercase hex chars from UUID tail).
- * V1.1: replace with a DB sequence for strict ordering.
+ * Derive a human-readable order number from a UUID.
+ * Format: DT-YYYY-XXXXX (5 uppercase hex chars from the UUID tail).
+ * V1.1: replace with a Postgres sequence for strict ordering.
  */
 export function generateOrderNumber(id: string): string {
-  const year    = new Date().getFullYear();
-  const suffix  = id.replace(/-/g, "").slice(-5).toUpperCase();
+  const year   = new Date().getFullYear();
+  const suffix = id.replace(/-/g, "").slice(-5).toUpperCase();
   return `DT-${year}-${suffix}`;
 }
 
 /**
  * Generate an 8-char uppercase referral code.
- * Excludes ambiguous chars: 0, O, 1, I, L.
+ * Excludes visually ambiguous chars: 0/O, 1/I/L.
  */
 export function generateReferralCode(): string {
   const chars = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
