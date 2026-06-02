@@ -103,14 +103,14 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         ref={setRef}
+        // data-hover-big activates the large cream cursor dot on desktop
+        data-hover-big
         className={cn(
-          // Base
           "relative inline-flex items-center justify-center",
           "font-mono uppercase transition-colors duration-200",
           "cursor-pointer select-none whitespace-nowrap",
           "focus-visible:outline-2 focus-visible:outline-[--blue] focus-visible:outline-offset-3",
           "disabled:pointer-events-none",
-          // Variant + size
           variantClasses[variant],
           sizeClasses[size],
           className
