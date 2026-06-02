@@ -1,94 +1,90 @@
 import Link from "next/link";
+import { WineGlassMark } from "@/components/glass/WineGlassMark";
+
+const LINKS = {
+  pours: [
+    { label: "Pour #001 — The First Round", href: "/pour/pour-001" },
+    { label: "Pour #002 — Coming soon", href: "#", muted: true },
+  ],
+  info: [
+    { label: "Last Call (newsletter)", href: "/regulars" },
+    { label: "Story",                  href: "/story" },
+    { label: "Building",               href: "/building" },
+  ],
+  legal: [
+    { label: "Privacy Policy", href: "/legal/privacy" },
+    { label: "Terms",          href: "/legal/terms" },
+    { label: "Returns",        href: "/legal/returns" },
+  ],
+};
 
 export function Footer() {
   return (
-    <footer className="bg-[#141518] text-[#E4E2DD] py-16">
-      <div className="max-w-[1440px] mx-auto px-6 md:px-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-12 mb-16">
-          {/* Brand */}
-          <div className="col-span-2 md:col-span-1">
-            <p className="font-display italic text-2xl text-[#E4E2DD] mb-3">
+    <footer className="bg-[--ink] text-[--cream]">
+      <div className="container-site py-16 grid grid-cols-2 md:grid-cols-4 gap-10">
+        {/* Brand */}
+        <div className="col-span-2 md:col-span-1 flex flex-col gap-4">
+          <Link href="/" className="flex items-center gap-2.5 w-fit group">
+            <WineGlassMark size={20} color="var(--cream)" className="group-hover:opacity-60 transition-opacity" />
+            <span className="font-display italic text-lg text-[--cream] group-hover:opacity-60 transition-opacity leading-none">
               Drip Theka
-            </p>
-            <p className="font-sans text-sm text-[#E4E2DD]/50 leading-relaxed max-w-[200px]">
-              Streetwear for the ones who get it. No explanation needed.
-            </p>
-          </div>
-
-          {/* Drops */}
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-[#E4E2DD]/30 mb-4">
-              The Pours
-            </p>
-            <ul className="space-y-2">
-              <li>
-                <Link
-                  href="/pour/pour-001"
-                  className="font-sans text-sm text-[#E4E2DD]/70 hover:text-[#E4E2DD] transition-colors"
-                >
-                  Pour #001 — The First Round
-                </Link>
-              </li>
-              <li>
-                <span className="font-sans text-sm text-[#E4E2DD]/20">
-                  Pour #002 — Coming Soon
-                </span>
-              </li>
-            </ul>
-          </div>
-
-          {/* Info */}
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-[#E4E2DD]/30 mb-4">
-              The Stuff
-            </p>
-            <ul className="space-y-2">
-              <li>
-                <Link
-                  href="/last-call"
-                  className="font-sans text-sm text-[#E4E2DD]/70 hover:text-[#E4E2DD] transition-colors"
-                >
-                  Last Call (newsletter)
-                </Link>
-              </li>
-              <li>
-                <span className="font-sans text-sm text-[#E4E2DD]/70">
-                  Returns & Exchanges
-                </span>
-              </li>
-              <li>
-                <span className="font-sans text-sm text-[#E4E2DD]/70">
-                  Shipping & FAQs
-                </span>
-              </li>
-            </ul>
-          </div>
-
-          {/* Social */}
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-[#E4E2DD]/30 mb-4">
-              Find Us
-            </p>
-            <ul className="space-y-2">
-              <li>
-                <span className="font-sans text-sm text-[#E4E2DD]/70">
-                  @driptheka
-                </span>
-              </li>
-            </ul>
-          </div>
+            </span>
+          </Link>
+          <p className="font-sans text-sm text-[--cream]/40 leading-relaxed max-w-[200px]">
+            Streetwear for the ones who get it.
+          </p>
         </div>
 
-        {/* Bottom bar */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between border-t border-[#E4E2DD]/10 pt-8 gap-4">
-          <p className="font-mono text-[10px] uppercase tracking-widest text-[#E4E2DD]/20">
+        {/* Pours */}
+        <div className="flex flex-col gap-3">
+          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[--cream]/30">
+            The Pours
+          </p>
+          {LINKS.pours.map(({ label, href, muted }) => (
+            <Link
+              key={href}
+              href={href}
+              className={`font-sans text-sm ${muted ? "text-[--cream]/20 pointer-events-none" : "text-[--cream]/60 hover:text-[--cream] transition-colors"}`}
+            >
+              {label}
+            </Link>
+          ))}
+        </div>
+
+        {/* Info */}
+        <div className="flex flex-col gap-3">
+          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[--cream]/30">
+            Info
+          </p>
+          {LINKS.info.map(({ label, href }) => (
+            <Link key={href} href={href} className="font-sans text-sm text-[--cream]/60 hover:text-[--cream] transition-colors">
+              {label}
+            </Link>
+          ))}
+        </div>
+
+        {/* Legal */}
+        <div className="flex flex-col gap-3">
+          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[--cream]/30">
+            Legal
+          </p>
+          {LINKS.legal.map(({ label, href }) => (
+            <Link key={href} href={href} className="font-sans text-sm text-[--cream]/60 hover:text-[--cream] transition-colors">
+              {label}
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      {/* Bottom bar */}
+      <div className="border-t border-[--cream]/8">
+        <div className="container-site py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--cream]/20">
             © 2024 Drip Theka. All rights reserved.
           </p>
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-[10px] text-[#E4E2DD]/20">Razorpay Secured</span>
-            <span className="font-mono text-[10px] text-[#E4E2DD]/20">·</span>
-            <span className="font-mono text-[10px] text-[#E4E2DD]/20">30% deposit model</span>
-          </div>
+          <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--cream]/20">
+            Razorpay secured · 30% deposit model
+          </p>
         </div>
       </div>
     </footer>
