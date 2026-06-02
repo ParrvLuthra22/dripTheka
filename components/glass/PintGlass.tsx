@@ -20,7 +20,7 @@ import {
   useCallback,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { gsap } from "gsap";
 import { useCartStore } from "@/lib/store/cart";
@@ -55,9 +55,14 @@ interface PintGlassProps {
 }
 
 export function PintGlass({ className }: PintGlassProps) {
-  const router  = useRouter();
+  const router   = useRouter();
+  const pathname = usePathname();
   const { items, totalItems } = useCartStore();
   const { muted } = useSoundStore();
+
+  // On /cart the hero pint takes over the layoutId — this element unmounts
+  // so Framer Motion can animate the shared layout transition
+  if (pathname === "/cart") return null;
 
   const count    = totalItems();
   const prevCount = useRef(count);
