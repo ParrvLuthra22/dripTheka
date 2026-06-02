@@ -1,21 +1,47 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { POUR_001 } from "@/data/pour-001";
+import { PourHeroStrip }   from "@/components/sections/pour/PourHeroStrip";
+import { FillBar }         from "@/components/sections/pour/FillBar";
+import { PourProductGrid } from "@/components/sections/pour/PourProductGrid";
 
-interface Props { params: Promise<{ slug: string }> }
+const VALID_SLUGS = new Set(["pour-001"]);
+
+interface Props {
+  params: Promise<{ slug: string }>;
+}
 
 export async function generateStaticParams() {
   return [{ slug: "pour-001" }];
 }
 
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  if (!VALID_SLUGS.has(slug)) return { title: "Not Found" };
+  return {
+    title:       `Pour #${POUR_001.number}: ${POUR_001.title}`,
+    description: POUR_001.description,
+    openGraph: {
+      title:       `Pour #${POUR_001.number} — Drip Theka`,
+      description: POUR_001.subtitle,
+    },
+  };
+}
+
 export default async function PourPage({ params }: Props) {
   const { slug } = await params;
-  if (slug !== "pour-001") notFound();
+  if (!VALID_SLUGS.has(slug)) notFound();
+
   return (
-    <div className="container-site py-24">
-      <p className="font-mono text-xs text-[--ink]/40 uppercase tracking-widest mb-4">Pour #{POUR_001.number}</p>
-      <h1 className="type-display-lg text-[--ink]">{POUR_001.title}</h1>
-      <p className="type-body-lg text-[--ink]/60 mt-4">{POUR_001.description}</p>
-      <p className="font-mono text-xs text-[--blue] mt-8 uppercase tracking-widest">← Collection page built in a later prompt</p>
-    </div>
+    <>
+      {/* 1. Hero strip — animated title + countdown */}
+      <PourHeroStrip />
+
+      {/* 2. Fill bar — FOMO mechanism, polls live count */}
+      <FillBar />
+
+      {/* 3. Product grid — filter, sort, editorial break, footer CTA */}
+      <PourProductGrid />
+    </>
   );
 }

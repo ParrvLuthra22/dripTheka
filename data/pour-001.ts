@@ -248,6 +248,10 @@ export const POUR_001: Pour = {
   ],
 };
 
+// Opening Night date — drives the countdown in the pour page hero.
+// Change this to a real date when you set the drop.
+export const DROP_DATE = new Date("2026-09-01T18:00:00+05:30");
+
 export function getPriceDisplay(paise: number): string {
   return `₹${(paise / 100).toLocaleString("en-IN")}`;
 }
