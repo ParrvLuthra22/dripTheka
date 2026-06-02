@@ -4,19 +4,16 @@
 // Pairs with .reveal-hidden in globals.css for a CSS-driven transition
 // (no JS animation for this layer → stays smooth at any framerate).
 
-import { useEffect, useRef, type ReactNode } from "react";
+import React, { useEffect, useRef, type ReactNode } from "react";
 import { cn } from "@/lib/utils/cn";
 
 interface RevealProps {
   children: ReactNode;
   className?: string;
-  /** Delay in ms before the "is-in" class is applied */
   delay?: number;
-  /** Fraction of element visible before triggering (0–1) */
   threshold?: number;
-  /** Only reveal once (default true) */
   once?: boolean;
-  as?: React.ElementType;
+  as?: keyof React.JSX.IntrinsicElements;
 }
 
 export function Reveal({
@@ -27,7 +24,7 @@ export function Reveal({
   once = true,
   as: Tag = "div",
 }: RevealProps) {
-  const ref = useRef<HTMLElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = ref.current;
@@ -48,10 +45,9 @@ export function Reveal({
     return () => observer.disconnect();
   }, [delay, threshold, once]);
 
-  const TagEl = Tag as React.ElementType;
-  return (
-    <TagEl ref={ref} className={cn("reveal-hidden", className)}>
-      {children}
-    </TagEl>
+  return React.createElement(
+    Tag,
+    { ref, className: cn("reveal-hidden", className) },
+    children
   );
 }

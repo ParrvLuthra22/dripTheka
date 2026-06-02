@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { WineGlassMark } from "@/components/glass/WineGlassMark";
-import { PintGlassCart } from "@/components/glass/PintGlassCart";
+import { PintGlassNav } from "@/components/glass/PintGlass";
 import { SoundToggle } from "@/components/sound/SoundToggle";
 import { cn } from "@/lib/utils/cn";
 
@@ -72,7 +72,10 @@ export function Nav() {
         {/* Right controls */}
         <div className="flex items-center gap-5 md:gap-6">
           <SoundToggle className="hidden sm:flex" />
-          <PintGlassCart />
+          {/* Mobile: nav pint icon. Desktop: floating pint glass handles it */}
+          <div className="md:hidden">
+            <PintGlassNav />
+          </div>
         </div>
       </div>
     </header>

@@ -5,7 +5,7 @@
 // then animates them on scroll via GSAP ScrollTrigger.
 // No GSAP SplitText plugin required (manual split).
 
-import { useEffect, useRef, type ReactNode } from "react";
+import React, { useEffect, useRef, type ReactNode } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { cn } from "@/lib/utils/cn";
@@ -23,7 +23,7 @@ interface SplitRevealProps {
   from?: number;
   /** Start trigger — default "top 85%" */
   start?: string;
-  as?: React.ElementType;
+  as?: keyof React.JSX.IntrinsicElements;
 }
 
 export function SplitReveal({
@@ -89,10 +89,9 @@ export function SplitReveal({
     return () => ctx.revert();
   }, [splitBy, stagger, from, start]);
 
-  const TagEl = Tag as React.ElementType;
-  return (
-    <TagEl ref={containerRef} className={cn(className)}>
-      {children}
-    </TagEl>
+  return React.createElement(
+    Tag,
+    { ref: containerRef, className: cn(className) },
+    children
   );
 }

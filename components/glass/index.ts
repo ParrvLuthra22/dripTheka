@@ -1,6 +1,11 @@
-// Glass components — built in a dedicated later prompt.
-// WineGlassMark = brand logo (SVG + Three.js)
-// PintGlassCart  = persistent cart indicator that fills with items
+// Glass components — the heart of the brand.
+//
+// WineGlassMark = SVG brand mark (logo, favicon, watermark)
+// PintGlass     = animated floating cart indicator (desktop fixed)
+// PintGlassNav  = static pint for mobile nav badge
+// HeroPour      = Three.js WebGL homepage hero
+// HeroPourFallback = SVG fallback for mobile / no WebGL
 
 export { WineGlassMark } from "./WineGlassMark";
-export { PintGlassCart } from "./PintGlassCart";
+export { PintGlass, PintGlassNav } from "./PintGlass";
+export { HeroPour, HeroPourFallback } from "./HeroPour";
