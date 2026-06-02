@@ -1,65 +1,69 @@
-import Image from "next/image";
+import { HeroSection } from "@/components/hero/HeroSection";
+import { PourGrid } from "@/components/pour/PourGrid";
+import { POUR_001 } from "@/data/pour-001";
+import Link from "next/link";
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <>
+      <HeroSection />
+
+      {/* Editorial strip */}
+      <section className="bg-[#004AAD] py-5 overflow-hidden">
+        <div className="flex gap-12 animate-marquee whitespace-nowrap">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <span key={i} className="font-mono text-xs uppercase tracking-widest text-[#E4E2DD] shrink-0">
+              Pour #001 — The First Round &nbsp;·&nbsp; 200 Units Only &nbsp;·&nbsp; 30% Deposit &nbsp;·&nbsp; Opening Night
+            </span>
+          ))}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* The collection */}
+      <PourGrid pour={POUR_001} />
+
+      {/* Editorial break — brand statement */}
+      <section className="bg-[#141518] py-32 px-6 md:px-12">
+        <div className="max-w-[1440px] mx-auto">
+          <div className="max-w-[800px]">
+            <p className="font-mono text-xs uppercase tracking-widest text-[#004AAD] mb-8">
+              Why we exist
+            </p>
+            <blockquote className="font-display italic text-4xl md:text-5xl lg:text-6xl text-[#E4E2DD] leading-tight mb-10">
+              &ldquo;Every brand says they&apos;re different.
+              <br />
+              We just made{" "}
+              <span className="text-[#004AAD]">200 pieces</span>{" "}
+              and stopped talking.&rdquo;
+            </blockquote>
+            <p className="font-sans text-[#E4E2DD]/50 text-base max-w-[480px] leading-relaxed">
+              Drip Theka is a clothing brand. The actual product is belonging.
+              We make small runs of quality pieces for people who know what they
+              want and don&apos;t need to be sold to.
+            </p>
+          </div>
         </div>
-      </main>
-    </div>
+      </section>
+
+      {/* Last Call CTA */}
+      <section className="bg-[#E4E2DD] py-24 px-6 md:px-12">
+        <div className="max-w-[1440px] mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
+          <div>
+            <h2 className="font-display italic text-3xl md:text-4xl text-[#141518] mb-2">
+              Don&apos;t miss the next pour.
+            </h2>
+            <p className="font-sans text-[#141518]/60">
+              Join Last Call. First to know. First to order.
+            </p>
+          </div>
+          <Link
+            href="/last-call"
+            className="font-mono text-xs uppercase tracking-widest bg-[#141518] text-[#E4E2DD] px-10 py-4 hover:bg-[#004AAD] transition-colors duration-200 whitespace-nowrap shrink-0"
+          >
+            Join Last Call
+          </Link>
+        </div>
+      </section>
+    </>
   );
 }
