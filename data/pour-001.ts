@@ -198,8 +198,8 @@ export const POUR_001: Pour = {
       sizes: [
         { size: "S", stock: 0, sku: "DT-001-005-S" },
         { size: "M", stock: 0, sku: "DT-001-005-M" },
-        { size: "L", stock: 12, sku: "DT-001-005-L" },
-        { size: "XL", stock: 8, sku: "DT-001-005-XL" },
+        { size: "L", stock: 0, sku: "DT-001-005-L" },
+        { size: "XL", stock: 0, sku: "DT-001-005-XL" },
       ],
       description:
         "Cream set — boxy half-zip and elastic-waist shorts. Printed wine glass on the back hem of the shorts. Minimal. Intentional. Loud in person.",
