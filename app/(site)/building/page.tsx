@@ -6,7 +6,6 @@
 import Link from "next/link";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { WineGlassMark } from "@/components/glass/WineGlassMark";
 import { Eyebrow }       from "@/components/ui/Eyebrow";
 import { Reveal }        from "@/components/motion/Reveal";
 import { BUILDING_POSTS } from "@/data/building";
@@ -82,15 +81,17 @@ export default function BuildingIndexPage() {
               </span>
 
               {/* Post number + glass mark */}
-              <div className="relative z-10 shrink-0 flex flex-col items-center gap-1">
-                <motion.div
-                  animate={{ rotate: hoveredIdx === i ? 5 : 0 }}
+              <div className="relative z-10 shrink-0 flex flex-col items-end gap-0.5">
+                <motion.span
+                  className="font-display italic text-[--ink]/30 group-hover:text-[--blue] transition-colors duration-200"
+                  animate={{ x: hoveredIdx === i ? -4 : 0 }}
                   transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                  style={{ fontSize: "clamp(1.4rem, 2.4vw, 1.9rem)", lineHeight: 1 }}
                 >
-                  <WineGlassMark size={18} className="text-[--ink]/25 group-hover:text-[--blue] transition-colors duration-200" />
-                </motion.div>
-                <span className="font-mono text-[8px] text-[--ink]/20 group-hover:text-[--blue] transition-colors duration-200">
                   {String(i + 1).padStart(2, "0")}
+                </motion.span>
+                <span className="font-mono text-[8px] uppercase tracking-[0.16em] text-[--ink]/20 group-hover:text-[--blue] transition-colors duration-200">
+                  Dispatch
                 </span>
               </div>
             </Link>

@@ -69,12 +69,12 @@ export function BuildingTeaser() {
     <section
       ref={sectionRef}
       data-nav-tone="dark"
-      className="bg-[--cream] overflow-hidden relative isolate"
+      className="bg-[--cream] overflow-x-hidden relative isolate"
       aria-labelledby="building-heading"
     >
       <div
         className="py-20 md:py-28"
-        style={{ paddingInline: "var(--pad-x)" }}
+        style={{ paddingInline: "var(--pad-x)", paddingBlockEnd: "clamp(5rem, 10vw, 9rem)" }}
       >
         {/* Header */}
         <Reveal className="flex items-start justify-between mb-12">

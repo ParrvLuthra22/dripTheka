@@ -1,57 +1,33 @@
 "use client";
 
 // Story Teaser — two-column editorial layout.
-// Left: sticky eyebrow stack. Right: Fraunces body with blue highlighted phrases.
-// Typing effect: each paragraph types out character-by-character on scroll-into-view.
+// Left: sticky eyebrow stack. Right: typewriter body copy.
+// Each paragraph types out 60ms/char when it enters viewport.
 
 import Link from "next/link";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { Reveal } from "@/components/motion/Reveal";
+import { Reveal }  from "@/components/motion/Reveal";
+import { TypeOnScroll, type Segment as TypeSegment } from "@/components/motion/TypeOnScroll";
 
-// Manifesto paragraphs with rich-text markup hints.
-type Segment = string | { em: string };
-
-const PARAGRAPHS: (readonly Segment[])[] = [
+// Manifesto paragraphs. Strings are typed char-by-char; node segments
+// (the blue highlights) are revealed atomically.
+const PARAGRAPHS: TypeSegment[][] = [
   [
     "We didn't start a clothing brand. We started a ",
-    { em: "theka" },
+    { node: <em className="not-italic text-[--blue]">theka</em>, chars: 5 },
     " — a corner where the dripped meet, where heritage and concrete shake hands, where every fit ",
-    { em: "means something." },
+    { node: <em className="not-italic text-[--blue]">means something.</em>, chars: 16 },
   ],
   [
     "Made in India, for the kids who code at midnight, ride at dawn, and dress like the city is theirs. ",
-    { em: "Because it is." },
+    { node: <em className="not-italic text-[--blue]">Because it is.</em>, chars: 14 },
   ],
   [
     "Six pieces. One colourway. Two hundred of each. When it's gone it's ",
-    { em: "Tapped Out" },
+    { node: <em className="not-italic text-[--blue]">Tapped Out</em>, chars: 10 },
     " — no restocks, no waiting lists. You either got it or you didn't. That's not scarcity marketing; that's respect for your time.",
   ],
 ];
-
-function StaticParagraph({ segments }: { segments: readonly Segment[] }) {
-  return (
-    <p
-      className="font-display text-black uppercase leading-[1.1]"
-      style={{ fontSize: "clamp(1.5rem, 3.5vw, 2.8rem)" }}
-    >
-      {segments.map((seg, i) => {
-        if (typeof seg === "string") {
-          return <span key={i}>{seg}</span>;
-        } else {
-          return (
-            <em
-              key={i}
-              className="not-italic text-[--blue]"
-            >
-              {seg.em}
-            </em>
-          );
-        }
-      })}
-    </p>
-  );
-}
 
 export function StoryTeaser() {
   return (
@@ -60,8 +36,6 @@ export function StoryTeaser() {
       className="bg-[--cream] py-20 md:py-32"
       aria-labelledby="story-heading"
     >
-
-
       <div style={{ paddingInline: "var(--pad-x)" }}>
         {/* Top eyebrow */}
         <Reveal className="flex justify-end mb-12">
@@ -84,7 +58,6 @@ export function StoryTeaser() {
                 </p>
               </Reveal>
 
-              {/* Thin vertical rule */}
               <div className="hidden md:block w-px h-20 bg-[--ink]/10 mt-2" />
 
               <Reveal delay={150} className="hidden md:block">
@@ -95,12 +68,18 @@ export function StoryTeaser() {
             </div>
           </div>
 
-          {/* RIGHT — typing body copy */}
-          <div className="space-y-8 md:space-y-10">
-            {PARAGRAPHS.map((para, i) => (
-              <Reveal key={i} delay={i * 100}>
-                <StaticParagraph segments={para} />
-              </Reveal>
+          {/* RIGHT — typewriter body */}
+          <div className="space-y-10 md:space-y-12">
+            {PARAGRAPHS.map((segments, i) => (
+              <TypeOnScroll
+                key={i}
+                segments={segments}
+                speed={60}
+                threshold={0.25}
+                as="p"
+                className="font-display text-[--ink] leading-[1.15]"
+                style={{ fontSize: "clamp(1.4rem, 3vw, 2.4rem)" }}
+              />
             ))}
 
             {/* CTA */}

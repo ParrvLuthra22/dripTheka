@@ -4,25 +4,31 @@
 //   SoundProvider  → global Howler + sound state
 //   SmoothScroll   → Lenis + GSAP ScrollTrigger shared ticker
 //   PourTransition → cream overlay on route changes
-//   Nav            → fixed top, theme-aware tone detection
+//   Nav            → fixed top, cobalt, with morph target
 //   main           → page content
-//   Footer         → ink background, parallax wordmark
+//   Footer         → ink background + video header
 //
 // Fixed/global overlays:
-//   PintGlass      → cart indicator, desktop only
-//   SoundToggle    → bottom-left
-//   Cursor         → custom dot + ring, desktop only
-//   LoadingScreen  → fullscreen brand intro, once per session
+//   MorphingLogo       → hero → nav scroll-driven logo morph
+//   ScrollProgressDrip → right-edge cobalt fill line + droplet
+//   Cursor             → custom dot + ring + label, desktop only
+//   ThekaEgg           → keyboard easter egg (type "theka")
+//   LoadingScreen      → fullscreen brand intro, once per session
+//   PintGlass          → cart indicator (legacy — currently in nav)
+//   SoundToggle        → bottom-left
 
-import { SmoothScroll }    from "@/components/motion/SmoothScroll";
-import { SoundProvider }   from "@/components/sound/SoundProvider";
-import { SoundToggle }     from "@/components/sound/SoundToggle";
-import { Nav }             from "@/components/sections/Nav";
-import { Footer }          from "@/components/sections/Footer";
-import { PintGlass }       from "@/components/glass/PintGlass";
-import { PourTransition }  from "@/components/transitions/PourTransition";
-import { Cursor }          from "@/components/ui/Cursor";
-import { LoadingScreen }   from "@/components/layout/LoadingScreen";
+import { SmoothScroll }       from "@/components/motion/SmoothScroll";
+import { SoundProvider }      from "@/components/sound/SoundProvider";
+import { SoundToggle }        from "@/components/sound/SoundToggle";
+import { Nav }                from "@/components/sections/Nav";
+import { Footer }             from "@/components/sections/Footer";
+import { PintGlass }          from "@/components/glass/PintGlass";
+import { PourTransition }     from "@/components/transitions/PourTransition";
+import { Cursor }             from "@/components/ui/Cursor";
+import { LoadingScreen }      from "@/components/layout/LoadingScreen";
+import { ThekaEgg }           from "@/components/layout/ThekaEgg";
+import { MorphingLogo }       from "@/components/glass/MorphingLogo";
+import { ScrollProgressDrip } from "@/components/motion/ScrollProgressDrip";
 
 export default function SiteLayout({
   children,
@@ -48,7 +54,16 @@ export default function SiteLayout({
       <SoundToggle />
       <Cursor />
 
-      {/* First-session brand intro — sits above everything (z-200) */}
+      {/* The signature moment — scroll-driven logo morph */}
+      <MorphingLogo />
+
+      {/* Right-edge scroll progress indicator */}
+      <ScrollProgressDrip />
+
+      {/* Keyboard easter egg — type "theka" anywhere */}
+      <ThekaEgg />
+
+      {/* First-session brand intro */}
       <LoadingScreen />
     </SoundProvider>
   );

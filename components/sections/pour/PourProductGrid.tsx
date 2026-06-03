@@ -7,7 +7,6 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { WineGlassMark } from "@/components/glass/WineGlassMark";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Reveal } from "@/components/motion/Reveal";
@@ -45,9 +44,14 @@ function EditorialBreak() {
           minHeight:       "40vh",
         }}
       >
-        {/* Wine glass mark — large, left */}
-        <div className="shrink-0 hidden md:block">
-          <WineGlassMark size={120} liquid={60} className="text-[#E4E2DD]" />
+        {/* Drop number — massive, left */}
+        <div className="shrink-0 hidden md:flex flex-col items-start">
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#E4E2DD]/40 mb-2">
+            Pour
+          </span>
+          <span className="font-display italic text-[#E4E2DD]/85" style={{ fontSize: "clamp(6rem, 9vw, 11rem)", lineHeight: 0.85 }}>
+            001
+          </span>
         </div>
 
         {/* Quote */}

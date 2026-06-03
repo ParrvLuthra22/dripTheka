@@ -1,11 +1,17 @@
 "use client";
 
 // Nav — fixed top, full-width.
-// Uses a section-tone detection system (data-nav-tone attribute on sections)
-// so text/icons swap colors based on whichever section is currently under
-// the header. Replaces the previous mix-blend-mode:difference approach.
+// Cobalt #004AAD background, cream type, always.
 //
-// Hide-on-scroll-down / show-on-scroll-up with hysteresis to avoid jitter.
+// CENTER: empty placeholder div with data-morph-anchor="nav" — this is
+// where MorphingLogo settles when the user scrolls past the hero. There is
+// NO logo rendered here directly; the MorphingLogo component owns it.
+//
+// RIGHT: four functional elements
+//   1. SoundToggle compact — animated waveform when ON
+//   2. ReservationCounter — live X/100 RESERVED with pulsing dot
+//   3. PourIndicator — mini pint glass that fills as cart fills
+//   4. WALK IN CTA — scrolls to Currently Pouring (homepage only)
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
@@ -13,10 +19,8 @@ import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { gsap } from "gsap";
 
-import { BrandLogo }      from "@/components/glass/BrandLogo";
-import { PintGlassNav }   from "@/components/glass/PintGlass";
-import { useSoundStore }  from "@/lib/store/sound";
-import { useCartStore }   from "@/lib/store/cart";
+import { useSoundStore } from "@/lib/store/sound";
+import { useCartStore }  from "@/lib/store/cart";
 
 // ── Links ────────────────────────────────────────────────────────────────
 
@@ -34,8 +38,6 @@ const MOBILE_LINKS = [
   { label: "Regulars",  href: "/regulars" },
   { label: "Cart",      href: "/cart" },
 ] as const;
-
-type Tone = "light" | "dark"; // light = cream text on dark bg; dark = ink text on light bg
 
 // ── NavLink with hairline-draw hover underline ────────────────────────────
 
@@ -73,64 +75,147 @@ function NavLink({
   );
 }
 
-// ── Tone detector — reads data-nav-tone from sections ─────────────────────
+// ── Compact sound waveform indicator ─────────────────────────────────────
 
-function useNavTone(): Tone {
-  const [tone, setTone] = useState<Tone>("dark");
-  const pathname = usePathname();
+function SoundIndicator({ muted, onClick }: { muted: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-pressed={!muted}
+      data-hover
+      className="hidden min-[900px]:flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.14em] hover:opacity-70 transition-opacity"
+    >
+      <span className="flex items-end gap-[2px] h-3" aria-hidden="true">
+        {[4, 9, 6, 11, 5].map((h, i) => (
+          <span
+            key={i}
+            className="w-[2px] rounded-full bg-current"
+            style={
+              muted
+                ? { height: 2 }
+                : {
+                    height: h,
+                    animation: `wave-bar 600ms ${i * 70}ms ease-in-out infinite alternate`,
+                  }
+            }
+          />
+        ))}
+      </span>
+      <span>Sound&nbsp;·&nbsp;{muted ? "Off" : "On"}</span>
+      <style>{`
+        @keyframes wave-bar {
+          from { transform: scaleY(0.4); }
+          to   { transform: scaleY(1); }
+        }
+      `}</style>
+    </button>
+  );
+}
+
+// ── Live reservation counter ─────────────────────────────────────────────
+
+function ReservationCounter() {
+  const [data, setData] = useState<{ reserved: number; total: number } | null>(null);
 
   useEffect(() => {
-    // Reset to default when navigating
-    setTone("dark");
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const res = await fetch("/api/reserve/count", { cache: "no-store" });
+        if (!res.ok) return;
+        const json = (await res.json()) as { reserved: number; total: number };
+        if (!cancelled) setData(json);
+      } catch { /* silent */ }
+    };
+    load();
+    const id = setInterval(load, 30_000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, []);
 
-    // Wait one frame for the new page DOM to mount
-    const raf = requestAnimationFrame(() => {
-      // Header height in px (matches --header-h in CSS)
-      const HEADER_H = 84;
-      // Sample point: just below the nav at horizontal middle
-      const sampleY = HEADER_H + 4;
+  if (!data) return null;
 
-      const updateTone = () => {
-        const els = document.elementsFromPoint(window.innerWidth / 2, sampleY);
-        // Walk outward (innermost → outermost) looking for the closest
-        // element with data-nav-tone — that section's tone wins
-        for (const el of els) {
-          const t = (el as HTMLElement).dataset?.navTone;
-          if (t === "light" || t === "dark") {
-            setTone(t);
-            return;
-          }
+  return (
+    <Link
+      href="/pour/pour-001"
+      data-hover
+      className="hidden min-[1100px]:flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.14em] hover:opacity-70 transition-opacity"
+      aria-label={`${data.reserved} of ${data.total} reserved`}
+    >
+      <span
+        aria-hidden="true"
+        className="block w-1.5 h-1.5 rounded-full bg-current"
+        style={{ animation: "reservation-pulse 1.8s ease-in-out infinite" }}
+      />
+      <span className="tabular-nums">
+        {String(data.reserved).padStart(3, "0")}/{String(data.total).padStart(3, "0")}
+      </span>
+      <span className="opacity-60">Reserved</span>
+      <style>{`
+        @keyframes reservation-pulse {
+          0%, 100% { opacity: 1;   transform: scale(1); }
+          50%      { opacity: 0.3; transform: scale(0.7); }
         }
-        setTone("dark");
-      };
+      `}</style>
+    </Link>
+  );
+}
 
-      updateTone();
+// ── Mini pour indicator — pint glass that fills with cart items ──────────
 
-      // Update on scroll (throttled with rAF)
-      let ticking = false;
-      const onScroll = () => {
-        if (ticking) return;
-        ticking = true;
-        requestAnimationFrame(() => {
-          updateTone();
-          ticking = false;
-        });
-      };
+function PourIndicator({ count }: { count: number }) {
+  const fill = Math.min(1, count / 10);
+  return (
+    <Link
+      href="/cart"
+      data-hover
+      aria-label={`Cart, ${count} item${count !== 1 ? "s" : ""}`}
+      className="hidden min-[900px]:flex items-center gap-2 hover:opacity-80 transition-opacity"
+    >
+      <svg width="18" height="22" viewBox="0 0 72 96" fill="none" aria-hidden="true">
+        <defs>
+          <clipPath id="nav-pour-clip">
+            <path d="M 8 14 C 8 30 10 52 12 72 C 14 82 14 86 14 88 L 58 88 C 58 86 58 82 60 72 C 62 52 64 30 64 14 Q 36 22 8 14 Z" />
+          </clipPath>
+        </defs>
+        {fill > 0 && (
+          <rect
+            x="7"
+            y={84 - fill * 70}
+            width="58"
+            height={fill * 70}
+            fill="currentColor"
+            clipPath="url(#nav-pour-clip)"
+            style={{ transition: "y 0.55s var(--ease-pour, cubic-bezier(.6,.05,.2,1)), height 0.55s var(--ease-pour)" }}
+          />
+        )}
+        <path
+          d="M 4 10 A 34 7 0 0 1 68 10 C 68 26 64 50 62 72 C 60 82 60 86 60 90 L 60 92 L 12 92 L 12 90 C 12 86 12 82 10 72 C 8 50 4 26 4 10 Z"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinejoin="round"
+        />
+        <path d="M 8 12 Q 36 20 64 12" stroke="currentColor" strokeWidth="1" fill="none" opacity="0.5" />
+        <path d="M 60 34 Q 70 34 70 44 Q 70 54 60 54" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+      </svg>
+      <span className="font-mono text-[9px] uppercase tracking-[0.14em] tabular-nums">
+        {count > 0 ? `${count}` : "—"}
+      </span>
+    </Link>
+  );
+}
 
-      window.addEventListener("scroll", onScroll, { passive: true });
-      window.addEventListener("resize", onScroll);
+// ── WALK IN CTA — scrolls to Currently Pouring on homepage ───────────────
 
-      // Cleanup
-      return () => {
-        window.removeEventListener("scroll", onScroll);
-        window.removeEventListener("resize", onScroll);
-      };
-    });
-
-    return () => cancelAnimationFrame(raf);
-  }, [pathname]);
-
-  return tone;
+function WalkInCTA({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      data-hover-big
+      className="hidden min-[900px]:flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.14em] border border-[#E4E2DD]/40 text-[#E4E2DD] px-3 py-1.5 hover:bg-[#E4E2DD] hover:text-[#004AAD] transition-all duration-200"
+    >
+      Walk In&nbsp;→
+    </button>
+  );
 }
 
 // ── Main Nav ──────────────────────────────────────────────────────────────
@@ -142,22 +227,16 @@ export function Nav() {
   const { totalItems } = useCartStore();
   const count = totalItems();
 
-  const tone = useNavTone();
-
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  // Scroll-hide state with hysteresis (must drop > 8px to hide,
-  // rise > 4px to reveal — avoids jitter from tiny scroll movements)
   const lastY    = useRef(0);
   const isHidden = useRef(false);
   const [scrolled, setScrolled] = useState(false);
 
-  // Mobile menu
   const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => { setMenuOpen(false); }, [pathname]);
 
-  // Scroll-hide / scroll-reveal
   useEffect(() => {
     const onScroll = () => {
       const y     = window.scrollY;
@@ -187,7 +266,6 @@ export function Nav() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Body lock while mobile menu open
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
@@ -195,14 +273,16 @@ export function Nav() {
 
   const closeMenu = useCallback(() => setMenuOpen(false), []);
 
-  // Navbar is always #004AAD — the brand blue. Same shade, always.
-  const textColor = "#E4E2DD";
-  const bgStyle: React.CSSProperties = {
-    backgroundColor: "#004AAD",
-    borderBottom: scrolled ? "1px solid rgba(228,226,221,0.1)" : "none",
-  };
-
-  const CLIP_ORIGIN = "calc(100% - 28px) 42px";
+  // Walk In CTA action — scrolls to Currently Pouring on home, navigates from other pages
+  const handleWalkIn = useCallback(() => {
+    if (pathname === "/") {
+      const target = document.querySelector('[data-section="currently-pouring"]');
+      target?.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      // Navigate to home, then scroll target catches via hash
+      window.location.href = "/#currently-pouring";
+    }
+  }, [pathname]);
 
   return (
     <>
@@ -210,25 +290,23 @@ export function Nav() {
         ref={navRef}
         style={{
           height: "var(--header-h)",
-          color: textColor,
-          transition: "background-color 0.3s ease, border-color 0.3s ease",
-          ...bgStyle,
+          color:  "#E4E2DD",
+          backgroundColor: "#004AAD",
+          borderBottom: scrolled ? "1px solid rgba(228,226,221,0.1)" : "1px solid transparent",
+          transition: "border-color 0.3s ease",
         }}
         className="fixed inset-x-0 top-0 z-50 pointer-events-none will-change-transform"
         role="banner"
       >
-        <div
-          className="pointer-events-auto h-full"
-        >
+        <div className="pointer-events-auto h-full">
           <div
-            className="h-full flex items-center justify-between"
+            className="h-full flex items-center justify-between gap-4"
             style={{ paddingInline: "var(--pad-x)" }}
           >
-            {/* ── LEFT ──────────────────────────────────────────────── */}
-            <div className="flex items-center">
-              {/* Desktop links */}
+            {/* ── LEFT — nav links (desktop) / blank (mobile) ─────── */}
+            <div className="flex items-center min-w-0">
               <nav
-                className="hidden min-[900px]:flex items-center gap-8"
+                className="hidden min-[900px]:flex items-center gap-7"
                 aria-label="Primary navigation"
               >
                 {LEFT_LINKS.map(({ label, href }) => (
@@ -237,54 +315,33 @@ export function Nav() {
                   </NavLink>
                 ))}
               </nav>
-
-              {/* Mobile small logo — dt icon monogram */}
-              <Link
-                href="/"
-                data-hover
-                className="flex min-[900px]:hidden items-center"
-                aria-label="Drip Theka home"
-              >
-                <BrandLogo size="lg" />
-              </Link>
             </div>
 
-            {/* ── CENTER (desktop only) ─────────────────────────────── */}
-            <Link
-              href="/"
-              data-hover
-              aria-label="Drip Theka home"
-              className="hidden min-[900px]:flex absolute left-1/2 -translate-x-1/2 items-center group hover:opacity-90 transition-opacity duration-200"
-            >
-              <BrandLogo size="xl" priority />
-            </Link>
+            {/*
+              ── CENTER — morph anchor (desktop) ──────────────────────
+              Empty placeholder div. MorphingLogo reads its bounding rect
+              and animates the actual logo into this position on scroll.
+              Width sized to match nav target logo size.
+            */}
+            <div
+              data-morph-anchor="nav"
+              className="hidden min-[900px]:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+              style={{
+                width:  120,
+                height: 36,
+                // height matches BrandLogo "md" size — used as final size of morph
+              }}
+              aria-hidden="true"
+            />
 
-            {/* ── RIGHT ─────────────────────────────────────────────── */}
-            <div className="flex items-center gap-5">
-              <button
-                onClick={toggleSound}
-                aria-pressed={!muted}
-                data-hover
-                className="hidden min-[900px]:flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.14em] hover:opacity-70 transition-opacity"
-              >
-                <span
-                  aria-hidden="true"
-                  className="inline-block w-1.5 h-1.5 rounded-full bg-current"
-                  style={{ opacity: mounted && !muted ? 1 : 0.3 }}
-                />
-                Sound&nbsp;·&nbsp;{mounted && !muted ? "On" : "Off"}
-              </button>
+            {/* ── RIGHT — controls ──────────────────────────────────── */}
+            <div className="flex items-center gap-4 min-w-0">
+              <SoundIndicator muted={!mounted || muted} onClick={toggleSound} />
+              <ReservationCounter />
+              <PourIndicator count={count} />
+              <WalkInCTA onClick={handleWalkIn} />
 
-              <span className="hidden min-[900px]:flex font-mono text-[9px] uppercase tracking-[0.14em]">
-                {mounted && count > 0 && `${count} item${count !== 1 ? "s" : ""}`}
-              </span>
-
-              {/* Mobile pint glass icon */}
-              <div className="min-[900px]:hidden">
-                <PintGlassNav />
-              </div>
-
-              {/* Hamburger */}
+              {/* Hamburger — mobile only */}
               <button
                 onClick={() => setMenuOpen((v) => !v)}
                 aria-label={menuOpen ? "Close menu" : "Open menu"}
@@ -310,61 +367,83 @@ export function Nav() {
         </div>
       </header>
 
-      {/* ── Mobile menu ─────────────────────────────────────────────── */}
+      {/* ── Mobile menu — full-page typographic takeover ──────────── */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
             key="mobile-menu"
-            initial={{ clipPath: `circle(0px at ${CLIP_ORIGIN})` }}
-            animate={{ clipPath: `circle(200vmax at ${CLIP_ORIGIN})` }}
-            exit={{   clipPath: `circle(0px at ${CLIP_ORIGIN})` }}
-            transition={{ duration: 0.55, ease: [0.6, 0.05, 0.2, 1] }}
-            className="fixed inset-0 z-40 bg-[--ink] flex flex-col justify-center min-[900px]:hidden"
-            style={{ paddingInline: "var(--pad-x)" }}
+            initial={{ y: "-100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "-100%" }}
+            transition={{ duration: 0.6, ease: [0.76, 0, 0.24, 1] }}
+            className="fixed inset-0 z-40 flex flex-col justify-between min-[900px]:hidden overflow-hidden"
+            style={{
+              backgroundColor: "#004AAD",
+              paddingInline:   "var(--pad-x)",
+              paddingTop:      "calc(var(--header-h) + 1.5rem)",
+              paddingBottom:   "2.5rem",
+            }}
           >
-            <button
-              onClick={closeMenu}
-              aria-label="Close menu"
-              className="absolute top-7 right-6 w-8 h-8 flex items-center justify-center text-[--cream] opacity-50 hover:opacity-100 transition-opacity"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-            </button>
+            {/* Top eyebrow */}
+            <div className="flex items-center justify-between">
+              <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#E4E2DD]/40">
+                The Menu
+              </p>
+              <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#E4E2DD]/40">
+                Pour&nbsp;#001
+              </p>
+            </div>
 
-            <nav aria-label="Mobile navigation">
-              <ul className="flex flex-col gap-2">
+            {/* Big italic links */}
+            <nav aria-label="Mobile navigation" className="flex-1 flex flex-col justify-center py-8">
+              <ul className="flex flex-col gap-1">
                 {MOBILE_LINKS.map(({ label, href }, i) => (
                   <motion.li
                     key={href}
-                    initial={{ opacity: 0, x: -32 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{   opacity: 0, x: -20 }}
-                    transition={{ delay: i * 0.06 + 0.15, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                    initial={{ opacity: 0, y: 40 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{   opacity: 0, y: 20 }}
+                    transition={{
+                      delay: i * 0.08 + 0.2,
+                      duration: 0.5,
+                      ease: [0.16, 1, 0.3, 1],
+                    }}
                   >
                     <Link
                       href={href}
                       onClick={closeMenu}
-                      className="block font-display italic text-[--cream] hover:text-[--blue] transition-colors duration-200 leading-none"
-                      style={{ fontSize: "clamp(2.5rem, 10vw, 5rem)" }}
+                      className="flex items-baseline gap-3 group leading-none"
                     >
-                      {label}
+                      <span
+                        aria-hidden="true"
+                        className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#E4E2DD]/30 group-hover:text-[#E4E2DD] transition-colors"
+                      >
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <span
+                        className="font-display italic font-semibold text-[#E4E2DD] group-hover:translate-x-2 transition-transform duration-300"
+                        style={{ fontSize: "clamp(2.75rem, 14vw, 7rem)" }}
+                      >
+                        {label}.
+                      </span>
                     </Link>
                   </motion.li>
                 ))}
               </ul>
             </nav>
 
-            <div className="absolute bottom-8 left-0 right-0 px-6 flex items-center justify-between">
+            {/* Bottom row */}
+            <div className="flex items-end justify-between gap-4">
               <button
                 onClick={toggleSound}
-                className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--cream]/40 hover:text-[--cream]/80 transition-colors"
+                className="flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-[#E4E2DD]/40 hover:text-[#E4E2DD] transition-colors"
               >
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-current" style={{ opacity: muted ? 0.3 : 1 }} />
                 Sound&nbsp;·&nbsp;{mounted && !muted ? "On" : "Off"}
               </button>
-              <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--cream]/20">
-                Pour #001
-              </span>
+              <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#E4E2DD]/20 text-right">
+                {count > 0 ? `${count} in glass` : "Empty glass"}
+              </p>
             </div>
           </motion.div>
         )}

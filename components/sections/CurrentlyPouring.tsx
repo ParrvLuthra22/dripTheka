@@ -30,7 +30,13 @@ const ASPECT_RATIOS = [
 
 export function CurrentlyPouring() {
   return (
-    <section data-nav-tone="dark" className="bg-[--cream] py-20 md:py-28" aria-labelledby="pouring-heading">
+    <section
+      id="currently-pouring"
+      data-section="currently-pouring"
+      data-nav-tone="dark"
+      className="bg-[--cream] py-20 md:py-28"
+      aria-labelledby="pouring-heading"
+    >
       <div style={{ paddingInline: "var(--pad-x)" }}>
         {/* Section header */}
         <Reveal className="flex items-start justify-between mb-12 border-b border-[--ink]/10 pb-8">

@@ -5,7 +5,6 @@ import { getBuildingPost, getAdjacentPosts, readingTime, BUILDING_POSTS }
   from "@/data/building";
 import { Reveal }       from "@/components/motion/Reveal";
 import { SplitReveal }  from "@/components/motion/SplitReveal";
-import { WineGlassMark } from "@/components/glass/WineGlassMark";
 
 interface Props { params: Promise<{ slug: string }> }
 

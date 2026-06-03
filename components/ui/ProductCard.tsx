@@ -1,12 +1,13 @@
 "use client";
 
 // Shared ProductCard — used in CurrentlyPouring (home) and PourProductGrid (pour page).
-// The parent grid controls column span; this component owns the card visual.
+// Includes 3D perspective tilt on hover (cursor drives rotateX/Y).
 
+import { useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
-import { WineGlassMark } from "@/components/glass/WineGlassMark";
+import { TappedOutStamp } from "@/components/glass/TappedOutStamp";
 import { ProductIllustration } from "@/components/sections/ProductIllustration";
 import { isTappedOut, getPriceDisplay, POUR_001 } from "@/data/pour-001";
 import type { Product } from "@/data/pour-001";
@@ -39,6 +40,25 @@ export function ProductCard({
   const accent     = product.colors[1] ?? "#E4E2DD";
   const productNum = POUR_001.products.findIndex((p) => p.id === product.id) + 1;
 
+  // ── 3D tilt on hover ───────────────────────────────────────────────────
+  const imgRef = useRef<HTMLDivElement>(null);
+
+  const onMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const el = imgRef.current;
+    if (!el || tappedOut) return;
+    const rect = el.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width  - 0.5;  // -0.5..0.5
+    const y = (e.clientY - rect.top)  / rect.height - 0.5;
+    // Subtle tilt — 6° max in either axis
+    el.style.transform = `perspective(900px) rotateX(${-y * 6}deg) rotateY(${x * 8}deg)`;
+  }, [tappedOut]);
+
+  const onMouseLeave = useCallback(() => {
+    const el = imgRef.current;
+    if (!el) return;
+    el.style.transform = "perspective(900px) rotateX(0deg) rotateY(0deg)";
+  }, []);
+
   const handleClick = () => {
     if (!tappedOut) router.push(`/product/${product.slug}`);
   };
@@ -58,19 +78,28 @@ export function ProductCard({
         onKeyDown={(e) => e.key === "Enter" && handleClick()}
         aria-label={tappedOut ? `${product.name} — Tapped Out` : `View ${product.name}`}
         data-hover={!tappedOut || undefined}
+        data-cursor={!tappedOut ? "view" : undefined}
         className={cn(
           "flex flex-col",
           tappedOut ? "cursor-not-allowed" : "cursor-pointer"
         )}
       >
-        {/* ── Illustration area ─────────────────────────────────── */}
+        {/* ── Illustration area — 3D tilt on hover ─────────────────── */}
         <div
+          ref={imgRef}
+          onMouseMove={onMouseMove}
+          onMouseLeave={onMouseLeave}
           className={cn(
             "relative overflow-hidden",
             aspectRatio,
             tappedOut && "[filter:grayscale(1)_brightness(0.8)]"
           )}
-          style={{ backgroundColor: primary }}
+          style={{
+            backgroundColor: primary,
+            transformStyle: "preserve-3d",
+            transition: "transform 0.45s cubic-bezier(.2,.9,.3,1)",
+            willChange: "transform",
+          }}
         >
           {/* Garment SVG */}
           <div className="absolute inset-0 flex items-center justify-center p-[8%] transition-transform duration-500 ease-out group-hover:scale-[1.06]">
@@ -82,16 +111,8 @@ export function ProductCard({
             />
           </div>
 
-          {/* Tapped Out watermark — tipped wine glass */}
-          {tappedOut && (
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <WineGlassMark
-                size={72}
-                tilt={-75}
-                className="text-[#E4E2DD] opacity-25"
-              />
-            </div>
-          )}
+          {/* Tapped Out watermark — typographic stamp */}
+          {tappedOut && <TappedOutStamp />}
 
           {/* Tag pill — top left; rotates on hover */}
           <div className="absolute top-3 left-3 z-10">
@@ -155,6 +176,7 @@ export function ProductCard({
                   e.preventDefault();
                   router.push(`/product/${product.slug}`);
                 }}
+                data-cursor="add"
                 className="font-display text-sm px-4 py-2 bg-[--neon] text-black border-2 border-black shadow-[2px_2px_0_0_#141518] hover:shadow-[0px_0px_0_0_#141518] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
               >
                 ADD TO CART

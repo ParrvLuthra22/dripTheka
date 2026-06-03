@@ -1,11 +1,10 @@
 "use client";
 
 // Story — long-form editorial. Each section has a distinct layout.
-// No images — WineGlassMarks serve as decorative anchors.
+// No images — typographic anchors only.
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import { WineGlassMark } from "@/components/glass/WineGlassMark";
 import { Eyebrow }       from "@/components/ui/Eyebrow";
 import { Reveal }        from "@/components/motion/Reveal";
 import { SplitReveal }   from "@/components/motion/SplitReveal";
@@ -75,9 +74,14 @@ export default function StoryPage() {
         </div>
       </section>
 
-      {/* Decorative wine glass anchor */}
-      <div className="flex justify-center py-16 opacity-12 select-none" aria-hidden="true">
-        <WineGlassMark size={120} className="text-[--ink]" />
+      {/* Decorative typographic anchor */}
+      <div className="flex justify-center py-16 select-none" aria-hidden="true">
+        <span
+          className="font-display italic text-[--ink]/10"
+          style={{ fontSize: "clamp(6rem, 14vw, 14rem)", lineHeight: 0.85 }}
+        >
+          ✺
+        </span>
       </div>
 
       {/* ══════════════ SECTION 2 — THE NAME (sticky label layout) ═══ */}
@@ -181,8 +185,13 @@ export default function StoryPage() {
                 Pour #001
               </p>
             </Reveal>
-            <div className="opacity-15 select-none" aria-hidden="true">
-              <WineGlassMark size={160} liquid={75} className="text-[--ink]" />
+            <div className="select-none" aria-hidden="true">
+              <span
+                className="font-display italic text-[--blue]/15 block"
+                style={{ fontSize: "clamp(8rem, 18vw, 18rem)", lineHeight: 0.85 }}
+              >
+                001
+              </span>
             </div>
           </div>
 

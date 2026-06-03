@@ -1,7 +1,5 @@
-// HomeMarquee — cream background, ink type, hairline borders top and bottom.
-// Pure CSS infinite scroll — no JS required.
-
-import { WineGlassMark } from "@/components/glass/WineGlassMark";
+// HomeMarquee — bold tilted ribbon, infinite scroll.
+// Pure CSS animation — no JS required.
 
 const PHRASES = [
   "DRIP THEKA",
@@ -11,6 +9,19 @@ const PHRASES = [
   "POUR #001",
 ];
 
+// Asterisk separator — typographic instead of a decorative glass icon
+function Separator() {
+  return (
+    <span
+      aria-hidden="true"
+      className="font-display text-[--ink] text-3xl md:text-5xl shrink-0 mx-4 select-none"
+      style={{ transform: "translateY(-0.1em)" }}
+    >
+      ✺
+    </span>
+  );
+}
+
 function MarqueeItem() {
   return (
     <>
@@ -19,10 +30,7 @@ function MarqueeItem() {
           <span className="font-display text-[--ink] text-3xl md:text-5xl whitespace-nowrap tracking-wide leading-none pt-1">
             {phrase}
           </span>
-          <WineGlassMark
-            size={32}
-            className="text-[--ink] mx-4 shrink-0"
-          />
+          <Separator />
         </span>
       ))}
     </>

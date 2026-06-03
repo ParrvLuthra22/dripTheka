@@ -1,79 +1,98 @@
 "use client";
 
-// Hero — full viewport, blue background, cream type.
-// Three.js HeroPour lazy-loaded on desktop; SVG fallback on mobile.
+// Hero — full viewport, cobalt background, cream type.
+//
+// First-load sequence:
+//   1. Devanagari × Latin scramble (1.2s) on placeholder text
+//   2. Scramble settles to "DRIP THEKA"
+//   3. Text cross-fades out, dtlogo PNG cross-fades in
+//   4. Tagline + CTA reveal
+//
+// The dtlogo final position has `data-morph-anchor="hero"` — that's the
+// anchor read by MorphingLogo to drive the scroll-driven morph into nav.
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import Image from "next/image";
 import { Button } from "@/components/ui/Button";
+import { ScrambleText } from "@/components/motion/ScrambleText";
 import { useSound } from "@/components/sound/SoundProvider";
 
-// Session key — pour animation plays once per browser session
 const SESSION_KEY = "dt-hero-played";
 
 export function Hero() {
   const { muted, play } = useSound();
   const containerRef  = useRef<HTMLElement>(null);
-  const logoRef       = useRef<HTMLDivElement>(null);
   const taglineRef    = useRef<HTMLParagraphElement>(null);
   const ctaRef        = useRef<HTMLDivElement>(null);
   const metaRef       = useRef<HTMLDivElement>(null);
+  const scrambleRef   = useRef<HTMLDivElement>(null);
+  const logoRef       = useRef<HTMLDivElement>(null);
+
+  // SSR-safe initial state — assume first visit during render,
+  // then check sessionStorage on mount to decide if we replay.
+  const [alreadyPlayed, setAlreadyPlayed] = useState(false);
+  const [scrambleDone, setScrambleDone]   = useState(false);
 
   useGSAP(() => {
-    const logo = logoRef.current;
-    const alreadyPlayed = sessionStorage.getItem(SESSION_KEY);
+    const skip = typeof window !== "undefined"
+      ? !!sessionStorage.getItem(SESSION_KEY)
+      : false;
 
-    if (alreadyPlayed) {
-      gsap.set(logo,               { opacity: 1, y: 0 });
-      gsap.set(taglineRef.current, { opacity: 1, y: 0 });
-      gsap.set(ctaRef.current,     { opacity: 1, y: 0 });
-      gsap.set(metaRef.current,    { opacity: 1 });
+    if (skip) {
+      setAlreadyPlayed(true);
+      setScrambleDone(true);
+      gsap.set(scrambleRef.current, { opacity: 0, display: "none" });
+      gsap.set(logoRef.current,     { opacity: 1, y: 0 });
+      gsap.set(taglineRef.current,  { opacity: 1, y: 0 });
+      gsap.set(ctaRef.current,      { opacity: 1, y: 0 });
+      gsap.set(metaRef.current,     { opacity: 1 });
       return;
     }
 
     sessionStorage.setItem(SESSION_KEY, "1");
 
-    // Set initial hidden state
-    gsap.set(logo,               { opacity: 0, y: 40 });
-    gsap.set(taglineRef.current, { opacity: 0, y: 24 });
-    gsap.set(ctaRef.current,     { opacity: 0, y: 16 });
-    gsap.set(metaRef.current,    { opacity: 0 });
+    // Initial states
+    gsap.set(logoRef.current,     { opacity: 0, y: 20 });
+    gsap.set(taglineRef.current,  { opacity: 0, y: 24 });
+    gsap.set(ctaRef.current,      { opacity: 0, y: 16 });
+    gsap.set(metaRef.current,     { opacity: 0 });
 
-    const tl = gsap.timeline({ delay: 0.2 });
-
-    // Logo slides up + fades in
-    tl.to(logo, {
-      opacity:  1,
-      y:        0,
-      duration: 1.0,
-      ease:     "power3.out",
-    });
-
-    // Tagline
-    tl.to(taglineRef.current, {
-      opacity:  1,
-      y:        0,
-      duration: 0.65,
-      ease:     "power2.out",
-    }, "-=0.35");
-
-    // CTA
-    tl.to(ctaRef.current, {
-      opacity:  1,
-      y:        0,
-      duration: 0.5,
-      ease:     "power2.out",
-    }, "-=0.45");
-
-    // Meta bottom-right
-    tl.to(metaRef.current, {
-      opacity:  1,
-      duration: 0.4,
-    }, "-=0.45");
+    // Pour sound — fire on hero entrance if sound is on
+    if (!muted) {
+      gsap.delayedCall(1.6, () => play("pour"));
+    }
   }, { scope: containerRef, dependencies: [muted] });
+
+  // Triggered when ScrambleText finishes — cross-fade text out, logo image in
+  const onScrambleComplete = () => {
+    setScrambleDone(true);
+    const tl = gsap.timeline();
+    tl.to(scrambleRef.current, {
+      opacity: 0,
+      duration: 0.4,
+      ease: "power2.out",
+    });
+    tl.to(logoRef.current, {
+      opacity: 1,
+      y: 0,
+      duration: 0.7,
+      ease: "power3.out",
+    }, "-=0.15");
+    tl.to(taglineRef.current, {
+      opacity: 1, y: 0,
+      duration: 0.65, ease: "power2.out",
+    }, "-=0.3");
+    tl.to(ctaRef.current, {
+      opacity: 1, y: 0,
+      duration: 0.5, ease: "power2.out",
+    }, "-=0.45");
+    tl.to(metaRef.current, {
+      opacity: 1, duration: 0.4,
+    }, "-=0.45");
+  };
 
   return (
     <section
@@ -96,28 +115,69 @@ export function Hero() {
         </p>
       </div>
 
-      {/* ── Main content — Centered ──────────────────────────────────── */}
+      {/* ── Main content — centred ──────────────────────────────────── */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center">
 
         <div
-          className="flex flex-col items-center justify-center gap-8 md:gap-10 py-12 md:py-20"
+          className="flex flex-col items-center justify-center gap-8 md:gap-10 py-12 md:py-20 w-full"
           style={{ paddingInline: "var(--pad-x)" }}
         >
-          {/* Logo image — large, centered */}
+          {/*
+            Logo slot — there are two overlaid layers:
+              1. ScrambleText (visible during entrance, then fades out)
+              2. dtlogo PNG (the real logo, fades in after scramble)
+
+            The PNG slot also carries data-morph-anchor="hero" — this is what
+            MorphingLogo reads to know where the big logo lives.
+          */}
           <div
-            ref={logoRef}
-            className="overflow-hidden flex justify-center"
+            className="relative flex justify-center w-full"
+            style={{ maxWidth: "clamp(280px, 60vw, 720px)" }}
           >
-            <Image
-              src="/dtlogo-cropped.png"
-              alt="Drip Theka"
-              width={1412}
-              height={564}
-              priority
-              draggable={false}
-              className="select-none pointer-events-none w-full h-auto"
-              style={{ maxWidth: "clamp(280px, 60vw, 720px)" }}
-            />
+            {/* Scramble text — visible first */}
+            {!alreadyPlayed && !scrambleDone && (
+              <div
+                ref={scrambleRef}
+                className="absolute inset-0 flex items-center justify-center"
+                style={{ minHeight: "clamp(80px, 16vw, 200px)" }}
+              >
+                <ScrambleText
+                  text="DRIP THEKA"
+                  duration={1300}
+                  stagger={60}
+                  speed={40}
+                  onComplete={onScrambleComplete}
+                  className="font-display font-bold italic text-[#E4E2DD] whitespace-nowrap"
+                  style={{
+                    fontSize: "clamp(2.5rem, 8vw, 6.5rem)",
+                    letterSpacing: "0.01em",
+                    lineHeight: 0.9,
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Logo image — the morph anchor. Always rendered (invisible on first
+                visit until scramble finishes, then crosses in). */}
+            <div
+              ref={logoRef}
+              data-morph-anchor="hero"
+              className="flex justify-center w-full"
+              style={{
+                aspectRatio: "1412 / 564",
+                opacity: alreadyPlayed ? 1 : 0,
+              }}
+            >
+              <Image
+                src="/dtlogo-cropped.png"
+                alt="Drip Theka"
+                width={1412}
+                height={564}
+                priority
+                draggable={false}
+                className="select-none pointer-events-none w-full h-auto"
+              />
+            </div>
           </div>
 
           {/* Tagline */}

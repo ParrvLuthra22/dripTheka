@@ -1,12 +1,12 @@
 "use client";
 
-// Footer — ink background, cream text.
-// Massive stroked-outline wordmark parallaxes on scroll.
+// Footer — cinematic video header + 4-col grid.
+// /videos/follow.mp4 plays muted/looped at the top, with the brand mark
+// overlaid. Below: 4-column link grid. Bottom: legal bar.
 
 import { useRef } from "react";
-import Link from "next/link";
-import { motion, useScroll, useTransform } from "framer-motion";
-import { BrandLogo } from "@/components/glass/BrandLogo";
+import Link  from "next/link";
+import Image from "next/image";
 
 const POURS = [
   { label: "Pour #001 — The First Round", href: "/pour/pour-001" },
@@ -16,73 +16,102 @@ const POURS = [
 const BRAND = [
   { label: "The Story",   href: "/story" },
   { label: "Building",    href: "/building" },
-  { label: "Last Call",   href: "/regulars" }, // Theka: newsletter = Last Call
+  { label: "Last Call",   href: "/regulars" },
 ];
 
 const CONNECT = [
-  { label: "@driptheka",        href: "#" },
+  { label: "@driptheka",            href: "#" },
   { label: "Regulars early access", href: "/regulars" },
 ];
 
 export function Footer() {
   const ref = useRef<HTMLElement>(null);
 
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "end end"],
-  });
-
-  // Wordmark drifts upward as footer scrolls into view — parallax effect
-  const wordmarkY = useTransform(scrollYProgress, [0, 1], ["6%", "-8%"]);
-
   return (
-    <footer ref={ref} data-nav-tone="light" className="bg-[--ink] text-[--cream] overflow-hidden relative">
-
-      {/* ── Massive stroked wordmark ──────────────────────────────────────── */}
+    <footer
+      ref={ref}
+      data-nav-tone="light"
+      className="bg-[--ink] text-[--cream] overflow-hidden relative"
+    >
+      {/* ── Cinematic video header ─────────────────────────────────────
+           /videos/follow.mp4 plays muted+looped as a brand "outro" moment.
+           Logo overlaid in the centre — large, semi-transparent.            */}
       <div
-        className="relative overflow-hidden select-none pointer-events-none w-full"
-        aria-hidden="true"
-        style={{ paddingBlockStart: "clamp(2.5rem, 4vw, 5rem)", paddingBlockEnd: "0.5rem" }}
+        className="relative w-full overflow-hidden"
+        style={{ height: "clamp(280px, 50vh, 600px)" }}
       >
-        <motion.p
+        <video
+          src="/videos/follow.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          className="absolute inset-0 w-full h-full object-cover"
           style={{
-            y:                    wordmarkY,
-            fontSize:             "clamp(80px, 18vw, 320px)",
-            WebkitTextStroke:     "1px rgba(228,226,221,0.2)",
-            color:                "transparent",
-            fontFamily:           "var(--font-display, serif)",
-            fontStyle:            "italic",
-            fontWeight:           600,
-            lineHeight:           0.9,
-            letterSpacing:        "-0.03em",
-            whiteSpace:           "nowrap",
-            willChange:           "transform",
-            paddingInline:        "var(--pad-x)",
+            // Slight cream-tinted darkening so the logo reads
+            filter: "brightness(0.55) saturate(1.05)",
           }}
-        >
-          drip theka
-        </motion.p>
+        />
+
+        {/* Vignette */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "linear-gradient(to bottom, rgba(20,21,24,0.35) 0%, rgba(20,21,24,0) 30%, rgba(20,21,24,0) 70%, rgba(20,21,24,0.85) 100%)",
+          }}
+        />
+
+        {/* Brand mark overlay */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <Image
+            src="/dtlogo-cropped.png"
+            alt="Drip Theka"
+            width={1412}
+            height={564}
+            draggable={false}
+            className="select-none"
+            style={{
+              maxWidth: "min(72%, 720px)",
+              height:   "auto",
+              opacity:  0.95,
+              mixBlendMode: "lighten",
+            }}
+          />
+        </div>
+
+        {/* Bottom-left small eyebrow */}
+        <p className="absolute bottom-5 left-6 font-mono text-[9px] uppercase tracking-[0.18em] text-[--cream]/60 select-none">
+          Follow&nbsp;·&nbsp;@driptheka
+        </p>
+
+        {/* Bottom-right small eyebrow */}
+        <p className="absolute bottom-5 right-6 font-mono text-[9px] uppercase tracking-[0.18em] text-[--cream]/60 select-none">
+          Made in Delhi
+        </p>
       </div>
 
-      {/* ── Four-column grid ─────────────────────────────────────────── */}
+      {/* ── Four-column grid ───────────────────────────────────────── */}
       <div
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-16"
         style={{
           paddingInline:    "var(--pad-x)",
-          paddingBlockStart: "clamp(2.5rem, 5vw, 4rem)",
+          paddingBlockStart: "clamp(3rem, 5vw, 5rem)",
           paddingBlockEnd:   "2.5rem",
         }}
       >
-        {/* Col 1 — The Manifesto */}
+        {/* Col 1 — Manifesto */}
         <div className="flex flex-col gap-5">
-          <Link href="/" className="w-fit group hover:opacity-70 transition-opacity duration-200" data-hover>
-            <BrandLogo size="sm" />
-          </Link>
-          <p className="font-sans text-sm text-[--cream]/50 leading-relaxed max-w-[220px]">
+          <p
+            className="font-display italic font-bold leading-tight text-[--cream] max-w-[260px]"
+            style={{ fontSize: "clamp(1.3rem, 1.8vw, 1.7rem)" }}
+          >
             The actual product is belonging.
           </p>
-          <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--cream]/20">
-            Est. 2024 · Delhi
+          <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--cream]/30">
+            Est. MMXXVI · Delhi
           </p>
         </div>
 
@@ -108,9 +137,8 @@ export function Footer() {
                 </Link>
               </li>
             ))}
-            {/* Theka Language: no "Restock" — it's "Refill" */}
             <li>
-              <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-[--blue]/60">
+              <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-[--blue]/70">
                 No refills. That&apos;s the point.
               </span>
             </li>
@@ -165,9 +193,8 @@ export function Footer() {
             ))}
           </ul>
 
-          {/* Deposit reminder */}
           <div className="mt-2 border border-[--cream]/10 p-3">
-            <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-[--cream]/30 leading-relaxed">
+            <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-[--cream]/40 leading-relaxed">
               30% now · 70% when it ships
             </p>
           </div>
@@ -180,12 +207,10 @@ export function Footer() {
           className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-5"
           style={{ paddingInline: "var(--pad-x)" }}
         >
-          {/* Left */}
           <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-[--cream]/20">
             © 2026 Drip Theka&nbsp;·&nbsp;Made in Delhi&nbsp;·&nbsp;Pour #001 / V1.0
           </p>
 
-          {/* Right — legal links */}
           <nav
             aria-label="Legal"
             className="flex items-center gap-4 font-mono text-[9px] uppercase tracking-[0.12em] text-[--cream]/20"
