@@ -66,6 +66,7 @@ export function JoinRegulars() {
 
   return (
     <section
+      data-nav-tone="light"
       className="py-20 md:py-32 overflow-hidden"
       style={{ backgroundColor: "#004AAD" }}
       aria-labelledby="regulars-heading"

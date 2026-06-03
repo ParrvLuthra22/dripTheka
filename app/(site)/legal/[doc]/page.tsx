@@ -25,7 +25,7 @@ export default async function LegalDocPage({ params }: Props) {
   if (!document) notFound();
 
   return (
-    <div className="bg-[--cream] min-h-screen">
+    <div data-nav-tone="dark" className="bg-[--cream] min-h-screen">
 
       {/* Header */}
       <header

@@ -19,6 +19,7 @@ export function PreFooterWordmark() {
   return (
     <section
       ref={ref}
+      data-nav-tone="dark"
       className="bg-[--cream] overflow-hidden"
       aria-hidden="true"
     >

@@ -104,7 +104,7 @@ export default function CartPage() {
   const empty = items.length === 0;
 
   return (
-    <div className="bg-[--cream] min-h-screen">
+    <div data-nav-tone="dark" className="bg-[--cream] min-h-screen">
 
       {/* ── Hero pint glass — layoutId="cart-glass" morphs from floating ── */}
       <div className="flex flex-col items-center justify-center py-10 bg-[--cream] border-b border-[--ink]/8">

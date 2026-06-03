@@ -22,7 +22,7 @@ export default function BuildingIndexPage() {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   return (
-    <div className="bg-[--cream] min-h-screen">
+    <div data-nav-tone="dark" className="bg-[--cream] min-h-screen">
       {/* Header */}
       <header
         className="py-16 md:py-24 border-b border-[--ink]/8"

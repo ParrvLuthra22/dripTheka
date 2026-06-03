@@ -141,6 +141,7 @@ export function FillBar() {
   return (
     <section
       ref={sectionRef}
+      data-nav-tone="dark"
       className="bg-[--cream] py-16 md:py-20"
       style={{ paddingInline: "var(--pad-x)" }}
       aria-label="Reservation fill level"

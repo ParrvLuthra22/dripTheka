@@ -33,7 +33,7 @@ export function SuccessClient({ orderId, deposit, balance, dropStr }: SuccessCli
   }, []);
 
   return (
-    <div className="min-h-screen bg-[--blue] flex flex-col items-center justify-center relative overflow-hidden py-20"
+    <div data-nav-tone="light" className="min-h-screen bg-[--blue] flex flex-col items-center justify-center relative overflow-hidden py-20"
       style={{ paddingInline: "var(--pad-x)" }}>
 
       {/* ── Single foam bubble — drifts up, pops at top ──────────────── */}

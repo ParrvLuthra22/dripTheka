@@ -6,7 +6,7 @@
 import { useRef } from "react";
 import Link from "next/link";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { WineGlassMark } from "@/components/glass/WineGlassMark";
+import { BrandLogo } from "@/components/glass/BrandLogo";
 
 const POURS = [
   { label: "Pour #001 — The First Round", href: "/pour/pour-001" },
@@ -36,7 +36,7 @@ export function Footer() {
   const wordmarkY = useTransform(scrollYProgress, [0, 1], ["6%", "-8%"]);
 
   return (
-    <footer ref={ref} className="bg-[--ink] text-[--cream] overflow-hidden relative">
+    <footer ref={ref} data-nav-tone="light" className="bg-[--ink] text-[--cream] overflow-hidden relative">
 
       {/* ── Massive stroked wordmark ─────────────────────────────────── */}
       <div
@@ -75,11 +75,8 @@ export function Footer() {
       >
         {/* Col 1 — The Manifesto */}
         <div className="flex flex-col gap-5">
-          <Link href="/" className="flex items-center gap-2 group w-fit" data-hover>
-            <WineGlassMark size={18} className="text-[--cream] group-hover:opacity-60 transition-opacity" />
-            <span className="font-display italic text-base text-[--cream] group-hover:opacity-60 transition-opacity leading-none">
-              Drip Theka
-            </span>
+          <Link href="/" className="w-fit group hover:opacity-70 transition-opacity duration-200" data-hover>
+            <BrandLogo size="sm" tone="cream" />
           </Link>
           <p className="font-sans text-sm text-[--cream]/50 leading-relaxed max-w-[220px]">
             The actual product is belonging.

@@ -12,7 +12,7 @@ import { SplitReveal }   from "@/components/motion/SplitReveal";
 
 export default function StoryPage() {
   return (
-    <article className="bg-[--cream] text-[--ink]">
+    <article data-nav-tone="dark" className="bg-[--cream] text-[--ink]">
 
       {/* ═══════════════════════════════════════════ HERO ══════ */}
       <header

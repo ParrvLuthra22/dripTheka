@@ -106,6 +106,7 @@ export function PourProductGrid() {
 
   return (
     <section
+      data-nav-tone="dark"
       className="bg-[--cream] py-16 md:py-24"
       style={{ paddingInline: "var(--pad-x)" }}
       aria-label="Product grid"

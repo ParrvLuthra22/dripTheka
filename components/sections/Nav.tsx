@@ -1,37 +1,24 @@
 "use client";
 
-// Nav — fixed top, full-width, height var(--header-h).
+// Nav — fixed top, full-width.
+// Uses a section-tone detection system (data-nav-tone attribute on sections)
+// so text/icons swap colors based on whichever section is currently under
+// the header. Replaces the previous mix-blend-mode:difference approach.
 //
-// The inner content wrapper uses mix-blend-mode: difference with white text
-// so it adapts automatically to cream, cobalt, and ink section backgrounds.
-//
-// MOBILE (<= 900px):
-//   Left: WineGlassMark + wordmark
-//   Right: pint count + hamburger
-//   Hamburger opens a full-screen ink takeover via clip-path circle expansion.
-//
-// DESKTOP (> 900px):
-//   Left:   POURS / STORY / BUILDING / REGULARS
-//   Center: WineGlassMark + DRIP THEKA (absolutely centred)
-//   Right:  SOUND label + pint count
+// Hide-on-scroll-down / show-on-scroll-up with hysteresis to avoid jitter.
 
-import {
-  useEffect,
-  useRef,
-  useState,
-  useCallback,
-} from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { gsap } from "gsap";
 
-import { WineGlassMark } from "@/components/glass/WineGlassMark";
-import { PintGlassNav } from "@/components/glass/PintGlass";
-import { useSoundStore } from "@/lib/store/sound";
-import { useCartStore } from "@/lib/store/cart";
+import { BrandLogo }      from "@/components/glass/BrandLogo";
+import { PintGlassNav }   from "@/components/glass/PintGlass";
+import { useSoundStore }  from "@/lib/store/sound";
+import { useCartStore }   from "@/lib/store/cart";
 
-// ── Link data ─────────────────────────────────────────────────────────────
+// ── Links ────────────────────────────────────────────────────────────────
 
 const LEFT_LINKS = [
   { label: "Pours",     href: "/pour/pour-001" },
@@ -48,30 +35,23 @@ const MOBILE_LINKS = [
   { label: "Cart",      href: "/cart" },
 ] as const;
 
-// ── NavLink with draw-underline on hover ──────────────────────────────────
+type Tone = "light" | "dark"; // light = cream text on dark bg; dark = ink text on light bg
+
+// ── NavLink with hairline-draw hover underline ────────────────────────────
 
 function NavLink({
-  href,
-  children,
-}: {
-  href: string;
-  children: React.ReactNode;
-}) {
+  href, children,
+}: { href: string; children: React.ReactNode }) {
   const lineRef = useRef<HTMLSpanElement>(null);
 
   const enter = () =>
     gsap.to(lineRef.current, {
-      scaleX: 1,
-      duration: 0.28,
-      ease: "power2.out",
+      scaleX: 1, duration: 0.28, ease: "power2.out",
       transformOrigin: "left center",
     });
-
   const leave = () =>
     gsap.to(lineRef.current, {
-      scaleX: 0,
-      duration: 0.22,
-      ease: "power2.in",
+      scaleX: 0, duration: 0.22, ease: "power2.in",
       transformOrigin: "right center",
     });
 
@@ -81,7 +61,7 @@ function NavLink({
       data-hover
       onMouseEnter={enter}
       onMouseLeave={leave}
-      className="relative inline-flex flex-col items-start font-mono text-[10px] uppercase tracking-[0.13em] text-current"
+      className="relative inline-flex flex-col items-start font-mono text-[10px] uppercase tracking-[0.13em]"
     >
       {children}
       <span
@@ -93,7 +73,67 @@ function NavLink({
   );
 }
 
-// ── Main Nav component ────────────────────────────────────────────────────
+// ── Tone detector — reads data-nav-tone from sections ─────────────────────
+
+function useNavTone(): Tone {
+  const [tone, setTone] = useState<Tone>("dark");
+  const pathname = usePathname();
+
+  useEffect(() => {
+    // Reset to default when navigating
+    setTone("dark");
+
+    // Wait one frame for the new page DOM to mount
+    const raf = requestAnimationFrame(() => {
+      // Header height in px (matches --header-h in CSS)
+      const HEADER_H = 84;
+      // Sample point: just below the nav at horizontal middle
+      const sampleY = HEADER_H + 4;
+
+      const updateTone = () => {
+        const els = document.elementsFromPoint(window.innerWidth / 2, sampleY);
+        // Walk outward (innermost → outermost) looking for the closest
+        // element with data-nav-tone — that section's tone wins
+        for (const el of els) {
+          const t = (el as HTMLElement).dataset?.navTone;
+          if (t === "light" || t === "dark") {
+            setTone(t);
+            return;
+          }
+        }
+        setTone("dark");
+      };
+
+      updateTone();
+
+      // Update on scroll (throttled with rAF)
+      let ticking = false;
+      const onScroll = () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+          updateTone();
+          ticking = false;
+        });
+      };
+
+      window.addEventListener("scroll", onScroll, { passive: true });
+      window.addEventListener("resize", onScroll);
+
+      // Cleanup
+      return () => {
+        window.removeEventListener("scroll", onScroll);
+        window.removeEventListener("resize", onScroll);
+      };
+    });
+
+    return () => cancelAnimationFrame(raf);
+  }, [pathname]);
+
+  return tone;
+}
+
+// ── Main Nav ──────────────────────────────────────────────────────────────
 
 export function Nav() {
   const pathname  = usePathname();
@@ -102,39 +142,40 @@ export function Nav() {
   const { totalItems } = useCartStore();
   const count = totalItems();
 
-  // Scroll-hide state
+  const tone = useNavTone();
+
+  // Scroll-hide state with hysteresis (must drop > 8px to hide,
+  // rise > 4px to reveal — avoids jitter from tiny scroll movements)
   const lastY    = useRef(0);
   const isHidden = useRef(false);
+  const [scrolled, setScrolled] = useState(false);
 
   // Mobile menu
   const [menuOpen, setMenuOpen] = useState(false);
-
-  // ── Close menu on route change ──────────────────────────────────────────
   useEffect(() => { setMenuOpen(false); }, [pathname]);
 
-  // ── Scroll-hide behaviour ───────────────────────────────────────────────
+  // Scroll-hide / scroll-reveal
   useEffect(() => {
     const onScroll = () => {
       const y     = window.scrollY;
       const delta = y - lastY.current;
       lastY.current = y;
 
-      if (y < 60) {
-        // Near top — always show
+      setScrolled(y > 12);
+
+      if (y < 80) {
         if (isHidden.current) {
-          gsap.to(navRef.current, { yPercent: 0, duration: 0.4, ease: "power2.out" });
+          gsap.to(navRef.current, { yPercent: 0, duration: 0.35, ease: "power2.out" });
           isHidden.current = false;
         }
         return;
       }
 
-      if (delta > 6 && !isHidden.current) {
-        // Scrolling down → hide
-        gsap.to(navRef.current, { yPercent: -100, duration: 0.45, ease: "power2.inOut" });
+      if (delta > 8 && !isHidden.current) {
+        gsap.to(navRef.current, { yPercent: -100, duration: 0.4, ease: "power2.inOut" });
         isHidden.current = true;
       } else if (delta < -4 && isHidden.current) {
-        // Scrolling up → reveal
-        gsap.to(navRef.current, { yPercent: 0, duration: 0.4, ease: "power2.out" });
+        gsap.to(navRef.current, { yPercent: 0, duration: 0.35, ease: "power2.out" });
         isHidden.current = false;
       }
     };
@@ -143,7 +184,7 @@ export function Nav() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // ── Lock body scroll while menu is open ────────────────────────────────
+  // Body lock while mobile menu open
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
@@ -151,35 +192,39 @@ export function Nav() {
 
   const closeMenu = useCallback(() => setMenuOpen(false), []);
 
-  // ── Hamburger position for clip-path origin ─────────────────────────────
-  // Right edge of screen minus ~24px, vertically centred in the 84px header
+  // ── Tone → CSS color ────────────────────────────────────────────────────
+  const textColor = tone === "light" ? "var(--cream)" : "var(--ink)";
+  // Background tint when scrolled — same tone family, slight backdrop
+  const bgClass = scrolled
+    ? tone === "light"
+      ? "bg-[--ink]/40 backdrop-blur-md border-b border-[--cream]/8"
+      : "bg-[--cream]/85 backdrop-blur-md border-b border-[--ink]/8"
+    : "bg-transparent border-b border-transparent";
+
   const CLIP_ORIGIN = "calc(100% - 28px) 42px";
 
   return (
     <>
-      {/* ── Fixed header ─────────────────────────────────────────────── */}
       <header
         ref={navRef}
-        style={{ height: "var(--header-h)" }}
-        className="fixed inset-x-0 top-0 z-50 pointer-events-none will-change-transform"
+        style={{
+          height: "var(--header-h)",
+          color: textColor,
+          transition: "color 0.35s ease",
+        }}
+        className={`fixed inset-x-0 top-0 z-50 pointer-events-none will-change-transform ${bgClass} transition-[background-color,border-color] duration-300`}
         role="banner"
       >
-        {/*
-          Inner wrapper: mix-blend-mode difference + white text.
-          White − cream ≈ dark  ✓
-          White − ink  ≈ light  ✓
-          White − cobalt ≈ gold  (intentional brand moment)
-        */}
         <div
-          className="pointer-events-auto h-full text-white [mix-blend-mode:difference] [isolation:isolate]"
+          className="pointer-events-auto h-full"
         >
           <div
             className="h-full flex items-center justify-between"
             style={{ paddingInline: "var(--pad-x)" }}
           >
-            {/* ── LEFT: desktop links / mobile logo ────────────────── */}
+            {/* ── LEFT ──────────────────────────────────────────────── */}
             <div className="flex items-center">
-              {/* Desktop left links */}
+              {/* Desktop links */}
               <nav
                 className="hidden min-[900px]:flex items-center gap-8"
                 aria-label="Primary navigation"
@@ -191,44 +236,34 @@ export function Nav() {
                 ))}
               </nav>
 
-              {/* Mobile logo (visible < 900px) */}
+              {/* Mobile small logo — replaces the duplicated wordmark */}
               <Link
                 href="/"
                 data-hover
-                className="flex min-[900px]:hidden items-center gap-2"
+                className="flex min-[900px]:hidden items-center"
                 aria-label="Drip Theka home"
               >
-                <WineGlassMark size={20} className="text-current" />
-                <span className="font-display italic text-lg leading-none font-semibold tracking-tight">
-                  Drip Theka
-                </span>
+                <BrandLogo size="sm" tone={tone === "light" ? "cream" : "ink"} />
               </Link>
             </div>
 
-            {/* ── CENTER: logo lockup (desktop, absolutely centred) ─── */}
+            {/* ── CENTER (desktop only) ─────────────────────────────── */}
             <Link
               href="/"
               data-hover
               aria-label="Drip Theka home"
-              className="hidden min-[900px]:flex absolute left-1/2 -translate-x-1/2 items-center gap-2.5 group"
+              className="hidden min-[900px]:flex absolute left-1/2 -translate-x-1/2 items-center group hover:opacity-80 transition-opacity duration-200"
             >
-              <WineGlassMark
-                size={22}
-                className="text-current group-hover:opacity-70 transition-opacity duration-200"
-              />
-              <span className="font-display italic text-xl font-semibold tracking-tight leading-none">
-                Drip Theka
-              </span>
+              <BrandLogo size="md" tone={tone === "light" ? "cream" : "ink"} priority />
             </Link>
 
-            {/* ── RIGHT: controls ──────────────────────────────────── */}
+            {/* ── RIGHT ─────────────────────────────────────────────── */}
             <div className="flex items-center gap-5">
-              {/* Sound toggle label (desktop) */}
               <button
                 onClick={toggleSound}
                 aria-pressed={!muted}
                 data-hover
-                className="hidden min-[900px]:flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-current hover:opacity-70 transition-opacity"
+                className="hidden min-[900px]:flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.14em] hover:opacity-70 transition-opacity"
               >
                 <span
                   aria-hidden="true"
@@ -238,17 +273,16 @@ export function Nav() {
                 Sound&nbsp;·&nbsp;{muted ? "Off" : "On"}
               </button>
 
-              {/* Pint count (desktop: number only — the floating glass is the visual) */}
-              <span className="hidden min-[900px]:flex font-mono text-[9px] uppercase tracking-[0.14em] text-current">
+              <span className="hidden min-[900px]:flex font-mono text-[9px] uppercase tracking-[0.14em]">
                 {count > 0 && `${count} item${count !== 1 ? "s" : ""}`}
               </span>
 
-              {/* Mobile: PintGlassNav icon (< 900px) */}
-              <div className="min-[900px]:hidden [mix-blend-mode:normal] [color:var(--ink)]">
+              {/* Mobile pint glass icon */}
+              <div className="min-[900px]:hidden">
                 <PintGlassNav />
               </div>
 
-              {/* Hamburger (mobile) */}
+              {/* Hamburger */}
               <button
                 onClick={() => setMenuOpen((v) => !v)}
                 aria-label={menuOpen ? "Close menu" : "Open menu"}
@@ -258,9 +292,7 @@ export function Nav() {
               >
                 <span
                   className="block h-px w-full bg-current transition-transform duration-300 origin-center"
-                  style={{
-                    transform: menuOpen ? "translateY(6px) rotate(45deg)" : "none",
-                  }}
+                  style={{ transform: menuOpen ? "translateY(6px) rotate(45deg)" : "none" }}
                 />
                 <span
                   className="block h-px w-full bg-current transition-opacity duration-300"
@@ -268,9 +300,7 @@ export function Nav() {
                 />
                 <span
                   className="block h-px w-full bg-current transition-transform duration-300 origin-center"
-                  style={{
-                    transform: menuOpen ? "translateY(-6px) rotate(-45deg)" : "none",
-                  }}
+                  style={{ transform: menuOpen ? "translateY(-6px) rotate(-45deg)" : "none" }}
                 />
               </button>
             </div>
@@ -278,9 +308,7 @@ export function Nav() {
         </div>
       </header>
 
-      {/* ── Mobile full-screen menu ─────────────────────────────────────
-           Rendered OUTSIDE the blend-mode wrapper so its ink background
-           is not colour-inverted. Uses clip-path circle from hamburger. */}
+      {/* ── Mobile menu ─────────────────────────────────────────────── */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
@@ -292,7 +320,6 @@ export function Nav() {
             className="fixed inset-0 z-40 bg-[--ink] flex flex-col justify-center min-[900px]:hidden"
             style={{ paddingInline: "var(--pad-x)" }}
           >
-            {/* Close button (top-right) */}
             <button
               onClick={closeMenu}
               aria-label="Close menu"
@@ -303,7 +330,6 @@ export function Nav() {
               </svg>
             </button>
 
-            {/* Links */}
             <nav aria-label="Mobile navigation">
               <ul className="flex flex-col gap-2">
                 {MOBILE_LINKS.map(({ label, href }, i) => (
@@ -327,7 +353,6 @@ export function Nav() {
               </ul>
             </nav>
 
-            {/* Bottom bar in mobile menu */}
             <div className="absolute bottom-8 left-0 right-0 px-6 flex items-center justify-between">
               <button
                 onClick={toggleSound}

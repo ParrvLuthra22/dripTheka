@@ -257,7 +257,7 @@ export default function CheckoutPage() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="bg-[--cream] min-h-screen py-12 md:py-20" style={{ paddingInline: "var(--pad-x)" }}>
+    <div data-nav-tone="dark" className="bg-[--cream] min-h-screen py-12 md:py-20" style={{ paddingInline: "var(--pad-x)" }}>
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-12 lg:gap-20">
 
         {/* LEFT — form */}

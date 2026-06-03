@@ -62,6 +62,7 @@ export function PourHeroStrip() {
   return (
     <section
       ref={containerRef}
+      data-nav-tone="light"
       className="relative flex flex-col justify-between overflow-hidden"
       style={{ backgroundColor: "#004AAD", minHeight: "50vh", paddingInline: "var(--pad-x)" }}
       aria-label={`Pour #${POUR_001.number} — ${POUR_001.title}`}

@@ -1,17 +1,18 @@
 // (site) layout — wraps every public-facing page.
 //
 // Provider order (innermost first):
-//   SoundProvider → global Howler + sound state
-//   SmoothScroll  → Lenis + GSAP ScrollTrigger shared ticker
+//   SoundProvider  → global Howler + sound state
+//   SmoothScroll   → Lenis + GSAP ScrollTrigger shared ticker
 //   PourTransition → cream overlay on route changes
-//   Nav           → fixed top, mix-blend difference
-//   main          → page content
-//   Footer        → ink background, parallax wordmark
+//   Nav            → fixed top, theme-aware tone detection
+//   main           → page content
+//   Footer         → ink background, parallax wordmark
 //
-// Fixed/global overlays (not inside scroll container):
-//   PintGlass     → cart indicator, desktop only (fixed bottom-right)
-//   SoundToggle   → bottom-left, mix-blend difference
-//   Cursor        → custom dot + ring, desktop only
+// Fixed/global overlays:
+//   PintGlass      → cart indicator, desktop only
+//   SoundToggle    → bottom-left
+//   Cursor         → custom dot + ring, desktop only
+//   LoadingScreen  → fullscreen brand intro, once per session
 
 import { SmoothScroll }    from "@/components/motion/SmoothScroll";
 import { SoundProvider }   from "@/components/sound/SoundProvider";
@@ -21,6 +22,7 @@ import { Footer }          from "@/components/sections/Footer";
 import { PintGlass }       from "@/components/glass/PintGlass";
 import { PourTransition }  from "@/components/transitions/PourTransition";
 import { Cursor }          from "@/components/ui/Cursor";
+import { LoadingScreen }   from "@/components/layout/LoadingScreen";
 
 export default function SiteLayout({
   children,
@@ -30,7 +32,6 @@ export default function SiteLayout({
   return (
     <SoundProvider>
       <SmoothScroll>
-        {/* Pour-in / pour-out overlay sits above everything */}
         <PourTransition>
           <Nav />
 
@@ -42,10 +43,13 @@ export default function SiteLayout({
         </PourTransition>
       </SmoothScroll>
 
-      {/* Fixed global chrome — outside scroll container so Lenis doesn't affect them */}
+      {/* Fixed global chrome */}
       <PintGlass />
       <SoundToggle />
       <Cursor />
+
+      {/* First-session brand intro — sits above everything (z-200) */}
+      <LoadingScreen />
     </SoundProvider>
   );
 }

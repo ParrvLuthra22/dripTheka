@@ -82,7 +82,7 @@ export default function NotFound() {
   }, []);
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden" style={{ backgroundColor: "#004AAD" }}>
+    <div data-nav-tone="light" className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden" style={{ backgroundColor: "#004AAD" }}>
 
       {/* Tipped pint + foam */}
       <motion.div

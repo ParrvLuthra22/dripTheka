@@ -111,6 +111,7 @@ export function BuildingTeaser() {
   return (
     <section
       ref={sectionRef}
+      data-nav-tone="dark"
       className="bg-[--cream] overflow-hidden"
       aria-labelledby="building-heading"
     >

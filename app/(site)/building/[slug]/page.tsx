@@ -41,7 +41,7 @@ export default async function BuildingPostPage({ params }: Props) {
   const paragraphs = post.body.split(/\n\n+/).filter(Boolean);
 
   return (
-    <article className="bg-[--cream] text-[--ink] min-h-screen">
+    <article data-nav-tone="dark" className="bg-[--cream] text-[--ink] min-h-screen">
 
       {/* Header */}
       <header

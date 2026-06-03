@@ -48,6 +48,7 @@ function RichText({ segments }: { segments: readonly Segment[] }) {
 export function StoryTeaser() {
   return (
     <section
+      data-nav-tone="dark"
       className="bg-[--cream] py-20 md:py-32"
       aria-labelledby="story-heading"
     >
