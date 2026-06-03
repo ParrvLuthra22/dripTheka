@@ -26,14 +26,14 @@ export function PreFooterWordmark() {
       <motion.p
         style={{
           y,
-          fontSize:             "clamp(4rem, 30vw, 28rem)",
-          WebkitTextStroke:     "1px rgba(20,21,24,0.18)",
+          fontSize:             "clamp(3rem, 15vw, 14rem)",
+          WebkitTextStroke:     "1.5px var(--ink)",
           color:                "transparent",
           fontFamily:           "var(--font-display, serif)",
-          fontStyle:            "italic",
-          fontWeight:           600,
+          fontWeight:           400,
           lineHeight:           0.85,
-          letterSpacing:        "-0.03em",
+          letterSpacing:        "0.02em",
+          textTransform:        "uppercase",
           whiteSpace:           "nowrap",
           userSelect:           "none",
           willChange:           "transform",
@@ -41,7 +41,7 @@ export function PreFooterWordmark() {
           paddingBlock:         "clamp(2rem, 4vw, 4rem)",
         }}
       >
-        drip theka
+        DRIP THEKA
       </motion.p>
     </section>
   );

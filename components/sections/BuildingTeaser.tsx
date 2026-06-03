@@ -27,45 +27,36 @@ function JournalCard({ post, index }: { post: (typeof BUILDING_POSTS)[number]; i
     <Link
       href={`/building/${post.slug}`}
       data-hover
-      className={[
-        "group block shrink-0",
-        "w-[min(80vw,360px)] md:w-[360px]",
-        "bg-[--ink] p-8",
-        "transition-transform duration-300 hover:-translate-y-2",
-        "relative overflow-hidden",
-      ].join(" ")}
+      className="group block shrink-0 w-[min(80vw,360px)] md:w-[360px] bg-white p-8 border-4 border-black shadow-[8px_8px_0_0_#141518] hover:shadow-[0px_0px_0_0_#141518] hover:translate-x-2 hover:translate-y-2 transition-all duration-200 relative"
       aria-label={`Read: ${post.title}`}
     >
-      {/* Date */}
-      <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--cream]/30 mb-4">
-        {formatDate(post.date)}
-      </p>
+      {/* Top Header Row */}
+      <div className="flex justify-between items-start mb-6">
+        <p className="font-mono text-[10px] font-bold uppercase tracking-[0.1em] text-black">
+          {formatDate(post.date)}
+        </p>
+        <span className="font-mono text-xl font-bold text-black leading-none">
+          #{String(index + 1).padStart(2, "0")}
+        </span>
+      </div>
 
       {/* Title */}
       <h3
-        className="font-display italic text-[--cream] leading-tight mb-4"
-        style={{ fontSize: "clamp(1.4rem, 2.2vw, 1.8rem)" }}
+        className="font-display text-black uppercase leading-tight mb-4"
+        style={{ fontSize: "clamp(1.5rem, 2vw, 2rem)" }}
       >
         {post.title}
       </h3>
 
       {/* Peek on hover */}
-      <p className="font-sans text-sm text-[--cream]/40 leading-relaxed line-clamp-3 transition-all duration-300 opacity-0 group-hover:opacity-100 max-h-0 group-hover:max-h-40 overflow-hidden">
+      <p className="font-sans text-sm text-black/70 leading-relaxed line-clamp-3 transition-all duration-300 opacity-0 group-hover:opacity-100 max-h-0 group-hover:max-h-40 overflow-hidden">
         {post.excerpt}
       </p>
 
       {/* Arrow */}
-      <div className="absolute bottom-6 right-6 font-mono text-[9px] text-[--blue] uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-        Read →
+      <div className="absolute bottom-6 right-6 font-mono text-xs font-bold text-[--neon] uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity duration-200 drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">
+        READ →
       </div>
-
-      {/* Index number */}
-      <span
-        className="absolute top-5 right-6 font-mono text-[60px] text-[--cream]/5 leading-none select-none pointer-events-none"
-        aria-hidden="true"
-      >
-        {String(index + 1).padStart(2, "0")}
-      </span>
     </Link>
   );
 }
@@ -74,45 +65,11 @@ export function BuildingTeaser() {
   const sectionRef = useRef<HTMLElement>(null);
   const trackRef   = useRef<HTMLDivElement>(null);
 
-  useGSAP(() => {
-    const section = sectionRef.current;
-    const track   = trackRef.current;
-    if (!section || !track) return;
-
-    // Only pin on desktop — mobile uses native scroll
-    const mm = gsap.matchMedia();
-
-    mm.add("(min-width: 768px)", () => {
-      const totalScroll = track.scrollWidth - section.offsetWidth;
-
-      const tween = gsap.to(track, {
-        x:    -totalScroll,
-        ease: "none",
-        scrollTrigger: {
-          trigger:          section,
-          start:            "top top",
-          end:              () => `+=${totalScroll}`,
-          pin:              true,
-          scrub:            1.2,
-          anticipatePin:    1,
-          invalidateOnRefresh: true,
-        },
-      });
-
-      return () => {
-        tween.scrollTrigger?.kill();
-        tween.kill();
-      };
-    });
-
-    return () => mm.revert();
-  }, { scope: sectionRef });
-
   return (
     <section
       ref={sectionRef}
       data-nav-tone="dark"
-      className="bg-[--cream] overflow-hidden"
+      className="bg-[--cream] overflow-hidden relative isolate"
       aria-labelledby="building-heading"
     >
       <div
@@ -135,19 +92,16 @@ export function BuildingTeaser() {
         </Reveal>
 
         {/*
-          Desktop: horizontal track — GSAP moves it on scroll.
-          Mobile: native horizontal scroll with snap.
+          Native horizontal scroll with snap for all devices.
         */}
         <div
           ref={trackRef}
           className={[
-            /* Mobile: standard flex scroll */
             "flex gap-5 pb-4",
-            "overflow-x-auto md:overflow-x-visible",
-            "snap-x snap-mandatory md:snap-none",
+            "overflow-x-auto",
+            "snap-x snap-mandatory",
             "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-            /* Desktop: wide track with padding-right for last card reveal */
-            "md:pr-[var(--pad-x)]",
+            "pr-[var(--pad-x)]",
           ].join(" ")}
         >
           {BUILDING_POSTS.map((post, i) => (

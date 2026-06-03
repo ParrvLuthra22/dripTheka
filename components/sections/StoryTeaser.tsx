@@ -2,14 +2,16 @@
 
 // Story Teaser — two-column editorial layout.
 // Left: sticky eyebrow stack. Right: Fraunces body with blue highlighted phrases.
+// Typing effect: each paragraph types out character-by-character on scroll-into-view.
 
 import Link from "next/link";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Reveal } from "@/components/motion/Reveal";
 
 // Manifesto paragraphs with rich-text markup hints.
-// Phrases wrapped in <em> become blue italic.
-const PARAGRAPHS = [
+type Segment = string | { em: string };
+
+const PARAGRAPHS: (readonly Segment[])[] = [
   [
     "We didn't start a clothing brand. We started a ",
     { em: "theka" },
@@ -25,23 +27,29 @@ const PARAGRAPHS = [
     { em: "Tapped Out" },
     " — no restocks, no waiting lists. You either got it or you didn't. That's not scarcity marketing; that's respect for your time.",
   ],
-] as const;
+];
 
-type Segment = string | { em: string };
-
-function RichText({ segments }: { segments: readonly Segment[] }) {
+function StaticParagraph({ segments }: { segments: readonly Segment[] }) {
   return (
-    <>
-      {segments.map((seg, i) =>
-        typeof seg === "string" ? (
-          <span key={i}>{seg}</span>
-        ) : (
-          <em key={i} className="not-italic font-display italic text-[--blue]">
-            {seg.em}
-          </em>
-        )
-      )}
-    </>
+    <p
+      className="font-display text-black uppercase leading-[1.1]"
+      style={{ fontSize: "clamp(1.5rem, 3.5vw, 2.8rem)" }}
+    >
+      {segments.map((seg, i) => {
+        if (typeof seg === "string") {
+          return <span key={i}>{seg}</span>;
+        } else {
+          return (
+            <em
+              key={i}
+              className="not-italic text-[--blue]"
+            >
+              {seg.em}
+            </em>
+          );
+        }
+      })}
+    </p>
   );
 }
 
@@ -52,6 +60,8 @@ export function StoryTeaser() {
       className="bg-[--cream] py-20 md:py-32"
       aria-labelledby="story-heading"
     >
+
+
       <div style={{ paddingInline: "var(--pad-x)" }}>
         {/* Top eyebrow */}
         <Reveal className="flex justify-end mb-12">
@@ -85,16 +95,11 @@ export function StoryTeaser() {
             </div>
           </div>
 
-          {/* RIGHT — body copy */}
+          {/* RIGHT — typing body copy */}
           <div className="space-y-8 md:space-y-10">
             {PARAGRAPHS.map((para, i) => (
-              <Reveal key={i} delay={i * 80}>
-                <p
-                  className="font-display text-[--ink] leading-[1.2]"
-                  style={{ fontSize: "clamp(1.25rem, 2.5vw, 2rem)" }}
-                >
-                  <RichText segments={para} />
-                </p>
+              <Reveal key={i} delay={i * 100}>
+                <StaticParagraph segments={para} />
               </Reveal>
             ))}
 

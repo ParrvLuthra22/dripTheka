@@ -11,9 +11,10 @@
   --color-cream-warm: var(--cream-warm);
   --color-ink:        var(--ink);
   --color-ink-soft:   var(--ink-soft);
+  --color-neon:       var(--neon);
 
   /* Fonts */
-  --font-display: var(--font-fraunces), "Georgia", serif;
+  --font-display: var(--font-anton), "Impact", sans-serif;
   --font-mono:    var(--font-jetbrains), "Courier New", monospace;
   --font-sans:    var(--font-geist), system-ui, sans-serif;
 
@@ -36,6 +37,7 @@
   --cream-warm:  #EFEAD8;
   --ink:         #141518;
   --ink-soft:    #2A2B2F;
+  --neon:        #CCFF00;
 
   /* Layout */
   --container: 1440px;
@@ -111,29 +113,29 @@
 /* ─── Typography scale ───────────────────────────────────────────────────── */
 
 @layer base {
-  /* Display — Fraunces italic-forward */
+  /* Display — Anton brutalist */
   .type-display-xl {
     font-family: var(--font-display);
-    font-style: italic;
+    text-transform: uppercase;
     font-size: clamp(3.5rem, 8vw, 7rem);
     line-height: 0.92;
-    letter-spacing: -0.03em;
+    letter-spacing: 0.02em;
   }
 
   .type-display-lg {
     font-family: var(--font-display);
-    font-style: italic;
+    text-transform: uppercase;
     font-size: clamp(2.5rem, 5vw, 4.5rem);
     line-height: 0.95;
-    letter-spacing: -0.025em;
+    letter-spacing: 0.02em;
   }
 
   .type-display-md {
     font-family: var(--font-display);
-    font-style: italic;
+    text-transform: uppercase;
     font-size: clamp(1.75rem, 3vw, 2.75rem);
     line-height: 1.05;
-    letter-spacing: -0.02em;
+    letter-spacing: 0.02em;
   }
 
   /* Mono — JetBrains labels, prices, tags */

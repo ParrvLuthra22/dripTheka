@@ -7,7 +7,7 @@
 //
 // Hide-on-scroll-down / show-on-scroll-up with hysteresis to avoid jitter.
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
@@ -192,14 +192,12 @@ export function Nav() {
 
   const closeMenu = useCallback(() => setMenuOpen(false), []);
 
-  // ── Tone → CSS color ────────────────────────────────────────────────────
-  const textColor = tone === "light" ? "var(--cream)" : "var(--ink)";
-  // Background tint when scrolled — same tone family, slight backdrop
-  const bgClass = scrolled
-    ? tone === "light"
-      ? "bg-[--ink]/40 backdrop-blur-md border-b border-[--cream]/8"
-      : "bg-[--cream]/85 backdrop-blur-md border-b border-[--ink]/8"
-    : "bg-transparent border-b border-transparent";
+  // Navbar is always #004AAD — the brand blue. Same shade, always.
+  const textColor = "#E4E2DD";
+  const bgStyle: React.CSSProperties = {
+    backgroundColor: "#004AAD",
+    borderBottom: scrolled ? "1px solid rgba(228,226,221,0.1)" : "none",
+  };
 
   const CLIP_ORIGIN = "calc(100% - 28px) 42px";
 
@@ -210,9 +208,10 @@ export function Nav() {
         style={{
           height: "var(--header-h)",
           color: textColor,
-          transition: "color 0.35s ease",
+          transition: "background-color 0.3s ease, border-color 0.3s ease",
+          ...bgStyle,
         }}
-        className={`fixed inset-x-0 top-0 z-50 pointer-events-none will-change-transform ${bgClass} transition-[background-color,border-color] duration-300`}
+        className="fixed inset-x-0 top-0 z-50 pointer-events-none will-change-transform"
         role="banner"
       >
         <div
@@ -236,14 +235,14 @@ export function Nav() {
                 ))}
               </nav>
 
-              {/* Mobile small logo — replaces the duplicated wordmark */}
+              {/* Mobile small logo — dt icon monogram */}
               <Link
                 href="/"
                 data-hover
                 className="flex min-[900px]:hidden items-center"
                 aria-label="Drip Theka home"
               >
-                <BrandLogo size="sm" tone={tone === "light" ? "cream" : "ink"} />
+                <BrandLogo size="lg" />
               </Link>
             </div>
 
@@ -252,9 +251,9 @@ export function Nav() {
               href="/"
               data-hover
               aria-label="Drip Theka home"
-              className="hidden min-[900px]:flex absolute left-1/2 -translate-x-1/2 items-center group hover:opacity-80 transition-opacity duration-200"
+              className="hidden min-[900px]:flex absolute left-1/2 -translate-x-1/2 items-center group hover:opacity-90 transition-opacity duration-200"
             >
-              <BrandLogo size="md" tone={tone === "light" ? "cream" : "ink"} priority />
+              <BrandLogo size="xl" priority />
             </Link>
 
             {/* ── RIGHT ─────────────────────────────────────────────── */}

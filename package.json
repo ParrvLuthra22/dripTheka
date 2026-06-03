@@ -20,6 +20,8 @@
     "@next/third-parties": "^16.2.7",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
+    "@tsparticles/react": "^4.1.2",
+    "@tsparticles/slim": "^4.1.2",
     "clsx": "^2.1.1",
     "dotenv": "^17.4.2",
     "drizzle-kit": "^0.31.10",

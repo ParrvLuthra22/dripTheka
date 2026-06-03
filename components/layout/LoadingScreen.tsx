@@ -7,13 +7,12 @@
 //   • Mounts only on the first session-load
 //   • Plays video muted, playsinline, autoplay (mobile-safe)
 //   • Exits on `ended` event, on Skip click, or after 8s safety timeout
-//   • Fades out over 600ms, then unmounts
+//   • Wipes out with a smooth top-to-bottom sweep transition (1s), then unmounts
 //   • Respects prefers-reduced-motion (renders nothing)
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
-const SESSION_KEY = "dt-intro-played";
 const SAFETY_TIMEOUT_MS = 8000;
 
 export function LoadingScreen() {
@@ -24,11 +23,9 @@ export function LoadingScreen() {
   const timeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
-    // SSR safety + session check + reduced-motion respect
+    // SSR safety + reduced-motion respect
     if (typeof window === "undefined") return;
-    if (sessionStorage.getItem(SESSION_KEY)) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      sessionStorage.setItem(SESSION_KEY, "1");
       return;
     }
 
@@ -48,10 +45,9 @@ export function LoadingScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Common dismissal — flag session + start fade-out
+  // Common dismissal — start wipe-out
   const dismiss = () => {
     if (typeof window !== "undefined") {
-      sessionStorage.setItem(SESSION_KEY, "1");
       document.documentElement.style.overflow = "";
     }
     if (timeoutRef.current) {
@@ -66,9 +62,12 @@ export function LoadingScreen() {
       {visible && (
         <motion.div
           key="loading"
-          initial={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          initial={{ clipPath: "inset(0% 0% 0% 0%)" }}
+          exit={{ clipPath: "inset(0% 0% 100% 0%)" }}
+          transition={{
+            duration: 1.1,
+            ease: [0.76, 0, 0.24, 1],
+          }}
           className="fixed inset-0 z-[200] bg-[--ink] flex items-center justify-center overflow-hidden"
         >
           {/* Fullscreen video */}

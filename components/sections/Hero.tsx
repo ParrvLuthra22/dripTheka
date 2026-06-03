@@ -3,27 +3,14 @@
 // Hero — full viewport, blue background, cream type.
 // Three.js HeroPour lazy-loaded on desktop; SVG fallback on mobile.
 
-import { useRef, useEffect } from "react";
-import dynamic from "next/dynamic";
+import { useRef } from "react";
 import Link from "next/link";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
+import Image from "next/image";
 import { Button } from "@/components/ui/Button";
-import { WineGlassMark } from "@/components/glass/WineGlassMark";
-import { HeroPourFallback } from "@/components/glass/HeroPour";
 import { useSound } from "@/components/sound/SoundProvider";
-
-gsap.registerPlugin();
-
-// Three.js hero — SSR disabled, load only on desktop
-const HeroPour = dynamic(
-  () => import("@/components/glass/HeroPour").then((m) => ({ default: m.HeroPour })),
-  { ssr: false, loading: () => <HeroPourFallback /> }
-);
-
-// Split "DRIP" and "theka" into character spans for per-char GSAP animation
-const DRIP  = ["D", "R", "I", "P"];
-const THEKA = ["t", "h", "e", "k", "a"];
+import { HeroParticles } from "@/components/motion/HeroParticles";
 
 // Session key — pour animation plays once per browser session
 const SESSION_KEY = "dt-hero-played";
@@ -31,23 +18,17 @@ const SESSION_KEY = "dt-hero-played";
 export function Hero() {
   const { muted, play } = useSound();
   const containerRef  = useRef<HTMLElement>(null);
-  const dripRef       = useRef<HTMLDivElement>(null);
-  const thekaRef      = useRef<HTMLDivElement>(null);
+  const logoRef       = useRef<HTMLDivElement>(null);
   const taglineRef    = useRef<HTMLParagraphElement>(null);
   const ctaRef        = useRef<HTMLDivElement>(null);
   const metaRef       = useRef<HTMLDivElement>(null);
 
   useGSAP(() => {
-    const dripChars  = dripRef.current?.querySelectorAll(".hero-char");
-    const thekaChars = thekaRef.current?.querySelectorAll(".hero-char");
-    if (!dripChars || !thekaChars) return;
-
-    const allChars = [...Array.from(dripChars), ...Array.from(thekaChars)];
+    const logo = logoRef.current;
     const alreadyPlayed = sessionStorage.getItem(SESSION_KEY);
 
     if (alreadyPlayed) {
-      // Snap to final state — no re-animation on revisit
-      gsap.set(allChars,      { yPercent: 0, opacity: 1 });
+      gsap.set(logo,               { opacity: 1, y: 0 });
       gsap.set(taglineRef.current, { opacity: 1, y: 0 });
       gsap.set(ctaRef.current,     { opacity: 1, y: 0 });
       gsap.set(metaRef.current,    { opacity: 1 });
@@ -57,18 +38,18 @@ export function Hero() {
     sessionStorage.setItem(SESSION_KEY, "1");
 
     // Set initial hidden state
-    gsap.set(allChars,           { yPercent: 110, opacity: 1 });
+    gsap.set(logo,               { opacity: 0, y: 40 });
     gsap.set(taglineRef.current, { opacity: 0, y: 24 });
     gsap.set(ctaRef.current,     { opacity: 0, y: 16 });
     gsap.set(metaRef.current,    { opacity: 0 });
 
-    const tl = gsap.timeline({ delay: 0.25 });
+    const tl = gsap.timeline({ delay: 0.2 });
 
-    // Letters slide up
-    tl.to(allChars, {
-      yPercent: 0,
-      stagger:  0.04,
-      duration: 0.9,
+    // Logo slides up + fades in
+    tl.to(logo, {
+      opacity:  1,
+      y:        0,
+      duration: 1.0,
       ease:     "power3.out",
     });
 
@@ -108,6 +89,9 @@ export function Hero() {
       style={{ backgroundColor: "#004AAD" }}
       aria-label="Hero"
     >
+      {/* ── Particle canvas — fills the full hero section ── */}
+      <HeroParticles />
+
       {/* ── Top eyebrows ────────────────────────────────────────────── */}
       <div
         className="relative z-10 flex items-center justify-between pt-5 md:pt-7"
@@ -121,35 +105,28 @@ export function Hero() {
         </p>
       </div>
 
-      {/* ── Main grid ────────────────────────────────────────────────── */}
-      <div className="relative z-10 flex-1 grid grid-cols-1 md:grid-cols-[55%_45%] items-center">
+      {/* ── Main content — Centered ──────────────────────────────────── */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center">
 
-        {/* LEFT — text */}
         <div
-          className="flex flex-col justify-center gap-8 md:gap-10 py-12 md:py-20"
+          className="flex flex-col items-center justify-center gap-8 md:gap-10 py-12 md:py-20"
           style={{ paddingInline: "var(--pad-x)" }}
         >
-          {/* Title: DRIP / theka */}
+          {/* Logo image — large, centered */}
           <div
-            className="font-display font-semibold text-[#E4E2DD] leading-[0.85]"
-            style={{ fontSize: "clamp(72px, 18vw, 280px)" }}
+            ref={logoRef}
+            className="overflow-hidden flex justify-center"
           >
-            {/* DRIP line — overflow-hidden clips the "slide up from below" */}
-            <div className="overflow-hidden" ref={dripRef}>
-              <div className="flex">
-                {DRIP.map((ch, i) => (
-                  <span key={i} className="hero-char inline-block">{ch}</span>
-                ))}
-              </div>
-            </div>
-            {/* theka line */}
-            <div className="overflow-hidden" ref={thekaRef}>
-              <div className="flex italic">
-                {THEKA.map((ch, i) => (
-                  <span key={i} className="hero-char inline-block">{ch}</span>
-                ))}
-              </div>
-            </div>
+            <Image
+              src="/dtlogo-cropped.png"
+              alt="Drip Theka"
+              width={1412}
+              height={564}
+              priority
+              draggable={false}
+              className="select-none pointer-events-none w-full h-auto"
+              style={{ maxWidth: "clamp(280px, 60vw, 720px)" }}
+            />
           </div>
 
           {/* Tagline */}
@@ -162,7 +139,7 @@ export function Hero() {
           </p>
 
           {/* CTA */}
-          <div ref={ctaRef} className="flex flex-wrap gap-4">
+          <div ref={ctaRef} className="flex justify-center flex-wrap gap-4">
             <Link href="/pour/pour-001">
               <Button
                 variant="outline"
@@ -173,24 +150,6 @@ export function Hero() {
                 Walk in → Pour #001
               </Button>
             </Link>
-          </div>
-        </div>
-
-        {/* RIGHT — 3D glass (desktop) / SVG fallback (mobile) */}
-        <div className="relative h-full min-h-[340px] md:min-h-0">
-          {/* Desktop: lazy Three.js */}
-          <div className="hidden md:block absolute inset-0">
-            <HeroPour className="w-full h-full" />
-          </div>
-
-          {/* Mobile: static SVG */}
-          <div className="flex md:hidden items-center justify-center py-8">
-            <WineGlassMark
-              size={180}
-              liquid={72}
-              className="text-[#E4E2DD]"
-              liquidColor="#E4E2DD"
-            />
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import {
-  Fraunces,
+  Anton,
   JetBrains_Mono,
   Geist,
 } from "next/font/google";
@@ -8,10 +8,10 @@ import "../styles/globals.css";
 
 /* ─── Fonts ──────────────────────────────────────────────────────────────── */
 
-const fraunces = Fraunces({
+const anton = Anton({
+  weight: "400",
   subsets: ["latin"],
-  variable: "--font-fraunces",
-  axes: ["SOFT", "WONK", "opsz"],
+  variable: "--font-anton",
   display: "swap",
   preload: true,
 });
@@ -66,7 +66,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${fraunces.variable} ${jetbrains.variable} ${geist.variable}`}
+      className={`${anton.variable} ${jetbrains.variable} ${geist.variable}`}
     >
       <body>
         {children}

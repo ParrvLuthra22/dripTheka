@@ -4,11 +4,11 @@
 import { WineGlassMark } from "@/components/glass/WineGlassMark";
 
 const PHRASES = [
-  "Serving Fits Not Drinks",
-  "Pour #001",
-  "Opening Night Soon",
-  "Made in Delhi",
-  "Drip Theka",
+  "DRIP THEKA",
+  "SERVING FITS NOT DRINKS",
+  "NO RESTOCKS",
+  "TAPPED OUT",
+  "POUR #001",
 ];
 
 function MarqueeItem() {
@@ -16,12 +16,12 @@ function MarqueeItem() {
     <>
       {PHRASES.map((phrase, i) => (
         <span key={i} className="inline-flex items-center gap-4 shrink-0">
-          <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-[--ink] whitespace-nowrap">
+          <span className="font-display text-[--ink] text-3xl md:text-5xl whitespace-nowrap tracking-wide leading-none pt-1">
             {phrase}
           </span>
           <WineGlassMark
-            size={14}
-            className="text-[--ink] opacity-40 shrink-0"
+            size={32}
+            className="text-[--ink] mx-4 shrink-0"
           />
         </span>
       ))}
@@ -31,12 +31,12 @@ function MarqueeItem() {
 
 export function HomeMarquee() {
   return (
-    <div className="relative border-y border-[--ink]/10 bg-[--cream] overflow-hidden py-3.5">
+    <div className="relative border-y-4 border-[--ink] bg-[--neon] overflow-hidden py-4 md:py-6 rotate-[-1deg] scale-[1.02] z-20 shadow-2xl">
       {/* Two identical tracks side by side — seamless infinite loop */}
       <div
-        className="flex gap-8 w-max"
+        className="flex gap-4 w-max"
         style={{
-          animation: "marquee-scroll 28s linear infinite",
+          animation: "marquee-scroll 15s linear infinite",
           willChange: "transform",
         }}
       >

@@ -17,18 +17,22 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses: Record<ButtonVariant, string> = {
   solid: [
-    "bg-[--blue] text-[--cream]",
-    "hover:bg-[--ink]",
-    "disabled:bg-[--ink]/20 disabled:text-[--ink]/40",
+    "bg-[--blue] text-[--neon]",
+    "border-2 border-[--ink]",
+    "shadow-[4px_4px_0_0_var(--ink)]",
+    "hover:shadow-[0px_0px_0_0_var(--ink)] hover:translate-x-1 hover:translate-y-1",
+    "disabled:bg-[--ink]/20 disabled:text-[--ink]/40 disabled:shadow-none",
   ].join(" "),
   outline: [
-    "border border-[--ink] text-[--ink]",
-    "hover:bg-[--ink] hover:text-[--cream]",
-    "disabled:border-[--ink]/20 disabled:text-[--ink]/20",
+    "bg-[--cream] text-[--ink]",
+    "border-2 border-[--ink]",
+    "shadow-[4px_4px_0_0_var(--ink)]",
+    "hover:bg-[--neon] hover:shadow-[0px_0px_0_0_var(--ink)] hover:translate-x-1 hover:translate-y-1",
+    "disabled:border-[--ink]/20 disabled:text-[--ink]/20 disabled:shadow-none",
   ].join(" "),
   ghost: [
-    "text-[--ink]",
-    "hover:text-[--blue]",
+    "text-[--ink] font-bold",
+    "hover:text-[--neon] hover:bg-[--ink]",
     "disabled:text-[--ink]/30",
   ].join(" "),
 };
@@ -107,7 +111,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         data-hover-big
         className={cn(
           "relative inline-flex items-center justify-center",
-          "font-mono uppercase transition-colors duration-200",
+          "font-mono uppercase transition-all duration-200",
           "cursor-pointer select-none whitespace-nowrap",
           "focus-visible:outline-2 focus-visible:outline-[--blue] focus-visible:outline-offset-3",
           "disabled:pointer-events-none",

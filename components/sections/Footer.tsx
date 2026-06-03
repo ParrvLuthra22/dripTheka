@@ -38,22 +38,22 @@ export function Footer() {
   return (
     <footer ref={ref} data-nav-tone="light" className="bg-[--ink] text-[--cream] overflow-hidden relative">
 
-      {/* ── Massive stroked wordmark ─────────────────────────────────── */}
+      {/* ── Massive stroked wordmark ──────────────────────────────────────── */}
       <div
-        className="relative overflow-hidden select-none pointer-events-none"
+        className="relative overflow-hidden select-none pointer-events-none w-full"
         aria-hidden="true"
-        style={{ paddingBlockStart: "clamp(3rem, 6vw, 6rem)" }}
+        style={{ paddingBlockStart: "clamp(2.5rem, 4vw, 5rem)", paddingBlockEnd: "0.5rem" }}
       >
         <motion.p
           style={{
             y:                    wordmarkY,
-            fontSize:             "clamp(120px, 28vw, 480px)",
-            WebkitTextStroke:     "1px rgba(228,226,221,0.25)",
+            fontSize:             "clamp(80px, 18vw, 320px)",
+            WebkitTextStroke:     "1px rgba(228,226,221,0.2)",
             color:                "transparent",
             fontFamily:           "var(--font-display, serif)",
             fontStyle:            "italic",
             fontWeight:           600,
-            lineHeight:           0.88,
+            lineHeight:           0.9,
             letterSpacing:        "-0.03em",
             whiteSpace:           "nowrap",
             willChange:           "transform",
@@ -76,7 +76,7 @@ export function Footer() {
         {/* Col 1 — The Manifesto */}
         <div className="flex flex-col gap-5">
           <Link href="/" className="w-fit group hover:opacity-70 transition-opacity duration-200" data-hover>
-            <BrandLogo size="sm" tone="cream" />
+            <BrandLogo size="sm" />
           </Link>
           <p className="font-sans text-sm text-[--cream]/50 leading-relaxed max-w-[220px]">
             The actual product is belonging.

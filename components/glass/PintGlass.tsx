@@ -39,6 +39,8 @@ import { cn } from "@/lib/utils/cn";
 const BOWL_TOP_Y  = 14;  // where liquid starts at full (just below rim inner)
 const BOWL_BOT_Y  = 84;  // where liquid hits the base
 const BOWL_H      = BOWL_BOT_Y - BOWL_TOP_Y; // 70
+const BOWL_STROKE = "var(--ink)";
+const LIQUID_FILL = "var(--neon)";
 
 // Foam bubble data (relative to SVG coordinate space)
 const FOAM = [
@@ -59,10 +61,6 @@ export function PintGlass({ className }: PintGlassProps) {
   const pathname = usePathname();
   const { items, totalItems } = useCartStore();
   const { muted, play } = useSound();
-
-  // On /cart the hero pint takes over the layoutId — this element unmounts
-  // so Framer Motion can animate the shared layout transition
-  if (pathname === "/cart") return null;
 
   const count    = totalItems();
   const prevCount = useRef(count);
@@ -159,6 +157,11 @@ export function PintGlass({ className }: PintGlassProps) {
   }, []);
 
   // ── Render ────────────────────────────────────────────────────────────────
+
+  // On /cart the hero pint takes over the layoutId — this element unmounts
+  // so Framer Motion can animate the shared layout transition
+  if (pathname === "/cart") return null;
+
   return (
     <motion.div
       layoutId="cart-glass"
@@ -213,6 +216,13 @@ export function PintGlass({ className }: PintGlassProps) {
               "Z",
             ].join(" ")} />
           </clipPath>
+          <filter id="neon-glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
         </defs>
 
         {/* ── Liquid fill (clipped to interior) ──────────────────────── */}
@@ -222,7 +232,8 @@ export function PintGlass({ className }: PintGlassProps) {
           y={BOWL_BOT_Y}
           width="58"
           height="0"
-          fill="var(--blue, #004AAD)"
+          fill={LIQUID_FILL}
+          filter="url(#neon-glow)"
           clipPath="url(#pint-bowl)"
         />
 
@@ -257,22 +268,19 @@ export function PintGlass({ className }: PintGlassProps) {
           opacity="0"
         />
 
-        {/* ── Glass outer silhouette ─────────────────────────────────── */}
+        {/* ── Bowl Outline ── */}
         <path
           d={[
-            "M 4 10",
-            "A 34 7 0 0 1 68 10",            // back of rim arc (over the top)
-            "C 68 26 64 50 62 72",            // right outer — taper
-            "C 60 82 60 86 60 90",
-            "L 60 92",
-            "L 12 92",                         // base
-            "L 12 90",
-            "C 12 86 12 82 10 72",            // left outer
-            "C 8 50 4 26 4 10",
-            "Z",
+            "M 4 8",                       // top left rim
+            "C 4 30 6 52 10 74",           // left outer wall
+            "C 12 84 12 90 12 92",
+            "L 60 92",                       // base line
+            "C 60 90 60 84 62 74",           // right outer wall
+            "C 66 52 68 30 68 8"
           ].join(" ")}
-          stroke="var(--ink, #141518)"
-          strokeWidth="1.5"
+          stroke={BOWL_STROKE}
+          strokeWidth={2.5}
+          strokeLinecap="round"
           strokeLinejoin="round"
         />
 

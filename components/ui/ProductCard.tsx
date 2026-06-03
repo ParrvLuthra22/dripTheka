@@ -145,9 +145,21 @@ export function ProductCard({
           </p>
 
           {!tappedOut && (
-            <p className="font-mono text-[9px] text-[--blue] tracking-[0.1em]">
-              {getPriceDisplay(Math.round(product.price * 0.3))}&nbsp;deposit now
-            </p>
+            <div className="flex items-center justify-between mt-4">
+              <p className="font-mono text-[9px] text-[--blue] font-bold tracking-[0.1em]">
+                {getPriceDisplay(product.price)}
+              </p>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  router.push(`/product/${product.slug}`);
+                }}
+                className="font-display text-sm px-4 py-2 bg-[--neon] text-black border-2 border-black shadow-[2px_2px_0_0_#141518] hover:shadow-[0px_0px_0_0_#141518] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+              >
+                ADD TO CART
+              </button>
+            </div>
           )}
         </div>
       </div>
