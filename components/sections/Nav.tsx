@@ -144,6 +144,9 @@ export function Nav() {
 
   const tone = useNavTone();
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   // Scroll-hide state with hysteresis (must drop > 8px to hide,
   // rise > 4px to reveal — avoids jitter from tiny scroll movements)
   const lastY    = useRef(0);
@@ -267,13 +270,13 @@ export function Nav() {
                 <span
                   aria-hidden="true"
                   className="inline-block w-1.5 h-1.5 rounded-full bg-current"
-                  style={{ opacity: muted ? 0.3 : 1 }}
+                  style={{ opacity: mounted && !muted ? 1 : 0.3 }}
                 />
-                Sound&nbsp;·&nbsp;{muted ? "Off" : "On"}
+                Sound&nbsp;·&nbsp;{mounted && !muted ? "On" : "Off"}
               </button>
 
               <span className="hidden min-[900px]:flex font-mono text-[9px] uppercase tracking-[0.14em]">
-                {count > 0 && `${count} item${count !== 1 ? "s" : ""}`}
+                {mounted && count > 0 && `${count} item${count !== 1 ? "s" : ""}`}
               </span>
 
               {/* Mobile pint glass icon */}
@@ -357,7 +360,7 @@ export function Nav() {
                 onClick={toggleSound}
                 className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--cream]/40 hover:text-[--cream]/80 transition-colors"
               >
-                Sound&nbsp;·&nbsp;{muted ? "Off" : "On"}
+                Sound&nbsp;·&nbsp;{mounted && !muted ? "On" : "Off"}
               </button>
               <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--cream]/20">
                 Pour #001

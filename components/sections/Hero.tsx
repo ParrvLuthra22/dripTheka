@@ -74,11 +74,6 @@ export function Hero() {
       opacity:  1,
       duration: 0.4,
     }, "-=0.45");
-
-    // Pour sound — fire once, 1.4s after load. Guarded inside play().
-    if (!muted) {
-      tl.call(() => play("pour"), [], 1.4);
-    }
   }, { scope: containerRef, dependencies: [muted] });
 
   return (
