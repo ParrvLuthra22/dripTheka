@@ -17,7 +17,7 @@ const SAFETY_TIMEOUT_MS = 8000;
 
 export function LoadingScreen() {
   // Default OFF — we only flip ON in useEffect once we know we're mounted
-  // client-side and the session hasn't seen the intro yet.
+  // client-side.
   const [visible, setVisible] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const timeoutRef = useRef<number | null>(null);
@@ -29,8 +29,7 @@ export function LoadingScreen() {
       return;
     }
 
-    // Show it — but don't lock scroll on the underlying page; the overlay
-    // covers everything anyway
+    // Show it on initial mount (hard reload)
     setVisible(true);
     document.documentElement.style.overflow = "hidden";
 
@@ -42,7 +41,6 @@ export function LoadingScreen() {
       document.documentElement.style.overflow = "";
       if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Common dismissal — start wipe-out

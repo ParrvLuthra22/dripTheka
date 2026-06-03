@@ -10,7 +10,6 @@ import { gsap } from "gsap";
 import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import { useSound } from "@/components/sound/SoundProvider";
-import { HeroParticles } from "@/components/motion/HeroParticles";
 
 // Session key — pour animation plays once per browser session
 const SESSION_KEY = "dt-hero-played";
@@ -84,9 +83,6 @@ export function Hero() {
       style={{ backgroundColor: "#004AAD" }}
       aria-label="Hero"
     >
-      {/* ── Particle canvas — fills the full hero section ── */}
-      <HeroParticles />
-
       {/* ── Top eyebrows ────────────────────────────────────────────── */}
       <div
         className="relative z-10 flex items-center justify-between pt-5 md:pt-7"
