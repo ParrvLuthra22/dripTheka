@@ -8,6 +8,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCartStore } from "@/lib/store/cart";
 import { formatPrice } from "@/lib/utils/format";
+import { CountUp }     from "@/components/motion/CountUp";
 import { DROP_DATE } from "@/data/pour-001";
 import { ProductIllustration } from "@/components/sections/ProductIllustration";
 import { cn } from "@/lib/utils/cn";
@@ -251,27 +252,36 @@ export default function CartPage() {
                 Order Summary
               </p>
 
-              {/* Line items */}
+              {/* Line items — values count up on mount + when cart changes */}
               <div className="space-y-2.5 border-b border-[--ink]/8 pb-5">
                 <div className="flex justify-between">
                   <span className="font-sans text-sm text-[--ink]/60">Subtotal</span>
-                  <span className="font-mono text-sm text-[--ink] tabular-nums">
-                    {formatPrice(totalFull())}
-                  </span>
+                  <CountUp
+                    value={totalFull()}
+                    duration={650}
+                    format={formatPrice}
+                    className="font-mono text-sm text-[--ink] tabular-nums"
+                  />
                 </div>
                 <div className="flex justify-between">
                   <span className="font-sans text-sm text-[--blue]">Deposit due now&nbsp;(30%)</span>
-                  <span className="font-mono text-sm font-bold text-[--blue] tabular-nums">
-                    {formatPrice(totalDeposit())}
-                  </span>
+                  <CountUp
+                    value={totalDeposit()}
+                    duration={650}
+                    format={formatPrice}
+                    className="font-mono text-sm font-bold text-[--blue] tabular-nums"
+                  />
                 </div>
                 <div className="flex justify-between">
                   <span className="font-sans text-sm text-[--ink]/50">
                     Balance on Opening Night
                   </span>
-                  <span className="font-mono text-sm text-[--ink]/50 tabular-nums">
-                    {formatPrice(totalFull() - totalDeposit())}
-                  </span>
+                  <CountUp
+                    value={totalFull() - totalDeposit()}
+                    duration={650}
+                    format={formatPrice}
+                    className="font-mono text-sm text-[--ink]/50 tabular-nums"
+                  />
                 </div>
                 <div className="flex justify-between">
                   <span className="font-sans text-sm text-[--ink]/40">Shipping</span>

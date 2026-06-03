@@ -2,24 +2,26 @@
 
 // MorphingLogo — the signature moment.
 //
-// There is exactly ONE logo element on the page. It's position:fixed.
-// As the user scrolls, it interpolates from the hero center (large, ~60vw)
-// to the navbar center (small, 36px height).
+// Sole renderer of the dtlogo PNG across the app. Position:fixed.
 //
-// Coordination:
-//   • Hero exports a div with `data-morph-anchor="hero"` at the position
-//     where the logo should sit at scroll=0.
-//   • Nav exports a div with `data-morph-anchor="nav"` at the navbar center.
-//   • This component reads both anchor rects and lerps between them based
-//     on scrollY normalized to viewport height.
+// On homepage:
+//   • Hidden during hero scramble entrance
+//   • Becomes visible when Hero dispatches "drip-theka:hero-ready" event
+//   • Reads two anchor rects:
+//       data-morph-anchor="hero" → big position (hero section)
+//       data-morph-anchor="nav"  → small position (navbar center)
+//   • Interpolates position + size based on scroll progress through hero
 //
-// Only mounts on the homepage (or any page that has the hero anchor).
-// On pages without a hero anchor → snaps directly to nav anchor.
+// On other pages (no hero anchor):
+//   • Visible immediately
+//   • Snaps to nav anchor (small)
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
 
 interface Rect { left: number; top: number; width: number; height: number }
+const READY_EVENT = "drip-theka:hero-ready";
 
 function readAnchor(selector: string): Rect | null {
   const el = document.querySelector(selector) as HTMLElement | null;
@@ -33,19 +35,45 @@ function readAnchor(selector: string): Rect | null {
   };
 }
 
-function lerp(a: number, b: number, t: number) {
-  return a + (b - a) * t;
-}
-
-function easeOutCubic(t: number) {
-  return 1 - Math.pow(1 - t, 3);
-}
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
 
 export function MorphingLogo() {
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const [ready, setReady] = useState(false);
+  const pathname     = usePathname();
+  const wrapperRef   = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
 
+  // Decide initial visibility:
+  // • Homepage + first visit: hidden, wait for hero-ready
+  // • Homepage + replay session: visible immediately (hero played already)
+  // • Other pages: visible immediately (no hero on these routes)
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const isHome    = pathname === "/";
+    const heroSeen  = !!sessionStorage.getItem("dt-hero-played");
+
+    if (!isHome) {
+      setVisible(true);
+      return;
+    }
+    if (heroSeen) {
+      // Even on home, if scramble has already played this session, show now
+      setVisible(true);
+      return;
+    }
+
+    // Otherwise wait for Hero to broadcast ready
+    setVisible(false);
+    const onReady = () => setVisible(true);
+    window.addEventListener(READY_EVENT, onReady);
+    return () => window.removeEventListener(READY_EVENT, onReady);
+  }, [pathname]);
+
+  // Position interpolation loop
+  useEffect(() => {
+    if (!visible) return;
+
     let rafId = 0;
     let heroRect: Rect | null = null;
     let navRect:  Rect | null = null;
@@ -53,42 +81,55 @@ export function MorphingLogo() {
     function measure() {
       heroRect = readAnchor('[data-morph-anchor="hero"]');
       navRect  = readAnchor('[data-morph-anchor="nav"]');
-      if (heroRect && navRect) setReady(true);
     }
 
     function tick() {
-      // If the anchors haven't been measured yet, try again
+      // Try to re-measure if anchors were missing
       if (!heroRect || !navRect) {
         measure();
+      }
+
+      const el = wrapperRef.current;
+      if (!el) {
         rafId = requestAnimationFrame(tick);
         return;
       }
-      const el = wrapperRef.current;
-      if (!el) return;
 
-      // Hero anchor's TOP in viewport coordinates
-      const heroVisualTop = heroRect.top - window.scrollY;
-      const heroVisualBot = heroVisualTop + heroRect.height;
+      // No hero anchor (we're on a non-hero page) → snap to nav
+      if (!heroRect && navRect) {
+        const navVisualLeft = navRect.left - window.scrollX;
+        const navVisualTop  = navRect.top  - window.scrollY;
+        el.style.left   = `${navVisualLeft}px`;
+        el.style.top    = `${navVisualTop}px`;
+        el.style.width  = `${navRect.width}px`;
+        el.style.height = `${navRect.height}px`;
+        rafId = requestAnimationFrame(tick);
+        return;
+      }
 
-      // Progress: 0 when hero anchor is fully visible at its rest position,
-      // 1 when hero anchor has scrolled out of the top.
-      // We start morphing once the hero center crosses the viewport's 30% mark.
-      const vh = window.innerHeight;
-      const start = vh * 0.5;
-      const end   = -heroRect.height * 0.3; // hero almost out of view
-      const range = start - end;
-      const t     = Math.min(1, Math.max(0, (start - heroVisualTop) / range));
-      const eased = easeOutCubic(t);
+      if (!heroRect || !navRect) {
+        rafId = requestAnimationFrame(tick);
+        return;
+      }
 
-      // Nav anchor position (this is the destination; in viewport coords)
+      // Both anchors known — interpolate based on scroll progress
+      const vh           = window.innerHeight;
+      const heroVisTop   = heroRect.top - window.scrollY;
+      // Progress: 0 when hero anchor is in its rest position,
+      // 1 when hero anchor has scrolled well past the top.
+      const start        = vh * 0.5;
+      const end          = -heroRect.height * 0.3;
+      const range        = start - end;
+      const t            = Math.min(1, Math.max(0, (start - heroVisTop) / range));
+      const eased        = easeOutCubic(t);
+
       const navVisualLeft = navRect.left - window.scrollX;
       const navVisualTop  = navRect.top  - window.scrollY;
 
-      // Interpolate position + size between hero anchor and nav anchor
-      const left    = lerp(heroRect.left, navVisualLeft, eased);
-      const top     = lerp(heroVisualTop, navVisualTop, eased);
-      const width   = lerp(heroRect.width,  navRect.width,  eased);
-      const height  = lerp(heroRect.height, navRect.height, eased);
+      const left   = lerp(heroRect.left, navVisualLeft, eased);
+      const top    = lerp(heroVisTop,    navVisualTop,  eased);
+      const width  = lerp(heroRect.width,  navRect.width,  eased);
+      const height = lerp(heroRect.height, navRect.height, eased);
 
       el.style.left   = `${left}px`;
       el.style.top    = `${top}px`;
@@ -101,34 +142,37 @@ export function MorphingLogo() {
     measure();
     rafId = requestAnimationFrame(tick);
 
-    const onResize = () => { measure(); };
+    const onResize = () => measure();
     window.addEventListener("resize", onResize);
 
     return () => {
       cancelAnimationFrame(rafId);
       window.removeEventListener("resize", onResize);
     };
-  }, []);
+  }, [visible, pathname]);
 
   return (
     <div
       ref={wrapperRef}
       aria-hidden="true"
-      className="pointer-events-none select-none z-40"
+      className="pointer-events-none select-none"
       style={{
         position: "fixed",
         left: 0,
         top:  0,
         width:  0,
         height: 0,
-        opacity: ready ? 1 : 0,
-        transition: "opacity 0.35s ease",
+        opacity: visible ? 1 : 0,
+        transition: "opacity 0.5s ease",
         willChange: "left, top, width, height",
+        // z-index: above page content (z-30) but below nav links (z-50)
+        // so the nav's text isn't covered when logo is small inside the nav
+        zIndex: 45,
       }}
     >
       <Image
         src="/dtlogo-cropped.png"
-        alt=""
+        alt="Drip Theka"
         width={1412}
         height={564}
         priority

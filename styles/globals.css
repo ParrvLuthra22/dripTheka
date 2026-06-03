@@ -213,6 +213,29 @@
   }
 }
 
+/* ─── Easter egg: Happy Hour mode ────────────────────────────────────────
+   Activated via Konami code. Cobalt #004AAD becomes warm red #FF4D33.
+   Subtle warm tint on cream too. */
+
+html.happy-hour {
+  --blue:       #FF4D33;
+  --blue-deep:  #B82E1E;
+  --cream-warm: #F4E1D5;
+  transition: filter 0.6s ease;
+  filter: hue-rotate(0deg);
+}
+
+html.happy-hour body {
+  /* Sound cue that something changed beyond just the cobalt swap */
+  animation: happy-hour-flash 0.6s ease;
+}
+
+@keyframes happy-hour-flash {
+  0%   { filter: brightness(1); }
+  20%  { filter: brightness(1.08) saturate(1.1); }
+  100% { filter: brightness(1); }
+}
+
 /* ─── Keyframes ──────────────────────────────────────────────────────────── */
 
 @keyframes marquee-scroll {

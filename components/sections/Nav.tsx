@@ -21,6 +21,7 @@ import { gsap } from "gsap";
 
 import { useSoundStore } from "@/lib/store/sound";
 import { useCartStore }  from "@/lib/store/cart";
+import { CountUp }       from "@/components/motion/CountUp";
 
 // ── Links ────────────────────────────────────────────────────────────────
 
@@ -146,9 +147,12 @@ function ReservationCounter() {
         className="block w-1.5 h-1.5 rounded-full bg-current"
         style={{ animation: "reservation-pulse 1.8s ease-in-out infinite" }}
       />
-      <span className="tabular-nums">
-        {String(data.reserved).padStart(3, "0")}/{String(data.total).padStart(3, "0")}
-      </span>
+      <CountUp
+        value={data.reserved}
+        duration={1100}
+        format={(n) => `${String(Math.round(n)).padStart(3, "0")}/${String(data.total).padStart(3, "0")}`}
+        className="tabular-nums"
+      />
       <span className="opacity-60">Reserved</span>
       <style>{`
         @keyframes reservation-pulse {

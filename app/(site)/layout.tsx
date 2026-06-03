@@ -27,6 +27,7 @@ import { PourTransition }     from "@/components/transitions/PourTransition";
 import { Cursor }             from "@/components/ui/Cursor";
 import { LoadingScreen }      from "@/components/layout/LoadingScreen";
 import { ThekaEgg }           from "@/components/layout/ThekaEgg";
+import { HappyHour }          from "@/components/layout/HappyHour";
 import { MorphingLogo }       from "@/components/glass/MorphingLogo";
 import { ScrollProgressDrip } from "@/components/motion/ScrollProgressDrip";
 
@@ -60,8 +61,9 @@ export default function SiteLayout({
       {/* Right-edge scroll progress indicator */}
       <ScrollProgressDrip />
 
-      {/* Keyboard easter egg — type "theka" anywhere */}
+      {/* Keyboard easter eggs */}
       <ThekaEgg />
+      <HappyHour />
 
       {/* First-session brand intro */}
       <LoadingScreen />

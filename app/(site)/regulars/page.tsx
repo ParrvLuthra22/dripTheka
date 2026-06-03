@@ -7,6 +7,7 @@ import { useState, type FormEvent, type ChangeEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";
 import { Reveal } from "@/components/motion/Reveal";
+import { LiquidButton } from "@/components/ui/LiquidButton";
 
 const schema = z.object({
   email:      z.string().email("Enter a valid email address"),
@@ -199,14 +200,15 @@ export default function RegularsPage() {
                   </p>
                 )}
 
-                <button
+                <LiquidButton
                   type="submit"
-                  disabled={status === "loading"}
-                  data-hover-big
-                  className="w-full py-4 font-mono text-[10px] uppercase tracking-[0.16em] bg-[#E4E2DD] text-[#004AAD] hover:bg-[#141518] hover:text-[#E4E2DD] transition-all duration-200 disabled:opacity-40"
-                >
-                  {status === "loading" ? "Pulling up a stool…" : "Reserve your stool →"}
-                </button>
+                  state={status === "idle" || status === "error" ? "idle" : status}
+                  label="Reserve your stool →"
+                  doneLabel="Welcome, Regular. 🍺"
+                  fillColor="#E4E2DD"
+                  fillTextColor="#004AAD"
+                  className="border-[#E4E2DD]/40 text-[#E4E2DD]"
+                />
               </motion.form>
             )}
           </AnimatePresence>

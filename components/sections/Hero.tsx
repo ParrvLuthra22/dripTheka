@@ -2,25 +2,36 @@
 
 // Hero — full viewport, cobalt background, cream type.
 //
-// First-load sequence:
-//   1. Devanagari × Latin scramble (1.2s) on placeholder text
-//   2. Scramble settles to "DRIP THEKA"
-//   3. Text cross-fades out, dtlogo PNG cross-fades in
-//   4. Tagline + CTA reveal
+// The dtlogo image is NOT rendered here — it lives in MorphingLogo (fixed
+// position, shared across the page so it can fly into the navbar on scroll).
 //
-// The dtlogo final position has `data-morph-anchor="hero"` — that's the
-// anchor read by MorphingLogo to drive the scroll-driven morph into nav.
+// Hero owns:
+//   • Scramble text entrance ("DRIP THEKA" with Devanagari × Latin chars)
+//   • An invisible morph anchor (data-morph-anchor="hero") at the position
+//     where the real logo SHOULD appear after scramble
+//   • Tagline, CTA, eyebrows
+//
+// Coordination: when scramble completes, Hero dispatches a global event
+// (window event "drip-theka:hero-ready") that MorphingLogo listens for.
+// For previously-played sessions, the event fires immediately on mount.
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
-import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import { ScrambleText } from "@/components/motion/ScrambleText";
+import { FoamParticles } from "@/components/motion/FoamParticles";
 import { useSound } from "@/components/sound/SoundProvider";
 
 const SESSION_KEY = "dt-hero-played";
+const READY_EVENT = "drip-theka:hero-ready";
+
+function dispatchReady() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(READY_EVENT));
+  }
+}
 
 export function Hero() {
   const { muted, play } = useSound();
@@ -29,10 +40,8 @@ export function Hero() {
   const ctaRef        = useRef<HTMLDivElement>(null);
   const metaRef       = useRef<HTMLDivElement>(null);
   const scrambleRef   = useRef<HTMLDivElement>(null);
-  const logoRef       = useRef<HTMLDivElement>(null);
 
-  // SSR-safe initial state — assume first visit during render,
-  // then check sessionStorage on mount to decide if we replay.
+  // Track whether the scramble has run; default true if session shows already-played
   const [alreadyPlayed, setAlreadyPlayed] = useState(false);
   const [scrambleDone, setScrambleDone]   = useState(false);
 
@@ -45,17 +54,17 @@ export function Hero() {
       setAlreadyPlayed(true);
       setScrambleDone(true);
       gsap.set(scrambleRef.current, { opacity: 0, display: "none" });
-      gsap.set(logoRef.current,     { opacity: 1, y: 0 });
       gsap.set(taglineRef.current,  { opacity: 1, y: 0 });
       gsap.set(ctaRef.current,      { opacity: 1, y: 0 });
       gsap.set(metaRef.current,     { opacity: 1 });
+      // Tell MorphingLogo to mount immediately
+      dispatchReady();
       return;
     }
 
     sessionStorage.setItem(SESSION_KEY, "1");
 
-    // Initial states
-    gsap.set(logoRef.current,     { opacity: 0, y: 20 });
+    // Initial hidden state
     gsap.set(taglineRef.current,  { opacity: 0, y: 24 });
     gsap.set(ctaRef.current,      { opacity: 0, y: 16 });
     gsap.set(metaRef.current,     { opacity: 0 });
@@ -66,25 +75,25 @@ export function Hero() {
     }
   }, { scope: containerRef, dependencies: [muted] });
 
-  // Triggered when ScrambleText finishes — cross-fade text out, logo image in
+  // Triggered when ScrambleText finishes
   const onScrambleComplete = () => {
     setScrambleDone(true);
     const tl = gsap.timeline();
+    // Fade out the scramble text
     tl.to(scrambleRef.current, {
       opacity: 0,
       duration: 0.4,
       ease: "power2.out",
+      onComplete: () => {
+        // Now MorphingLogo can take over
+        dispatchReady();
+      },
     });
-    tl.to(logoRef.current, {
-      opacity: 1,
-      y: 0,
-      duration: 0.7,
-      ease: "power3.out",
-    }, "-=0.15");
+    // Reveal the rest
     tl.to(taglineRef.current, {
       opacity: 1, y: 0,
       duration: 0.65, ease: "power2.out",
-    }, "-=0.3");
+    }, "-=0.1");
     tl.to(ctaRef.current, {
       opacity: 1, y: 0,
       duration: 0.5, ease: "power2.out",
@@ -123,23 +132,30 @@ export function Hero() {
           style={{ paddingInline: "var(--pad-x)" }}
         >
           {/*
-            Logo slot — there are two overlaid layers:
-              1. ScrambleText (visible during entrance, then fades out)
-              2. dtlogo PNG (the real logo, fades in after scramble)
+            Logo slot — has TWO purposes:
 
-            The PNG slot also carries data-morph-anchor="hero" — this is what
-            MorphingLogo reads to know where the big logo lives.
+              1. While the scramble plays, render ScrambleText absolutely
+                 positioned over the same area
+              2. After scramble completes, this is the data-morph-anchor="hero"
+                 div — MorphingLogo reads its bounding rect and renders the
+                 actual dtlogo PNG flying into here.
+
+            The div itself is INVISIBLE — it only carries dimensions for
+            measurement. No image lives in it.
           */}
           <div
-            className="relative flex justify-center w-full"
-            style={{ maxWidth: "clamp(280px, 60vw, 720px)" }}
+            data-morph-anchor="hero"
+            className="relative w-full"
+            style={{
+              maxWidth:    "clamp(280px, 60vw, 720px)",
+              aspectRatio: "1412 / 564",
+            }}
           >
-            {/* Scramble text — visible first */}
+            {/* Scramble text — visible only during entrance, then fades */}
             {!alreadyPlayed && !scrambleDone && (
               <div
                 ref={scrambleRef}
                 className="absolute inset-0 flex items-center justify-center"
-                style={{ minHeight: "clamp(80px, 16vw, 200px)" }}
               >
                 <ScrambleText
                   text="DRIP THEKA"
@@ -156,28 +172,6 @@ export function Hero() {
                 />
               </div>
             )}
-
-            {/* Logo image — the morph anchor. Always rendered (invisible on first
-                visit until scramble finishes, then crosses in). */}
-            <div
-              ref={logoRef}
-              data-morph-anchor="hero"
-              className="flex justify-center w-full"
-              style={{
-                aspectRatio: "1412 / 564",
-                opacity: alreadyPlayed ? 1 : 0,
-              }}
-            >
-              <Image
-                src="/dtlogo-cropped.png"
-                alt="Drip Theka"
-                width={1412}
-                height={564}
-                priority
-                draggable={false}
-                className="select-none pointer-events-none w-full h-auto"
-              />
-            </div>
           </div>
 
           {/* Tagline */}
@@ -218,6 +212,9 @@ export function Hero() {
           Est.&nbsp;MMXXVI&nbsp;·&nbsp;Delhi
         </span>
       </div>
+
+      {/* Drifting foam particles behind everything */}
+      <FoamParticles />
 
       {/* Subtle grain texture overlay */}
       <div

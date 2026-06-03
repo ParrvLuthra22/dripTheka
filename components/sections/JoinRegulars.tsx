@@ -6,6 +6,7 @@
 import { useState, type FormEvent } from "react";
 import { z } from "zod";
 import { Reveal } from "@/components/motion/Reveal";
+import { LiquidButton } from "@/components/ui/LiquidButton";
 import { useSound } from "@/components/sound/SoundProvider";
 
 const schema = z.object({
@@ -123,32 +124,16 @@ export function JoinRegulars() {
               )}
             </div>
 
-            {/* Submit button — morphs on success */}
-            <button
+            {/* Liquid-fill submit button */}
+            <LiquidButton
               type="submit"
-              disabled={status === "loading" || status === "success"}
-              data-hover-big
-              className={[
-                "relative w-full py-4 font-mono text-[10px] uppercase tracking-[0.14em]",
-                "transition-all duration-500 overflow-hidden",
-                status === "success"
-                  ? "bg-[#E4E2DD] text-[#004AAD] cursor-default"
-                  : "bg-[#E4E2DD]/10 border border-[#E4E2DD]/40 text-[#E4E2DD] hover:bg-[#E4E2DD] hover:text-[#004AAD]",
-                "disabled:cursor-default",
-              ].join(" ")}
-            >
-              {status === "loading" && (
-                <span className="absolute inset-0 flex items-center justify-center">
-                  <span
-                    className="block w-4 h-4 border border-current border-t-transparent rounded-full"
-                    style={{ animation: "spin 0.7s linear infinite" }}
-                  />
-                </span>
-              )}
-              <span className={status === "loading" ? "opacity-0" : "opacity-100"}>
-                {status === "success" ? "Welcome, Regular. 🍺" : "Reserve your stool →"}
-              </span>
-            </button>
+              state={status === "idle" || status === "error" ? "idle" : status}
+              label="Reserve your stool →"
+              doneLabel="Welcome, Regular. 🍺"
+              fillColor="#E4E2DD"
+              fillTextColor="#004AAD"
+              className="border-[#E4E2DD]/40 text-[#E4E2DD]"
+            />
 
             <p className="font-mono text-[9px] text-[#E4E2DD]/20 uppercase tracking-[0.12em]">
               No spam. Unsubscribe any time. We&apos;re not desperate.
