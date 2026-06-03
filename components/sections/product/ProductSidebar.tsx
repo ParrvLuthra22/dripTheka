@@ -6,7 +6,7 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCartStore } from "@/lib/store/cart";
-import { useSoundStore } from "@/lib/store/sound";
+import { useSound } from "@/components/sound/SoundProvider";
 import { RefillNotifyForm } from "./RefillNotifyForm";
 import { cn } from "@/lib/utils/cn";
 import {
@@ -52,7 +52,7 @@ interface ProductSidebarProps {
 
 export function ProductSidebar({ product }: ProductSidebarProps) {
   const { addItem, updateQuantity } = useCartStore();
-  const { muted } = useSoundStore();
+  const { muted, play } = useSound();
 
   const tappedOut = isTappedOut(product.sizes);
   const tag       = TAGS[product.id] ?? "Freshly Poured";
@@ -76,18 +76,13 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
       updateQuantity(product.id, selectedSize, qty);
     }
 
-    // Play clink sound
-    if (!muted) {
-      import("howler").then(({ Howl }) => {
-        const h = new Howl({ src: ["/sounds/clink.mp3"], volume: 0.55 });
-        h.play();
-      }).catch(() => {});
-    }
+    // Play clink — guarded by mute inside play()
+    if (!muted) play("clink");
 
     // Button: "Pour into Glass" → "Poured ✓" → back to idle
     setAddState("poured");
     setTimeout(() => setAddState("idle"), 1800);
-  }, [selectedSize, tappedOut, qty, product, addItem, updateQuantity, muted]);
+  }, [selectedSize, tappedOut, qty, product, addItem, updateQuantity, muted, play]);
 
   return (
     <div

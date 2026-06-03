@@ -6,7 +6,7 @@
 import { useState, type FormEvent } from "react";
 import { z } from "zod";
 import { Reveal } from "@/components/motion/Reveal";
-import { useSoundStore } from "@/lib/store/sound";
+import { useSound } from "@/components/sound/SoundProvider";
 
 const schema = z.object({
   email: z
@@ -21,7 +21,7 @@ export function JoinRegulars() {
   const [email,  setEmail]  = useState("");
   const [error,  setError]  = useState("");
   const [status, setStatus] = useState<Status>("idle");
-  const { muted } = useSoundStore();
+  const { muted, play } = useSound();
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -45,13 +45,8 @@ export function JoinRegulars() {
       if (res.ok) {
         setStatus("success");
         setEmail("");
-        // Play pour/clink sound if enabled
-        if (!muted) {
-          import("howler").then(({ Howl }) => {
-            const h = new Howl({ src: ["/sounds/clink.mp3"], volume: 0.5 });
-            h.play();
-          }).catch(() => {});
-        }
+        // Play clink — guarded inside play()
+        if (!muted) play("clink");
         // Reset to idle after 4s
         setTimeout(() => setStatus("idle"), 4000);
       } else {

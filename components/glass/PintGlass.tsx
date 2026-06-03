@@ -24,7 +24,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { gsap } from "gsap";
 import { useCartStore } from "@/lib/store/cart";
-import { useSoundStore } from "@/lib/store/sound";
+import { useSound } from "@/components/sound/SoundProvider";
 import { cn } from "@/lib/utils/cn";
 
 // ── viewBox constants (0 0 72 96) ───────────────────────────────────────────
@@ -58,7 +58,7 @@ export function PintGlass({ className }: PintGlassProps) {
   const router   = useRouter();
   const pathname = usePathname();
   const { items, totalItems } = useCartStore();
-  const { muted } = useSoundStore();
+  const { muted, play } = useSound();
 
   // On /cart the hero pint takes over the layoutId — this element unmounts
   // so Framer Motion can animate the shared layout transition
@@ -74,26 +74,11 @@ export function PintGlass({ className }: PintGlassProps) {
   const foamRef     = useRef<SVGGElement>(null);
   const rippleRef   = useRef<SVGRectElement>(null);
   const wrapperRef  = useRef<HTMLDivElement>(null);
-  const soundRef    = useRef<{ play: () => void; unload: () => void } | null>(null);
 
   // Current animated fill Y — kept in ref to avoid re-renders
   const animY = useRef(BOWL_BOT_Y);
 
-  // ── Sound ─────────────────────────────────────────────────────────────────
-  useEffect(() => {
-    let h: { play: () => void; unload: () => void } | null = null;
-
-    import("howler").then(({ Howl }) => {
-      h = new Howl({
-        src: ["/sounds/pour.mp3"],
-        volume: 0.45,
-        html5: true,
-      });
-      soundRef.current = h;
-    }).catch(() => {}); // file may not exist yet — silent fail
-
-    return () => { h?.unload(); };
-  }, []);
+  // Pour sound is owned by SoundProvider — no local Howl instance here
 
   // ── Liquid fill calculation ───────────────────────────────────────────────
   const targetY = BOWL_BOT_Y - fillLevel * BOWL_H;
@@ -152,7 +137,7 @@ export function PintGlass({ className }: PintGlassProps) {
       }
 
       // Sound
-      if (!muted) soundRef.current?.play();
+      if (!muted) play("pour");
     }
 
     // Foam visibility
@@ -160,7 +145,7 @@ export function PintGlass({ className }: PintGlassProps) {
       opacity: count > 0 ? 1 : 0,
       duration: 0.3,
     });
-  }, [count, muted]);
+  }, [count, muted, play]);
 
   // ── Hover ─────────────────────────────────────────────────────────────────
   const onEnter = useCallback((_e: ReactPointerEvent<HTMLDivElement>) => {

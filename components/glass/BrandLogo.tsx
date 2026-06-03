@@ -42,7 +42,10 @@ export function BrandLogo({
   const [errored, setErrored] = useState(false);
 
   // Image path — V1 single file. V1.1 could ship tone variants.
-  const src = "/dtlogo.png";
+  // We use the cropped version (content-bounded, ~2.5:1 aspect)
+  // rather than the raw 2000x2000 source. Falls back to /dtlogo.png if
+  // /dtlogo-cropped.png is missing.
+  const src = "/dtlogo-cropped.png";
 
   if (errored) {
     // Typographic fallback — used when /public/dtlogo.png isn't there yet
@@ -64,22 +67,22 @@ export function BrandLogo({
     );
   }
 
+  // The cropped source is 1412×564 (~2.5:1), content-bounded.
+  // next/image needs the intrinsic dims to compute aspect ratio;
+  // we apply visual height via inline style and let width auto-scale.
   return (
     <Image
       src={src}
       alt={alt}
-      // Intrinsic-but-clamped: tell next/image our target render height
-      // and let it compute width from the file's aspect ratio
-      width={height * 4}   // assumes ~4:1 aspect, adjust per actual artwork
-      height={height}
+      width={1412}
+      height={564}
       priority={priority}
-      unoptimized={false}
       onError={() => setErrored(true)}
       className={cn(
-        "object-contain select-none pointer-events-none",
+        "select-none pointer-events-none",
         className
       )}
-      style={{ height, width: "auto" }}
+      style={{ height: `${height}px`, width: "auto" }}
       draggable={false}
     />
   );

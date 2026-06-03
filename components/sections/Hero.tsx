@@ -11,7 +11,7 @@ import { gsap } from "gsap";
 import { Button } from "@/components/ui/Button";
 import { WineGlassMark } from "@/components/glass/WineGlassMark";
 import { HeroPourFallback } from "@/components/glass/HeroPour";
-import { useSoundStore } from "@/lib/store/sound";
+import { useSound } from "@/components/sound/SoundProvider";
 
 gsap.registerPlugin();
 
@@ -29,7 +29,7 @@ const THEKA = ["t", "h", "e", "k", "a"];
 const SESSION_KEY = "dt-hero-played";
 
 export function Hero() {
-  const { muted } = useSoundStore();
+  const { muted, play } = useSound();
   const containerRef  = useRef<HTMLElement>(null);
   const dripRef       = useRef<HTMLDivElement>(null);
   const thekaRef      = useRef<HTMLDivElement>(null);
@@ -94,14 +94,9 @@ export function Hero() {
       duration: 0.4,
     }, "-=0.45");
 
-    // Pour sound — fire once, 1.4s after load, only if not muted
+    // Pour sound — fire once, 1.4s after load. Guarded inside play().
     if (!muted) {
-      tl.call(() => {
-        import("howler").then(({ Howl }) => {
-          const h = new Howl({ src: ["/sounds/pour.mp3"], volume: 0.5 });
-          h.play();
-        }).catch(() => {});
-      }, [], 1.4);
+      tl.call(() => play("pour"), [], 1.4);
     }
   }, { scope: containerRef, dependencies: [muted] });
 
