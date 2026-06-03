@@ -37,11 +37,6 @@ export function SoundToggle() {
       });
       ambientRef.current = h;
 
-      // Resume if sound was ON in a previous session
-      if (!muted) {
-        playId.current = h.play();
-        hasUnmutedRef.current = true;
-      }
     }).catch(() => {/* file may not exist in dev */});
 
     return () => { h?.stop(); h?.unload(); };
@@ -53,19 +48,22 @@ export function SoundToggle() {
     const amb = ambientRef.current;
     if (!amb) return;
 
-    if (!muted) {
-      hasUnmutedRef.current = true;
+    // Only play if the user actively interacted to unmute in this session
+    if (!muted && hasUnmutedRef.current) {
       if (!amb.playing(playId.current)) {
         playId.current = amb.play();
       }
-    } else {
+    } else if (muted) {
       amb.stop(playId.current);
     }
   }, [muted]);
 
   return (
     <button
-      onClick={toggle}
+      onClick={() => {
+        hasUnmutedRef.current = true;
+        toggle();
+      }}
       aria-label={muted ? "Enable sound" : "Mute sound"}
       aria-pressed={!muted}
       data-hover

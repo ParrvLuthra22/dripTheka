@@ -17,6 +17,7 @@
 import {
   useRef,
   useEffect,
+  useState,
   useCallback,
   type PointerEvent as ReactPointerEvent,
 } from "react";
@@ -62,7 +63,10 @@ export function PintGlass({ className }: PintGlassProps) {
   const { items, totalItems } = useCartStore();
   const { muted, play } = useSound();
 
-  const count    = totalItems();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const count    = mounted ? totalItems() : 0;
   const prevCount = useRef(count);
   const fillLevel = Math.min(1, count / 10); // 0–1
 
@@ -317,7 +321,9 @@ interface PintGlassNavProps {
 export function PintGlassNav({ className }: PintGlassNavProps) {
   const router = useRouter();
   const { totalItems } = useCartStore();
-  const count = totalItems();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const count = mounted ? totalItems() : 0;
   const iconRef = useRef<SVGSVGElement>(null);
   const prevCount = useRef(count);
 
