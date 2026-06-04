@@ -49,7 +49,7 @@ function EditorialBreak() {
           <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#E4E2DD]/40 mb-2">
             Pour
           </span>
-          <span className="font-display italic text-[#E4E2DD]/85" style={{ fontSize: "clamp(6rem, 9vw, 11rem)", lineHeight: 0.85 }}>
+          <span className="font-tanker uppercase text-[#E4E2DD]/85" style={{ fontSize: "clamp(6rem, 9vw, 11rem)", lineHeight: 0.82 }}>
             001
           </span>
         </div>

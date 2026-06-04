@@ -2,7 +2,24 @@
 
 @import "tailwindcss";
 
-/* Tailwind v4 theme — maps CSS vars to tw utilities */
+/* ─── Tanker self-hosted @font-face ─────────────────────────────────────────
+   Place Tanker-Regular.woff2 in /public/fonts/tanker/
+   Download: https://pangrampangram.com/products/tanker (free)
+   Falls back to Impact / Arial Black until the file is present.              */
+
+@font-face {
+  font-family: "Tanker";
+  src: local("Tanker"),
+       url("/fonts/tanker/Tanker-Regular.woff2") format("woff2"),
+       url("/fonts/tanker/Tanker-Regular.woff")  format("woff"),
+       url("/fonts/tanker/Tanker-Regular.otf")   format("opentype");
+  font-weight: 400;
+  font-style:  normal;
+  font-display: swap;
+}
+
+/* ─── Tailwind v4 @theme ─────────────────────────────────────────────────── */
+
 @theme inline {
   /* Colors */
   --color-blue:       var(--blue);
@@ -13,8 +30,14 @@
   --color-ink-soft:   var(--ink-soft);
   --color-neon:       var(--neon);
 
-  /* Fonts */
-  --font-display: var(--font-anton), "Impact", sans-serif;
+  /* ── Fonts ─────────────────────────────────────────────────────────────
+     font-tanker  → Tanker — loud, chunky, for hero / marquees / 404 / menu
+     font-display → Fraunces italic — editorial, section headlines, body copy
+     font-mono    → JetBrains Mono — labels, prices, tags, all UI text
+     font-sans    → Geist Sans — body paragraphs, forms, descriptions       */
+
+  --font-tanker:  "Tanker", Impact, "Arial Black", sans-serif;
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
   --font-mono:    var(--font-jetbrains), "Courier New", monospace;
   --font-sans:    var(--font-geist), system-ui, sans-serif;
 
@@ -28,7 +51,8 @@
   --spacing-header-h:  var(--header-h);
 }
 
-/* CSS custom properties — single source of truth */
+/* ─── CSS custom properties ──────────────────────────────────────────────── */
+
 :root {
   /* Brand colours */
   --blue:        #004AAD;
@@ -44,9 +68,12 @@
   --pad-x:     clamp(20px, 4vw, 72px);
   --header-h:  84px;
 
-  /* Easing — also available as Tailwind tokens above */
+  /* Easing */
   --ease-pour:     cubic-bezier(.6,.05,.2,1);
   --ease-out-expo: cubic-bezier(.16,1,.3,1);
+
+  /* Audio-reactive (driven by AudioReactive.tsx) */
+  --audio-level: 0;
 }
 
 /* ─── Base Reset ─────────────────────────────────────────────────────────── */
@@ -64,7 +91,6 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
-    /* Lenis sets scroll-behavior; we don't touch it here */
   }
 
   body {
@@ -73,20 +99,17 @@
     overflow-x: hidden;
   }
 
-  /* Selection */
   ::selection {
     background: var(--blue);
     color: var(--cream);
   }
 
-  /* Focus ring */
   :focus-visible {
     outline: 2px solid var(--blue);
     outline-offset: 3px;
     border-radius: 2px;
   }
 
-  /* Scrollbar — subtle brand tint */
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: var(--cream); }
   ::-webkit-scrollbar-thumb {
@@ -94,83 +117,123 @@
     border-radius: 3px;
   }
 
-  /* Reduced motion — collapses all animations to instant */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-      scroll-behavior: auto !important;
+      animation-duration:        0.01ms !important;
+      animation-iteration-count: 1      !important;
+      transition-duration:       0.01ms !important;
+      scroll-behavior:           auto   !important;
     }
   }
 
-  /* Links default */
-  a { color: inherit; text-decoration: none; }
-
+  a   { color: inherit; text-decoration: none; }
   img, video, svg { display: block; max-width: 100%; }
 }
 
 /* ─── Typography scale ───────────────────────────────────────────────────── */
 
 @layer base {
-  /* Display — Anton brutalist */
+  /* ── Tanker scale — loud, uppercase, blocked ─────────────────────────
+     Use for: hero wordmark, mobile menu, marquees, 404 headline,
+     pre-footer wordmark, manifesto headline.                            */
+
+  .type-tanker-xl {
+    font-family:     var(--font-tanker);
+    font-weight:     400;
+    font-style:      normal;
+    text-transform:  uppercase;
+    font-size:       clamp(5rem, 18vw, 14rem);
+    line-height:     0.82;
+    letter-spacing:  -0.02em;
+  }
+
+  .type-tanker-lg {
+    font-family:     var(--font-tanker);
+    font-weight:     400;
+    font-style:      normal;
+    text-transform:  uppercase;
+    font-size:       clamp(3.5rem, 8vw, 7rem);
+    line-height:     0.85;
+    letter-spacing:  -0.01em;
+  }
+
+  .type-tanker-md {
+    font-family:     var(--font-tanker);
+    font-weight:     400;
+    font-style:      normal;
+    text-transform:  uppercase;
+    font-size:       clamp(2rem, 5vw, 4rem);
+    line-height:     0.88;
+    letter-spacing:  -0.005em;
+  }
+
+  /* ── Fraunces scale — editorial serif italic ─────────────────────────
+     Use for: section headlines, product names, pull quotes, story body,
+     building post titles, taglines, footer copy.
+     Always italic — that's the brand expression.                        */
+
   .type-display-xl {
-    font-family: var(--font-display);
-    text-transform: uppercase;
-    font-size: clamp(3.5rem, 8vw, 7rem);
-    line-height: 0.92;
-    letter-spacing: 0.02em;
+    font-family:    var(--font-display);
+    font-style:     italic;
+    font-weight:    600;
+    font-size:      clamp(3.5rem, 8vw, 7rem);
+    line-height:    0.88;
+    letter-spacing: -0.025em;
   }
 
   .type-display-lg {
-    font-family: var(--font-display);
-    text-transform: uppercase;
-    font-size: clamp(2.5rem, 5vw, 4.5rem);
-    line-height: 0.95;
-    letter-spacing: 0.02em;
+    font-family:    var(--font-display);
+    font-style:     italic;
+    font-weight:    600;
+    font-size:      clamp(2.5rem, 5vw, 4.5rem);
+    line-height:    0.92;
+    letter-spacing: -0.02em;
   }
 
   .type-display-md {
-    font-family: var(--font-display);
-    text-transform: uppercase;
-    font-size: clamp(1.75rem, 3vw, 2.75rem);
-    line-height: 1.05;
-    letter-spacing: 0.02em;
+    font-family:    var(--font-display);
+    font-style:     italic;
+    font-weight:    500;
+    font-size:      clamp(1.75rem, 3vw, 2.75rem);
+    line-height:    1.0;
+    letter-spacing: -0.015em;
   }
 
-  /* Mono — JetBrains labels, prices, tags */
+  /* ── Mono scale ────────────────────────────────────────────────────── */
+
   .type-mono-sm {
-    font-family: var(--font-mono);
-    font-size: 0.6875rem; /* 11px */
-    line-height: 1;
+    font-family:    var(--font-mono);
+    font-size:      0.6875rem; /* 11px */
+    line-height:    1;
     letter-spacing: 0.1em;
     text-transform: uppercase;
   }
 
   .type-mono-xs {
-    font-family: var(--font-mono);
-    font-size: 0.625rem; /* 10px */
-    line-height: 1;
+    font-family:    var(--font-mono);
+    font-size:      0.625rem;  /* 10px */
+    line-height:    1;
     letter-spacing: 0.12em;
     text-transform: uppercase;
   }
 
-  /* Body — Geist */
+  /* ── Body — Geist ──────────────────────────────────────────────────── */
+
   .type-body-lg {
     font-family: var(--font-sans);
-    font-size: clamp(1rem, 1.2vw, 1.125rem);
+    font-size:   clamp(1rem, 1.2vw, 1.125rem);
     line-height: 1.65;
   }
 
   .type-body-md {
     font-family: var(--font-sans);
-    font-size: 0.9375rem;
+    font-size:   0.9375rem;
     line-height: 1.6;
   }
 
   .type-body-sm {
     font-family: var(--font-sans);
-    font-size: 0.8125rem;
+    font-size:   0.8125rem;
     line-height: 1.55;
   }
 }
@@ -178,7 +241,6 @@
 /* ─── Utilities ──────────────────────────────────────────────────────────── */
 
 @layer utilities {
-  /* Container */
   .container-site {
     width: 100%;
     max-width: var(--container);
@@ -186,40 +248,37 @@
     padding-inline: var(--pad-x);
   }
 
-  /* Marquee keyframes */
+  /* Marquee */
   .marquee-track {
-    display: flex;
-    gap: inherit;
-    animation: marquee-scroll linear infinite;
+    display:    flex;
+    gap:        inherit;
+    animation:  marquee-scroll linear infinite;
     will-change: transform;
   }
 
-  /* Reveal animation base state */
+  /* Reveal */
   .reveal-hidden {
-    opacity: 0;
+    opacity:   0;
     transform: translateY(32px);
   }
 
   .reveal-hidden.is-in {
-    opacity: 1;
-    transform: translateY(0);
-    transition: opacity 0.7s var(--ease-out-expo), transform 0.7s var(--ease-out-expo);
+    opacity:    1;
+    transform:  translateY(0);
+    transition: opacity 0.7s var(--ease-out-expo),
+                transform 0.7s var(--ease-out-expo);
   }
 
-  /* SplitReveal char base */
+  /* SplitReveal chars */
   .split-char {
-    display: inline-block;
+    display:     inline-block;
     will-change: transform, opacity;
   }
 }
 
-/* ─── Audio-reactive backdrop ────────────────────────────────────────────
-   --audio-level (0–1) is driven by AudioReactive.tsx when sound is ON.
-   Cobalt sections (data-nav-tone="light") pulse subtly with the music.    */
-
-:root {
-  --audio-level: 0;
-}
+/* ─── Audio-reactive backdrop ───────────────────────────────────────────────
+   --audio-level (0–1) driven by AudioReactive.tsx.
+   Cobalt sections pulse gently when ambient plays.                          */
 
 [data-nav-tone="light"] {
   position: relative;
@@ -241,20 +300,16 @@
   mix-blend-mode: screen;
 }
 
-/* ─── Easter egg: Happy Hour mode ────────────────────────────────────────
-   Activated via Konami code. Cobalt #004AAD becomes warm red #FF4D33.
-   Subtle warm tint on cream too. */
+/* ─── Happy Hour easter egg ─────────────────────────────────────────────────
+   Konami code swaps --blue → warm red site-wide.                            */
 
 html.happy-hour {
   --blue:       #FF4D33;
   --blue-deep:  #B82E1E;
   --cream-warm: #F4E1D5;
-  transition: filter 0.6s ease;
-  filter: hue-rotate(0deg);
 }
 
 html.happy-hour body {
-  /* Sound cue that something changed beyond just the cobalt swap */
   animation: happy-hour-flash 0.6s ease;
 }
 
@@ -264,7 +319,7 @@ html.happy-hour body {
   100% { filter: brightness(1); }
 }
 
-/* ─── Keyframes ──────────────────────────────────────────────────────────── */
+/* ─── Keyframes ─────────────────────────────────────────────────────────── */
 
 @keyframes marquee-scroll {
   from { transform: translateX(0); }

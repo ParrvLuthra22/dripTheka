@@ -428,7 +428,7 @@ export function Nav() {
                         {String(i + 1).padStart(2, "0")}
                       </span>
                       <span
-                        className="font-display italic font-semibold text-[#E4E2DD] group-hover:translate-x-2 transition-transform duration-300"
+                        className="font-tanker uppercase text-[#E4E2DD] group-hover:translate-x-2 transition-transform duration-300"
                         style={{ fontSize: "clamp(2.75rem, 14vw, 7rem)" }}
                       >
                         {label}.

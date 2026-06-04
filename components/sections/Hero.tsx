@@ -163,11 +163,11 @@ export function Hero() {
                   stagger={60}
                   speed={40}
                   onComplete={onScrambleComplete}
-                  className="font-display font-bold italic text-[#E4E2DD] whitespace-nowrap"
+                  className="font-tanker text-[#E4E2DD] whitespace-nowrap uppercase"
                   style={{
-                    fontSize: "clamp(2.5rem, 8vw, 6.5rem)",
-                    letterSpacing: "0.01em",
-                    lineHeight: 0.9,
+                    fontSize:      "clamp(2.5rem, 8vw, 6.5rem)",
+                    letterSpacing: "-0.01em",
+                    lineHeight:    0.85,
                   }}
                 />
               </div>

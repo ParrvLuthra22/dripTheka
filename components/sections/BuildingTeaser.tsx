@@ -42,7 +42,7 @@ function JournalCard({ post, index }: { post: (typeof BUILDING_POSTS)[number]; i
 
       {/* Title */}
       <h3
-        className="font-display text-black uppercase leading-tight mb-4"
+        className="font-display italic text-[--ink] leading-tight mb-4"
         style={{ fontSize: "clamp(1.5rem, 2vw, 2rem)" }}
       >
         {post.title}

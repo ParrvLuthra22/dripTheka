@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import {
-  Anton,
+  Fraunces,
   JetBrains_Mono,
   Geist,
 } from "next/font/google";
@@ -9,26 +9,35 @@ import { SessionProvider } from "@/components/providers/SessionProvider";
 
 /* ─── Fonts ──────────────────────────────────────────────────────────────── */
 
-const anton = Anton({
-  weight: "400",
-  subsets: ["latin"],
-  variable: "--font-anton",
-  display: "swap",
-  preload: true,
+// Fraunces — editorial serif with optical size, soft, and wonk axes.
+// Used for: section headlines, product names, pull quotes, body editorial.
+// Italic is the brand expression — Fraunces italic feels designed, not accidental.
+const fraunces = Fraunces({
+  subsets:  ["latin"],
+  variable: "--font-fraunces",
+  weight:   "variable",
+  style:    ["normal", "italic"],
+  axes:     ["SOFT", "WONK", "opsz"],
+  display:  "swap",
+  preload:  true,
 });
 
+// Tanker is self-hosted — see /public/fonts/tanker/README.md
+// CSS @font-face in globals.css loads it; fallback is Impact + Arial Black.
+// No next/font for Tanker since it's not on Google Fonts.
+
 const jetbrains = JetBrains_Mono({
-  subsets: ["latin"],
+  subsets:  ["latin"],
   variable: "--font-jetbrains",
-  display: "swap",
-  preload: false, // loaded on first mono use via CSS
+  display:  "swap",
+  preload:  false,
 });
 
 const geist = Geist({
-  subsets: ["latin"],
+  subsets:  ["latin"],
   variable: "--font-geist",
-  display: "swap",
-  preload: true,
+  display:  "swap",
+  preload:  true,
 });
 
 /* ─── Metadata ───────────────────────────────────────────────────────────── */
@@ -39,21 +48,21 @@ export const metadata: Metadata = {
   ),
   title: {
     template: "%s — Drip Theka",
-    default: "Drip Theka — Pour #001: The First Round",
+    default:  "Drip Theka — Pour #001: The First Round",
   },
   description:
     "Streetwear for Gen Z India. Six pieces. One colourway. 200 of each. When it's done, it's Tapped Out.",
   openGraph: {
-    type: "website",
+    type:     "website",
     siteName: "Drip Theka",
-    locale: "en_IN",
+    locale:   "en_IN",
   },
   twitter: { card: "summary_large_image" },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#E4E2DD",
-  width: "device-width",
+  themeColor:   "#E4E2DD",
+  width:        "device-width",
   initialScale: 1,
 };
 
@@ -67,7 +76,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${anton.variable} ${jetbrains.variable} ${geist.variable}`}
+      className={`${fraunces.variable} ${jetbrains.variable} ${geist.variable}`}
     >
       <body>
         <SessionProvider>

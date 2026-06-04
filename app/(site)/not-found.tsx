@@ -105,10 +105,10 @@ export default function NotFound() {
       <motion.h1
         initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="font-display italic text-[#E4E2DD] text-center"
-        style={{ fontSize: "clamp(3rem, 10vw, 8rem)", lineHeight: 0.9 }}
+        className="font-tanker uppercase text-[#E4E2DD] text-center"
+        style={{ fontSize: "clamp(3rem, 10vw, 8rem)", lineHeight: 0.82 }}
       >
-        Wrong theka.
+        WRONG THEKA.
       </motion.h1>
 
       <motion.p

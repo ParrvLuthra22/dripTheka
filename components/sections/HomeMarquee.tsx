@@ -14,7 +14,7 @@ function Separator() {
   return (
     <span
       aria-hidden="true"
-      className="font-display text-[--ink] text-3xl md:text-5xl shrink-0 mx-4 select-none"
+      className="font-tanker text-[--ink] text-3xl md:text-5xl shrink-0 mx-4 select-none uppercase"
       style={{ transform: "translateY(-0.1em)" }}
     >
       ✺
@@ -27,7 +27,7 @@ function MarqueeItem() {
     <>
       {PHRASES.map((phrase, i) => (
         <span key={i} className="inline-flex items-center gap-4 shrink-0">
-          <span className="font-display text-[--ink] text-3xl md:text-5xl whitespace-nowrap tracking-wide leading-none pt-1">
+          <span className="font-tanker text-[--ink] text-3xl md:text-5xl whitespace-nowrap uppercase leading-none tracking-tight">
             {phrase}
           </span>
           <Separator />

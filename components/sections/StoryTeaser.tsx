@@ -77,7 +77,7 @@ export function StoryTeaser() {
                 speed={60}
                 threshold={0.25}
                 as="p"
-                className="font-display text-[--ink] leading-[1.15]"
+                className="font-display italic text-[--ink] leading-[1.2]"
                 style={{ fontSize: "clamp(1.4rem, 3vw, 2.4rem)" }}
               />
             ))}

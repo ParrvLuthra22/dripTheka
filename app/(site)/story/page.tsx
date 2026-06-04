@@ -25,12 +25,12 @@ export default function StoryPage() {
         <SplitReveal
           as="h1"
           splitBy="words"
-          stagger={0.05}
-          from={60}
+          stagger={0.04}
+          from={48}
           start="top 95%"
-          className="font-display italic text-[--ink] leading-[0.88]"
+          className="font-tanker uppercase text-[--ink] leading-[0.85]"
         >
-          Why we built a theka.
+          WHY WE BUILT A THEKA.
         </SplitReveal>
 
         <Reveal delay={300} className="mt-8 max-w-[520px]">

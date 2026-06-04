@@ -177,7 +177,7 @@ export function ProductCard({
                   router.push(`/product/${product.slug}`);
                 }}
                 data-cursor="add"
-                className="font-display text-sm px-4 py-2 bg-[--neon] text-black border-2 border-black shadow-[2px_2px_0_0_#141518] hover:shadow-[0px_0px_0_0_#141518] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                className="font-mono text-[10px] uppercase tracking-[0.14em] px-4 py-2 bg-[--neon] text-black border-2 border-black shadow-[2px_2px_0_0_#141518] hover:shadow-[0px_0px_0_0_#141518] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
               >
                 ADD TO CART
               </button>
