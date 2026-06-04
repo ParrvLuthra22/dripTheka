@@ -1,14 +1,10 @@
 // Drip Theka — Drizzle ORM schema for Neon Postgres.
 //
-// V1 uses hardcoded data in /data/pour-001.ts.
-// This schema provides the persistence layer for:
-//   regulars      — newsletter sign-ups with referral codes
-//   reservations  — deposit-based pre-orders
-//   reservation_items — line items per reservation
-//   referrals     — referral code ledger
-//   reserve_count_cache — per-product reservation counter (fill bar reads this)
-//   pour_progress — per-pour overall progress (fill bar target)
-//   products      — V1.1 migration target for /data/pour-001.ts
+// Tables:
+//   Auth (NextAuth v5):  users, accounts, sessions, verification_tokens
+//   Business:           regulars, reservations, reservation_items,
+//                        referrals, reserve_count_cache, pour_progress,
+//                        products (V1.1 target)
 
 import {
   pgTable,
@@ -19,9 +15,59 @@ import {
   timestamp,
   jsonb,
   boolean,
+  primaryKey,
 } from "drizzle-orm/pg-core";
+import type { AdapterAccountType } from "next-auth/adapters";
 import { relations } from "drizzle-orm";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
+
+// ── NextAuth v5 tables ────────────────────────────────────────────────────
+// Required by @auth/drizzle-adapter. Shape matches Auth.js spec exactly.
+
+export const users = pgTable("users", {
+  id:            text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  name:          text("name"),
+  email:         text("email").unique(),
+  emailVerified: timestamp("email_verified", { mode: "date" }),
+  image:         text("image"),
+  // Drip Theka extras stored on the user row
+  referralCode:  text("referral_code").unique(),
+  createdAt:     timestamp("created_at").defaultNow(),
+});
+
+export const accounts = pgTable("accounts", {
+  userId:              text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  type:                text("type").$type<AdapterAccountType>().notNull(),
+  provider:            text("provider").notNull(),
+  providerAccountId:   text("provider_account_id").notNull(),
+  refresh_token:       text("refresh_token"),
+  access_token:        text("access_token"),
+  expires_at:          integer("expires_at"),
+  token_type:          text("token_type"),
+  scope:               text("scope"),
+  id_token:            text("id_token"),
+  session_state:       text("session_state"),
+}, (t) => [primaryKey({ columns: [t.provider, t.providerAccountId] })]);
+
+export const sessions = pgTable("sessions", {
+  sessionToken: text("session_token").primaryKey(),
+  userId:       text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  expires:      timestamp("expires", { mode: "date" }).notNull(),
+});
+
+export const verificationTokens = pgTable("verification_tokens", {
+  identifier: text("identifier").notNull(),
+  token:      text("token").notNull(),
+  expires:    timestamp("expires", { mode: "date" }).notNull(),
+}, (t) => [primaryKey({ columns: [t.identifier, t.token] })]);
+
+// ── Auth relations ────────────────────────────────────────────────────────
+
+export const usersRelations = relations(users, ({ many }) => ({
+  accounts:     many(accounts),
+  sessions:     many(sessions),
+  reservations: many(reservations, { relationName: "userReservations" }),
+}));
 
 // ── Enums ─────────────────────────────────────────────────────────────────
 
@@ -68,6 +114,7 @@ export const regulars = pgTable("regulars", {
 export const reservations = pgTable("reservations", {
   id:                 uuid("id").primaryKey().defaultRandom(),
   orderNumber:        text("order_number").notNull().unique(),   // DT-YYYY-NNNNN
+  userId:             text("user_id").references(() => users.id, { onDelete: "set null" }), // nullable — guest checkout
   email:              text("email").notNull(),
   name:               text("name").notNull(),
   phone:              text("phone").notNull(),

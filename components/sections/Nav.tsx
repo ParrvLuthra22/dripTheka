@@ -22,6 +22,7 @@ import { gsap } from "gsap";
 import { useSoundStore } from "@/lib/store/sound";
 import { useCartStore }  from "@/lib/store/cart";
 import { CountUp }       from "@/components/motion/CountUp";
+import { UserMenu }      from "@/components/auth/UserMenu";
 
 // ── Links ────────────────────────────────────────────────────────────────
 
@@ -33,11 +34,12 @@ const LEFT_LINKS = [
 ] as const;
 
 const MOBILE_LINKS = [
-  { label: "Pours",     href: "/pour/pour-001" },
-  { label: "Story",     href: "/story" },
-  { label: "Building",  href: "/building" },
-  { label: "Regulars",  href: "/regulars" },
-  { label: "Cart",      href: "/cart" },
+  { label: "Pours",    href: "/pour/pour-001" },
+  { label: "Story",    href: "/story" },
+  { label: "Building", href: "/building" },
+  { label: "Regulars", href: "/regulars" },
+  { label: "Cart",     href: "/cart" },
+  { label: "Account",  href: "/account" },
 ] as const;
 
 // ── NavLink with hairline-draw hover underline ────────────────────────────
@@ -344,6 +346,7 @@ export function Nav() {
               <ReservationCounter />
               <PourIndicator count={mounted ? count : 0} />
               <WalkInCTA onClick={handleWalkIn} />
+              <UserMenu />
 
               {/* Hamburger — mobile only */}
               <button

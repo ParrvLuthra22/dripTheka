@@ -5,6 +5,7 @@ import {
   Geist,
 } from "next/font/google";
 import "../styles/globals.css";
+import { SessionProvider } from "@/components/providers/SessionProvider";
 
 /* ─── Fonts ──────────────────────────────────────────────────────────────── */
 
@@ -69,7 +70,9 @@ export default function RootLayout({
       className={`${anton.variable} ${jetbrains.variable} ${geist.variable}`}
     >
       <body>
-        {children}
+        <SessionProvider>
+          {children}
+        </SessionProvider>
       </body>
     </html>
   );
