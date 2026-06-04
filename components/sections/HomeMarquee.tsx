@@ -4,8 +4,8 @@
 const PHRASES = [
   "DRIP THEKA",
   "SERVING FITS NOT DRINKS",
-  "NO RESTOCKS",
-  "TAPPED OUT",
+  "LIMITED STOCK",
+  "MAXED OUT",
   "POUR #001",
 ];
 

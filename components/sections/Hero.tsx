@@ -53,10 +53,10 @@ export function Hero() {
     if (skip) {
       setAlreadyPlayed(true);
       setScrambleDone(true);
-      gsap.set(scrambleRef.current, { opacity: 0, display: "none" });
-      gsap.set(taglineRef.current,  { opacity: 1, y: 0 });
-      gsap.set(ctaRef.current,      { opacity: 1, y: 0 });
-      gsap.set(metaRef.current,     { opacity: 1 });
+      if (scrambleRef.current) gsap.set(scrambleRef.current, { opacity: 0, display: "none" });
+      if (taglineRef.current) gsap.set(taglineRef.current,  { opacity: 1, y: 0 });
+      if (ctaRef.current) gsap.set(ctaRef.current,      { opacity: 1, y: 0 });
+      if (metaRef.current) gsap.set(metaRef.current,     { opacity: 1 });
       // Tell MorphingLogo to mount immediately
       dispatchReady();
       return;
@@ -65,9 +65,9 @@ export function Hero() {
     sessionStorage.setItem(SESSION_KEY, "1");
 
     // Initial hidden state
-    gsap.set(taglineRef.current,  { opacity: 0, y: 24 });
-    gsap.set(ctaRef.current,      { opacity: 0, y: 16 });
-    gsap.set(metaRef.current,     { opacity: 0 });
+    if (taglineRef.current) gsap.set(taglineRef.current,  { opacity: 0, y: 24 });
+    if (ctaRef.current) gsap.set(ctaRef.current,      { opacity: 0, y: 16 });
+    if (metaRef.current) gsap.set(metaRef.current,     { opacity: 0 });
 
     // Pour sound — fire on hero entrance if sound is on
     if (!muted) {
@@ -90,15 +90,15 @@ export function Hero() {
       },
     });
     // Reveal the rest
-    tl.to(taglineRef.current, {
+    if (taglineRef.current) tl.to(taglineRef.current, {
       opacity: 1, y: 0,
       duration: 0.65, ease: "power2.out",
     }, "-=0.1");
-    tl.to(ctaRef.current, {
+    if (ctaRef.current) tl.to(ctaRef.current, {
       opacity: 1, y: 0,
       duration: 0.5, ease: "power2.out",
     }, "-=0.45");
-    tl.to(metaRef.current, {
+    if (metaRef.current) tl.to(metaRef.current, {
       opacity: 1, duration: 0.4,
     }, "-=0.45");
   };

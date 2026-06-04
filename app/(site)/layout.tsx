@@ -28,8 +28,10 @@ import { Cursor }             from "@/components/ui/Cursor";
 import { LoadingScreen }      from "@/components/layout/LoadingScreen";
 import { ThekaEgg }           from "@/components/layout/ThekaEgg";
 import { HappyHour }          from "@/components/layout/HappyHour";
+import { FounderSecret }      from "@/components/layout/FounderSecret";
 import { MorphingLogo }       from "@/components/glass/MorphingLogo";
 import { ScrollProgressDrip } from "@/components/motion/ScrollProgressDrip";
+import { AudioReactive }      from "@/components/motion/AudioReactive";
 
 export default function SiteLayout({
   children,
@@ -58,12 +60,16 @@ export default function SiteLayout({
       {/* The signature moment — scroll-driven logo morph */}
       <MorphingLogo />
 
+      {/* Audio-reactive: drives --audio-level CSS var when ambient plays */}
+      <AudioReactive />
+
       {/* Right-edge scroll progress indicator */}
       <ScrollProgressDrip />
 
-      {/* Keyboard easter eggs */}
+      {/* Easter eggs */}
       <ThekaEgg />
       <HappyHour />
+      <FounderSecret />
 
       {/* First-session brand intro */}
       <LoadingScreen />

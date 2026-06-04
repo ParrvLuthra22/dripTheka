@@ -77,7 +77,9 @@ export default function RegularsPage() {
         body:    JSON.stringify({ ...form, source: "regulars-page" }),
       });
       if (!res.ok) throw new Error();
-      setRefCode(genCode());
+      const data = await res.json() as { referralCode?: string };
+      // Use server-generated code (from DB); fall back to client-generated if DB not connected
+      setRefCode(data.referralCode ?? genCode());
       setStatus("done");
     } catch {
       setStatus("error");

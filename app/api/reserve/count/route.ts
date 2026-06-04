@@ -1,44 +1,58 @@
 // GET /api/reserve/count — live reservation progress for Pour #001.
 //
-// Reads from pour_progress table. Falls back to hardcoded mock if DB
-// is not yet connected (development without DATABASE_URL configured).
+// Reads from pour_progress table.
+// Auto-seeds the pour_progress row if it doesn't exist yet (first-run UX).
+// Falls back to hardcoded mock if DB is not connected.
 //
-// Cached for 10 seconds at the edge (ISR) so the fill bar reflects
-// recent confirmations without hammering the DB on every poll tick.
+// Cached for 10 seconds at the edge (ISR) so polls are cheap.
 
 import { NextResponse } from "next/server";
 
-export const revalidate = 10; // 10s ISR cache — meets spec
-
-// ── DB available? ─────────────────────────────────────────────────────────
+export const revalidate = 10;
 
 const dbReady = () =>
   !!(process.env.DATABASE_URL &&
      !process.env.DATABASE_URL.includes("placeholder") &&
      process.env.DATABASE_URL !== "REPLACE_ME");
 
-// ── Handler ───────────────────────────────────────────────────────────────
 
 export async function GET() {
   if (!dbReady()) {
-    // Dev fallback — realistic non-zero mock so the fill bar is visible
     return NextResponse.json({ reserved: 38, total: 100, pct: 0.38 });
   }
 
   try {
-    const { db }          = await import("@/lib/db/client");
+    const { db }         = await import("@/lib/db/client");
     const { pourProgress } = await import("@/lib/db/schema");
-    const { eq }          = await import("drizzle-orm");
+    const { eq }         = await import("drizzle-orm");
 
-    const [row] = await db
+    let [row] = await db
       .select()
       .from(pourProgress)
       .where(eq(pourProgress.pourSlug, "001"))
       .limit(1);
 
+    // Auto-seed on first request if pour_progress doesn't exist yet
     if (!row) {
-      // pour_progress not seeded yet
-      return NextResponse.json({ reserved: 0, total: 100, pct: 0 });
+      await db
+        .insert(pourProgress)
+        .values({ pourSlug: "001", reserved: 0, target: 100 })
+        .onConflictDoNothing();
+
+      // Also seed reserve_count_cache for all products
+      try {
+        const { reserveCountCache } = await import("@/lib/db/schema");
+        const { POUR_001 }          = await import("@/data/pour-001");
+        await db
+          .insert(reserveCountCache)
+          .values(POUR_001.products.map(p => ({
+            productSlug:   p.slug,
+            reservedCount: 0,
+          })))
+          .onConflictDoNothing();
+      } catch { /* if cache already seeded, that's fine */ }
+
+      row = { pourSlug: "001", reserved: 0, target: 100, unlockedAt: null };
     }
 
     const { reserved, target: total } = row;
@@ -48,7 +62,6 @@ export async function GET() {
 
   } catch (err) {
     console.error("[reserve/count] DB error:", err);
-    // Return last-known mock rather than a 500 — fill bar degrades gracefully
     return NextResponse.json({ reserved: 38, total: 100, pct: 0.38 });
   }
 }

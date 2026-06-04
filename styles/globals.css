@@ -213,6 +213,34 @@
   }
 }
 
+/* ─── Audio-reactive backdrop ────────────────────────────────────────────
+   --audio-level (0–1) is driven by AudioReactive.tsx when sound is ON.
+   Cobalt sections (data-nav-tone="light") pulse subtly with the music.    */
+
+:root {
+  --audio-level: 0;
+}
+
+[data-nav-tone="light"] {
+  position: relative;
+}
+
+[data-nav-tone="light"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: radial-gradient(
+    ellipse 70% 50% at 50% 50%,
+    rgba(228, 226, 221, calc(var(--audio-level) * 0.06)) 0%,
+    transparent 70%
+  );
+  transition: background 80ms linear;
+  z-index: 2;
+  mix-blend-mode: screen;
+}
+
 /* ─── Easter egg: Happy Hour mode ────────────────────────────────────────
    Activated via Konami code. Cobalt #004AAD becomes warm red #FF4D33.
    Subtle warm tint on cream too. */

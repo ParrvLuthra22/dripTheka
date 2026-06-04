@@ -14,17 +14,17 @@ import { TypeOnScroll, type Segment as TypeSegment } from "@/components/motion/T
 const PARAGRAPHS: TypeSegment[][] = [
   [
     "We didn't start a clothing brand. We started a ",
-    { node: <em className="not-italic text-[--blue]">theka</em>, chars: 5 },
+    { node: <em key="1" className="not-italic text-[--blue]">theka</em>, chars: 5 },
     " — a corner where the dripped meet, where heritage and concrete shake hands, where every fit ",
-    { node: <em className="not-italic text-[--blue]">means something.</em>, chars: 16 },
+    { node: <em key="2" className="not-italic text-[--blue]">means something.</em>, chars: 16 },
   ],
   [
     "Made in India, for the kids who code at midnight, ride at dawn, and dress like the city is theirs. ",
-    { node: <em className="not-italic text-[--blue]">Because it is.</em>, chars: 14 },
+    { node: <em key="3" className="not-italic text-[--blue]">Because it is.</em>, chars: 14 },
   ],
   [
     "Six pieces. One colourway. Two hundred of each. When it's gone it's ",
-    { node: <em className="not-italic text-[--blue]">Tapped Out</em>, chars: 10 },
+    { node: <em key="4" className="not-italic text-[--blue]">Tapped Out</em>, chars: 10 },
     " — no restocks, no waiting lists. You either got it or you didn't. That's not scarcity marketing; that's respect for your time.",
   ],
 ];

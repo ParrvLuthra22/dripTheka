@@ -342,7 +342,7 @@ export function Nav() {
             <div className="flex items-center gap-4 min-w-0">
               <SoundIndicator muted={!mounted || muted} onClick={toggleSound} />
               <ReservationCounter />
-              <PourIndicator count={count} />
+              <PourIndicator count={mounted ? count : 0} />
               <WalkInCTA onClick={handleWalkIn} />
 
               {/* Hamburger — mobile only */}

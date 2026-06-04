@@ -1,91 +1,150 @@
 "use client";
 
-// PourTransition — Barba-style "pour in / pour out" route transition.
+// PourTransition — path-aware route transitions.
 //
-// On every pathname change:
-//   Desktop (> 768px):
-//     1. Cream overlay sweeps DOWN from top  (0 → 700ms)
-//     2. Wordmark fades in at peak           (600 → 800ms)
-//     3. New page has rendered behind overlay
-//     4. Overlay sweeps DOWN off-screen      (800 → 1500ms)
+// Each route type gets a distinct visual flavour:
 //
-//   Mobile (≤ 768px):
-//     Simple 300ms opacity fade — no layout shift risk.
+//   /product/*    → Cream curtain drops from top (classic pour)
+//   /pour/*       → Cobalt flood from bottom (poured into a glass)
+//   /regulars     → Cobalt flood from bottom (same energy)
+//   /story        → Horizontal wipe left (turning a page)
+//   /building/*   → Vertical stack reveal (cards fan in)
+//   /cart         → Scale + opacity (the pint grows)
+//   everything else → Default cream sweep
 //
-// The overlay is positioned OUTSIDE <main> so it sits above Nav/Footer.
-// Children always render — we never block hydration.
+//   Mobile: always 300ms opacity fade
 
 import {
-  useEffect,
-  useRef,
-  useState,
-  useCallback,
-  type ReactNode,
+  useEffect, useRef, useState, useCallback, type ReactNode,
 } from "react";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import Image from "next/image";
 
-// Ease: cubic-bezier(.6,.05,.2,1) — same as --ease-pour
 const EASE_POUR = [0.6, 0.05, 0.2, 1] as const;
 const EASE_EXPO = [0.16, 1,   0.3, 1] as const;
 
-// Desktop timing (ms → s for Framer)
-const D_IN   = 0.68;  // overlay sweeps in
-const D_HOLD = 0.16;  // hold at peak (wordmark visible)
-const D_OUT  = 0.68;  // overlay sweeps out
-const D_TOTAL = D_IN + D_HOLD + D_OUT; // ≈ 1.52s
+function getVariant(path: string) {
+  if (path.startsWith("/product/"))  return "product";
+  if (path.startsWith("/pour/"))     return "pour";
+  if (path === "/regulars")          return "regulars";
+  if (path === "/story")             return "story";
+  if (path.startsWith("/building"))  return "building";
+  if (path === "/cart")              return "cart";
+  return "default";
+}
 
-// keyframe time fractions  [0, in, in+hold, total] / total
-const T0  = 0;
-const T1  = D_IN / D_TOTAL;
-const T2  = (D_IN + D_HOLD) / D_TOTAL;
-const T3  = 1;
+function DesktopOverlay({ onDone, toPath }: { onDone: () => void; toPath: string }) {
+  const variant = getVariant(toPath);
 
-// ── Desktop overlay ───────────────────────────────────────────────────────
+  // Shared duration
+  const D = 1.38;
+  const T = [0, 0.45, 0.54, 1];
 
-function DesktopOverlay({ onDone }: { onDone: () => void }) {
+  if (variant === "pour" || variant === "regulars") {
+    // Cobalt flood from bottom
+    return (
+      <motion.div
+        className="fixed inset-0 z-[80] pointer-events-none will-change-transform"
+        style={{ backgroundColor: "#004AAD" }}
+        initial={{ y: "100%" }}
+        animate={{ y: ["100%", "0%", "0%", "-100%"] }}
+        transition={{ duration: D, times: T, ease: [EASE_EXPO, "linear", EASE_POUR] as never }}
+        onAnimationComplete={onDone}
+      >
+        <motion.div
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+          animate={{ opacity: [0, 0, 1, 1, 0] }}
+          transition={{ duration: D, times: [0, T[0]+0.3, T[1], T[2], T[2]+0.08], ease: "easeInOut" }}
+        >
+          <Image src="/dtlogo-cropped.png" alt="" width={480} height={192}
+            style={{ height: "clamp(2rem, 5vh, 4rem)", width: "auto", opacity: 0.9 }} />
+        </motion.div>
+      </motion.div>
+    );
+  }
+
+  if (variant === "story") {
+    // Horizontal wipe left
+    return (
+      <motion.div
+        className="fixed inset-0 z-[80] bg-[--cream] pointer-events-none will-change-transform"
+        initial={{ x: "100%" }}
+        animate={{ x: ["100%", "0%", "0%", "-100%"] }}
+        transition={{ duration: D, times: T, ease: [EASE_EXPO, "linear", EASE_POUR] as never }}
+        onAnimationComplete={onDone}
+      >
+        <motion.div
+          className="absolute inset-0 flex items-center justify-center"
+          animate={{ opacity: [0, 0, 1, 1, 0] }}
+          transition={{ duration: D, times: [0, T[0]+0.3, T[1], T[2], T[2]+0.08] }}
+        >
+          <span className="font-display italic text-[--ink]/40 select-none"
+            style={{ fontSize: "clamp(1.5rem, 5vw, 4rem)" }}>
+            The Story.
+          </span>
+        </motion.div>
+      </motion.div>
+    );
+  }
+
+  if (variant === "product") {
+    // Cream curtain from top — classic pour
+    return (
+      <motion.div
+        className="fixed inset-0 z-[80] bg-[--cream] flex items-center justify-center pointer-events-none will-change-transform"
+        initial={{ y: "-100%" }}
+        animate={{ y: ["-100%", "0%", "0%", "100%"] }}
+        transition={{ duration: D, times: T, ease: [EASE_POUR, "linear", EASE_EXPO] as never }}
+        onAnimationComplete={onDone}
+      >
+        <motion.span
+          className="font-mono text-[9px] uppercase tracking-[0.18em] text-[--ink]/50 select-none"
+          animate={{ opacity: [0, 0, 1, 1, 0] }}
+          transition={{ duration: D, times: [0, T[0]+0.3, T[1], T[2], T[2]+0.08] }}
+        >
+          Pour #001
+        </motion.span>
+      </motion.div>
+    );
+  }
+
+  if (variant === "cart") {
+    // Scale + fade
+    return (
+      <motion.div
+        className="fixed inset-0 z-[80] bg-[--cream] flex items-center justify-center pointer-events-none"
+        initial={{ opacity: 0, scale: 1.04 }}
+        animate={{ opacity: [0, 1, 1, 0], scale: [1.04, 1, 1, 0.97] }}
+        transition={{ duration: 0.9, times: [0, 0.3, 0.7, 1], ease: "easeInOut" }}
+        onAnimationComplete={onDone}
+      />
+    );
+  }
+
+  // Default: cream sweep down
   return (
     <motion.div
-      key="pour-overlay"
-      className={[
-        "fixed inset-0 z-[80] bg-[--cream]",
-        "flex items-center justify-center",
-        "pointer-events-none will-change-transform",
-      ].join(" ")}
-      // Keyframe: off-screen top → cover → off-screen bottom
+      className="fixed inset-0 z-[80] bg-[--cream] flex items-center justify-center pointer-events-none will-change-transform"
       initial={{ y: "-100%" }}
       animate={{ y: ["-100%", "0%", "0%", "100%"] }}
-      transition={{
-        duration: D_TOTAL,
-        times:    [T0, T1, T2, T3],
-        ease:     [EASE_POUR, "linear", EASE_EXPO],
-      } as Parameters<typeof motion.div>[0]["transition"]}
+      transition={{ duration: D, times: T, ease: [EASE_POUR, "linear", EASE_EXPO] as never }}
       onAnimationComplete={onDone}
     >
-      {/* Wordmark at peak — fades in then out */}
-      <motion.span
-        aria-hidden="true"
-        className="font-display italic text-[--ink] select-none"
-        style={{ fontSize: "clamp(1.75rem, 4vw, 3.5rem)" }}
+      <motion.div
         animate={{ opacity: [0, 0, 1, 1, 0] }}
-        transition={{
-          duration: D_TOTAL,
-          times: [0, T1 * 0.8, T1, T2, T2 + 0.08],
-          ease: "easeInOut",
-        }}
+        transition={{ duration: D, times: [0, T[0]+0.3, T[1], T[2], T[2]+0.08] }}
       >
-        Drip Theka
-      </motion.span>
+        <Image src="/dtlogo-cropped.png" alt="" width={480} height={192}
+          style={{ height: "clamp(1.5rem, 4vh, 3rem)", width: "auto", opacity: 0.85 }} />
+      </motion.div>
     </motion.div>
   );
 }
 
-// ── Mobile overlay ────────────────────────────────────────────────────────
-
 function MobileOverlay({ onDone }: { onDone: () => void }) {
   return (
     <motion.div
-      key="pour-overlay-mobile"
       className="fixed inset-0 z-[80] bg-[--cream] pointer-events-none"
       initial={{ opacity: 1 }}
       animate={{ opacity: [1, 1, 0] }}
@@ -95,20 +154,14 @@ function MobileOverlay({ onDone }: { onDone: () => void }) {
   );
 }
 
-// ── PourTransition wrapper ────────────────────────────────────────────────
-
-interface PourTransitionProps {
-  children: ReactNode;
-}
-
-export function PourTransition({ children }: PourTransitionProps) {
+export function PourTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   const prevPathname = useRef(pathname);
-  // Increment to remount overlay on each transition
   const [overlayKey, setOverlayKey] = useState(0);
   const [overlayActive, setOverlayActive] = useState(false);
-  // Detect mobile once on client — default false for SSR
+  // Store the destination path so the overlay variant matches
+  const [toPath, setToPath] = useState(pathname);
   const isMobileRef = useRef(false);
 
   useEffect(() => {
@@ -120,26 +173,22 @@ export function PourTransition({ children }: PourTransitionProps) {
   useEffect(() => {
     if (pathname === prevPathname.current) return;
     prevPathname.current = pathname;
-
+    setToPath(pathname);
     setOverlayKey((k) => k + 1);
     setOverlayActive(true);
   }, [pathname]);
 
-  const handleDone = useCallback(() => {
-    setOverlayActive(false);
-  }, []);
+  const handleDone = useCallback(() => setOverlayActive(false), []);
 
   return (
     <>
-      {/* Children always in DOM — overlay sits above them */}
       {children}
-
       <AnimatePresence>
         {overlayActive &&
           (isMobileRef.current ? (
             <MobileOverlay key={overlayKey} onDone={handleDone} />
           ) : (
-            <DesktopOverlay key={overlayKey} onDone={handleDone} />
+            <DesktopOverlay key={overlayKey} onDone={handleDone} toPath={toPath} />
           ))}
       </AnimatePresence>
     </>
