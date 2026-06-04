@@ -19,7 +19,21 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*":              ["./*"],
+      "@frontend/*":      ["./frontend/*"],
+      "@backend/*":       ["./backend/*"],
+      "@ui/*":            ["./components/ui/*"],
+      "@glass/*":         ["./components/glass/*"],
+      "@sections/*":      ["./components/sections/*"],
+      "@motion/*":        ["./components/motion/*"],
+      "@sound/*":         ["./components/sound/*"],
+      "@transitions/*":   ["./components/transitions/*"],
+      "@db/*":            ["./lib/db/*"],
+      "@store/*":         ["./lib/store/*"],
+      "@utils/*":         ["./lib/utils/*"],
+      "@razorpay/*":      ["./lib/razorpay/*"],
+      "@klaviyo/*":       ["./lib/klaviyo/*"],
+      "@data/*":          ["./data/*"]
     }
   },
   "include": [
