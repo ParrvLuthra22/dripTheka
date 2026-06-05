@@ -5,7 +5,7 @@
 // Each paragraph types out 60ms/char when it enters viewport.
 
 import Link from "next/link";
-import { Eyebrow } from "@/components/ui/Eyebrow";
+import { ThekaLabel } from "@/components/ui/ThekaLabel";
 import { Reveal }  from "@/components/motion/Reveal";
 import { TypeOnScroll, type Segment as TypeSegment } from "@/components/motion/TypeOnScroll";
 
@@ -39,7 +39,7 @@ export function StoryTeaser() {
       <div style={{ paddingInline: "var(--pad-x)" }}>
         {/* Top eyebrow */}
         <Reveal className="flex justify-end mb-12">
-          <Eyebrow color="ink">[03 / The Story]</Eyebrow>
+          <ThekaLabel k="theStory" color="ink" />
         </Reveal>
 
         <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-12 md:gap-20">

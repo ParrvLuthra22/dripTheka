@@ -17,6 +17,7 @@ import {
 } from "@/data/pour-001";
 import type { Product, Size } from "@/data/pour-001";
 import { copy } from "@/data/copy";
+import { ThekaLabel, type ThekaKey } from "@/components/ui/ThekaLabel";
 
 // ── Mono detail list generator ─────────────────────────────────────────────
 function buildDetails(product: Product): string[] {
@@ -35,14 +36,14 @@ function buildDetails(product: Product): string[] {
   ];
 }
 
-// ── Tag labels — sourced from copy.ts ─────────────────────────────────────
-const TAGS: Record<string, string> = {
-  "dt-001-001": copy.status.freshlyPoured,
-  "dt-001-002": copy.status.happyHour,
-  "dt-001-003": copy.status.freshlyPoured,
-  "dt-001-004": copy.status.lastRound,
-  "dt-001-005": copy.status.tappedOut,
-  "dt-001-006": copy.status.freshlyPoured,
+// ── Tag palette — maps product IDs → copy.language keys ──────────────────
+const TAGS: Record<string, ThekaKey> = {
+  "dt-001-001": "freshlyPoured",
+  "dt-001-002": "happyHour",
+  "dt-001-003": "freshlyPoured",
+  "dt-001-004": "lastRound",
+  "dt-001-005": "tappedOut",
+  "dt-001-006": "freshlyPoured",
 };
 
 type AddState = "idle" | "adding" | "poured";
@@ -56,7 +57,7 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
   const { muted, play } = useSound();
 
   const tappedOut = isTappedOut(product.sizes);
-  const tag       = TAGS[product.id] ?? copy.status.freshlyPoured;
+  const tagKey: ThekaKey = TAGS[product.id] ?? "freshlyPoured";
   const details   = buildDetails(product);
 
   const availableSizes = product.sizes.filter((s) => s.stock > 0);
@@ -94,18 +95,20 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
         "md:border-l md:border-[--ink]/8",
       )}
     >
-      {/* ── Tag pill ────────────────────────────────────────────── */}
+      {/* ── Tag pill — sidebar version with full Hinglish gloss ──── */}
       <div>
-        <span
+        <ThekaLabel
+          k={tappedOut ? "tappedOut" : tagKey}
+          as="span"
+          showHi={true}
+          hairline={false}
           className={cn(
-            "font-mono text-[8px] uppercase tracking-[0.16em] px-2.5 py-1 inline-block",
+            "px-2.5 py-1 text-[8px]",
             tappedOut
               ? "bg-[#3D0000] text-[#FF7070]"
               : "bg-[--ink] text-[--cream]"
           )}
-        >
-          {tappedOut ? copy.status.tappedOut : tag}
-        </span>
+        />
       </div>
 
       {/* ── Product name ─────────────────────────────────────────── */}
@@ -305,9 +308,9 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
           {/* Disabled CTA */}
           <button
             disabled
-            className="w-full py-4 font-mono text-[10px] uppercase tracking-[0.16em] bg-[--ink]/8 text-[--ink]/25 cursor-not-allowed"
+            className="w-full py-4 font-mono text-[10px] uppercase tracking-[0.16em] bg-[--ink]/8 text-[--ink]/25 cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {copy.status.tappedOut}
+            <ThekaLabel k="tappedOut" as="span" hairline={false} showHi={true} color="ink" className="text-[--ink]/25" />
           </button>
 
           {/* Secondary CTA — refill notify */}

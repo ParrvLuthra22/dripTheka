@@ -5,7 +5,7 @@
 
 import Link from "next/link";
 import { ProductCard } from "@/components/ui/ProductCard";
-import { Eyebrow } from "@/components/ui/Eyebrow";
+import { ThekaLabel } from "@/components/ui/ThekaLabel";
 import { Reveal } from "@/components/motion/Reveal";
 import { POUR_001 } from "@/data/pour-001";
 
@@ -41,7 +41,7 @@ export function CurrentlyPouring() {
         {/* Section header */}
         <Reveal className="flex items-start justify-between mb-12 border-b border-[--ink]/10 pb-8">
           <div>
-            <Eyebrow color="ink" className="mb-3">[02 / Currently Pouring]</Eyebrow>
+            <ThekaLabel k="currentlyPouring" color="ink" className="mb-3" />
             <h2
               id="pouring-heading"
               className="font-display italic text-[--ink] leading-none"

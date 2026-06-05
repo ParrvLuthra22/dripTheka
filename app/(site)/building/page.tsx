@@ -6,7 +6,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Eyebrow }       from "@/components/ui/Eyebrow";
+import { ThekaLabel }    from "@/components/ui/ThekaLabel";
 import { Reveal }        from "@/components/motion/Reveal";
 import { BUILDING_POSTS } from "@/data/building";
 import { cn }             from "@/lib/utils/cn";
@@ -28,7 +28,7 @@ export default function BuildingIndexPage() {
         style={{ paddingInline: "var(--pad-x)" }}
       >
         <Reveal className="mb-5">
-          <Eyebrow>[Building Theka]</Eyebrow>
+          <ThekaLabel k="buildingTheka" />
         </Reveal>
         <Reveal delay={80}>
           <h1

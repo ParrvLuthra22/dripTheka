@@ -7,6 +7,7 @@ import { useRef, useEffect, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import { DROP_DATE, POUR_001 } from "@/data/pour-001";
+import { copy } from "@/data/copy";
 
 type TimeLeft = { days: number; hours: number; mins: number } | null;
 
@@ -69,17 +70,24 @@ export function PourHeroStrip() {
     >
       {/* ── Top row ──────────────────────────────────────────────── */}
       <div className="flex items-start justify-between pt-6 md:pt-8">
-        {/* Left eyebrow */}
+        {/* Left — Pour #001 · pehla pyaala */}
         <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#E4E2DD]/50">
-          Pour&nbsp;/&nbsp;{POUR_001.number}
+          {copy.language.pour001.en}
+          <span className="lowercase italic opacity-50 tracking-normal not-uppercase ml-1">
+            · {copy.language.pour001.hi}
+          </span>
         </p>
 
         {/* Right countdown */}
         <div className="text-right">
           {timeLeft ? (
             <>
+              {/* "Opening Night · doors khulne wale hain · 14D 06H 22M" */}
               <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-[#E4E2DD]/40 mb-1">
-                Doors Open In
+                {copy.language.openingNight.en}
+                <span className="lowercase italic opacity-60 tracking-normal not-uppercase ml-1">
+                  · {copy.language.openingNight.hi}
+                </span>
               </p>
               <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-[#E4E2DD] tabular-nums">
                 {String(timeLeft.days).padStart(2, "0")}D&nbsp;
@@ -92,8 +100,11 @@ export function PourHeroStrip() {
               <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-[#E4E2DD]/40 mb-1">
                 Status
               </p>
-              <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-[#004AAD] bg-[#E4E2DD] px-2 py-0.5">
-                Now Pouring
+              <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-[#004AAD] bg-[#E4E2DD] px-2 py-0.5 flex items-center gap-1.5">
+                {copy.language.nowPouring.en}
+                <span className="lowercase italic opacity-60 tracking-normal not-uppercase text-[9px]">
+                  · {copy.language.nowPouring.hi}
+                </span>
               </p>
             </>
           )}

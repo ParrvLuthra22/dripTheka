@@ -8,7 +8,7 @@ import Link from "next/link";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Eyebrow } from "@/components/ui/Eyebrow";
+import { ThekaLabel } from "@/components/ui/ThekaLabel";
 import { Reveal } from "@/components/motion/Reveal";
 import { BUILDING_POSTS } from "@/data/building";
 
@@ -79,7 +79,7 @@ export function BuildingTeaser() {
         {/* Header */}
         <Reveal className="flex items-start justify-between mb-12">
           <div>
-            <Eyebrow color="ink" className="mb-3">[04 / Building Theka]</Eyebrow>
+            <ThekaLabel k="buildingTheka" color="ink" className="mb-3" />
             <h2
               id="building-heading"
               className="font-display italic text-[--ink] leading-none"
@@ -88,7 +88,11 @@ export function BuildingTeaser() {
               From the Founder.
             </h2>
           </div>
-          <Eyebrow color="ink" className="hidden md:flex">{BUILDING_POSTS.length} dispatches</Eyebrow>
+          {/* "dispatches" is a count, not a Theka proper noun — keep as Eyebrow inline */}
+          <p className="hidden md:flex items-center gap-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-[--ink]/50">
+            <span className="block w-px h-5 bg-current opacity-40 shrink-0" aria-hidden="true" />
+            {BUILDING_POSTS.length} dispatches
+          </p>
         </Reveal>
 
         {/*

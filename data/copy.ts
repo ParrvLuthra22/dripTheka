@@ -179,6 +179,27 @@ export const copy = {
     madeIn: "Made in Delhi. Sold to the world.",
   },
 
+  // ── Bilingual Theka Language — proper nouns with Hinglish glosses ─────────
+  // Used by <ThekaLabel k="..." /> — Roman Hindi only, no Devanagari here.
+  // EN = the primary label. HI = lowercase italic gloss shown after a dot.
+
+  language: {
+    currentlyPouring: { en: "Currently Pouring", hi: "abhi nikla hai"          },
+    lastCall:         { en: "Last Call",          hi: "ek aakhri baar"          },
+    buildingTheka:    { en: "Building Theka",     hi: "banaate hue"             },
+    theStory:         { en: "The Story",          hi: "poori kahaani"           },
+    tappedOut:        { en: "Tapped Out",         hi: "khatam"                  },
+    nowPouring:       { en: "Now Pouring",        hi: "abhi chal raha hai"      },
+    openingNight:     { en: "Opening Night",      hi: "doors khulne wale hain"  },
+    pour001:          { en: "Pour #001",          hi: "pehla pyaala"            },
+    refilled:         { en: "Refilled",           hi: "bharwa diya"             },
+    happyHour:        { en: "Happy Hour",         hi: "do peg waale"            },
+    freshlyPoured:    { en: "Freshly Poured",     hi: "abhi nikla hai"          },
+    lastRound:        { en: "Last Round",         hi: "khatam hone wala hai"    },
+    regulars:         { en: "Regulars",           hi: "permanent customers"      },
+    wrongTheka:       { en: "Wrong Theka",        hi: "galat gully"             },
+  },
+
   // ── 404 ───────────────────────────────────────────────────────────────────
 
   notFound: {

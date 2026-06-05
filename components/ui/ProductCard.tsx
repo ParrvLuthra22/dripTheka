@@ -12,15 +12,17 @@ import { ProductIllustration } from "@/components/sections/ProductIllustration";
 import { isTappedOut, getPriceDisplay, POUR_001 } from "@/data/pour-001";
 import type { Product } from "@/data/pour-001";
 import { copy } from "@/data/copy";
+import { ThekaLabel, type ThekaKey } from "@/components/ui/ThekaLabel";
 
-// Theka-language tag palette — strings sourced from copy.ts
-const TAGS: Record<string, string> = {
-  "dt-001-001": copy.status.freshlyPoured,
-  "dt-001-002": copy.status.happyHour,
-  "dt-001-003": copy.status.freshlyPoured,
-  "dt-001-004": copy.status.lastRound,
-  "dt-001-005": copy.status.tappedOut,
-  "dt-001-006": copy.status.freshlyPoured,
+// Theka-language tag palette — maps product IDs → copy.language keys
+// Tag pills use showHi={false}: Hinglish makes them too wide on mobile
+const TAGS: Record<string, ThekaKey> = {
+  "dt-001-001": "freshlyPoured",
+  "dt-001-002": "happyHour",
+  "dt-001-003": "freshlyPoured",
+  "dt-001-004": "lastRound",
+  "dt-001-005": "tappedOut",
+  "dt-001-006": "freshlyPoured",
 };
 
 interface ProductCardProps {
@@ -36,7 +38,7 @@ export function ProductCard({
 }: ProductCardProps) {
   const router     = useRouter();
   const tappedOut  = isTappedOut(product.sizes);
-  const tag        = TAGS[product.id] ?? copy.status.freshlyPoured;
+  const tagKey: ThekaKey = TAGS[product.id] ?? "freshlyPoured";
   const primary    = product.colors[0];
   const accent     = product.colors[1] ?? "#E4E2DD";
   const productNum = POUR_001.products.findIndex((p) => p.id === product.id) + 1;
@@ -115,19 +117,22 @@ export function ProductCard({
           {/* Tapped Out watermark — typographic stamp */}
           {tappedOut && <TappedOutStamp />}
 
-          {/* Tag pill — top left; rotates on hover */}
+          {/* Tag pill — top left; rotates on hover. showHi=false: too wide on mobile */}
           <div className="absolute top-3 left-3 z-10">
-            <span
+            <ThekaLabel
+              k={tappedOut ? "tappedOut" : tagKey}
+              as="span"
+              showHi={false}
+              hairline={false}
+              color={tappedOut ? "cream" : "cream"}
               className={cn(
-                "font-mono text-[8px] uppercase tracking-[0.14em] px-2 py-1",
-                "inline-block transition-transform duration-300 group-hover:rotate-[-2deg]",
+                "px-2 py-1",
+                "transition-transform duration-300 group-hover:rotate-[-2deg]",
                 tappedOut
                   ? "bg-[#3D0000] text-[#FF7070]"
                   : "bg-[--ink]/80 text-[--cream]"
               )}
-            >
-              {tag}
-            </span>
+            />
           </div>
 
           {/* Price — top right */}

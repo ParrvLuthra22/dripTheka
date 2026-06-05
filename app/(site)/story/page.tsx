@@ -5,7 +5,7 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Eyebrow }       from "@/components/ui/Eyebrow";
+import { ThekaLabel }    from "@/components/ui/ThekaLabel";
 import { Reveal }        from "@/components/motion/Reveal";
 import { SplitReveal }   from "@/components/motion/SplitReveal";
 
@@ -19,7 +19,7 @@ export default function StoryPage() {
         style={{ paddingInline: "var(--pad-x)", paddingBlock: "clamp(4rem, 8vw, 8rem)" }}
       >
         <Reveal className="mb-6">
-          <Eyebrow>[Chapter 01 / The Story]</Eyebrow>
+          <ThekaLabel k="theStory" />
         </Reveal>
 
         <SplitReveal
