@@ -8,14 +8,17 @@
 //   main           → page content
 //   Footer         → ink background + video header
 //
-// Fixed/global overlays:
-//   MorphingLogo       → hero → nav scroll-driven logo morph
-//   ScrollProgressDrip → right-edge cobalt fill line + droplet
-//   Cursor             → custom dot + ring + label, desktop only
-//   ThekaEgg           → keyboard easter egg (type "theka")
-//   LoadingScreen      → fullscreen brand intro, once per session
-//   PintGlass          → cart indicator (legacy — currently in nav)
-//   SoundToggle        → bottom-left
+// Fixed/global overlays (z-index order, lowest → highest):
+//   MorphingLogo       → z-45  — hero → nav scroll-driven logo morph
+//   ScrollProgressDrip → z-30  — right-edge cobalt fill line + droplet
+//   Cursor             → z-9999 — custom dot + ring + label, desktop only
+//   SoundToggle        → z-60  — bottom-left ambient toggle
+//   PintGlass          → z-40  — cart indicator, desktop only
+//   ThekaEgg           → z-100 — keyboard easter egg (type "theka")
+//   HappyHour          → z-100 — Konami easter egg
+//   FounderSecret      → z-60  — scroll-to-bottom secret
+//   LoadingScreen      → z-200 — brand intro, once per session
+//   Bouncer            → z-300 — 18+ age gate (above everything)
 
 import { SmoothScroll }       from "@/components/motion/SmoothScroll";
 import { SoundProvider }      from "@/components/sound/SoundProvider";
@@ -26,6 +29,7 @@ import { PintGlass }          from "@/components/glass/PintGlass";
 import { PourTransition }     from "@/components/transitions/PourTransition";
 import { Cursor }             from "@/components/ui/Cursor";
 import { LoadingScreen }      from "@/components/layout/LoadingScreen";
+import { Bouncer }            from "@/components/layout/Bouncer";
 import { ThekaEgg }           from "@/components/layout/ThekaEgg";
 import { HappyHour }          from "@/components/layout/HappyHour";
 import { FounderSecret }      from "@/components/layout/FounderSecret";
@@ -73,6 +77,9 @@ export default function SiteLayout({
 
       {/* First-session brand intro */}
       <LoadingScreen />
+
+      {/* 18+ age gate — z-[300], above everything. Legal pages exempt. */}
+      <Bouncer />
     </SoundProvider>
   );
 }
