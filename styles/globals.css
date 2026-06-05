@@ -330,3 +330,54 @@ html.happy-hour body {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
+
+/* ─── Print styles — thermal receipt ───────────────────────────────────────
+   Cmd+P / Ctrl+P on the success page prints just the receipt.
+   No nav, footer, buttons, or background chrome.
+   Target size: 80mm wide (standard thermal receipt width).             */
+
+@media print {
+  /* Hide all UI chrome */
+  header, footer, nav,
+  [data-no-print],
+  [aria-label="Cart"],
+  [class*="fixed"],
+  [class*="z-["],
+  button,
+  a:not(#receipt-print-target a) {
+    display: none !important;
+  }
+
+  /* Show only the receipt */
+  body {
+    background: white !important;
+    margin:     0 !important;
+    padding:    0 !important;
+  }
+
+  main {
+    padding-top: 0 !important;
+    min-height:  auto !important;
+  }
+
+  #receipt-print-target {
+    display:    block !important;
+    visibility: visible !important;
+    position:   static !important;
+    width:      100% !important;
+    max-width:  100% !important;
+    box-shadow: none !important;
+    margin:     0 auto !important;
+    page-break-inside: avoid;
+  }
+
+  /* Receipt action buttons */
+  [class*="flex-wrap"][class*="gap-3"] {
+    display: none !important;
+  }
+
+  @page {
+    margin: 8mm;
+    size:   80mm auto; /* standard thermal receipt width */
+  }
+}
