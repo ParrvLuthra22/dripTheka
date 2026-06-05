@@ -8,6 +8,9 @@
 
 import Link  from "next/link";
 import Image from "next/image";
+import { useState, useEffect } from "react";
+import { copy } from "@/data/copy";
+import { getSessionWisdom } from "@/lib/utils/copy";
 
 const POURS = [
   { label: "Pour #001 — The First Round", href: "/pour/pour-001" },
@@ -26,6 +29,21 @@ const CONNECT = [
 ];
 
 export function Footer() {
+  const [wisdom, setWisdom] = useState<string>("");
+
+  useEffect(() => {
+    const line = getSessionWisdom();
+    setWisdom(line);
+
+    // PostHog event — track which wisdom was shown
+    if (typeof window !== "undefined" && (window as unknown as { posthog?: { capture: (n: string, p: object) => void } }).posthog) {
+      (window as unknown as { posthog: { capture: (n: string, p: object) => void } }).posthog.capture(
+        "voice_copy_loaded",
+        { wisdom_line: line, wisdom_total: copy.footer.wisdom.length }
+      );
+    }
+  }, []);
+
   return (
     <footer
       data-nav-tone="light"
@@ -197,12 +215,21 @@ export function Footer() {
 
       {/* ── Bottom bar ───────────────────────────────────────────── */}
       <div className="border-t border-[--cream]/8">
+        {/* Theka Wisdom — one line, pinned for the session via getSessionWisdom() */}
+        {wisdom && (
+          <p
+            className="text-center font-mono text-[9px] italic text-[--cream]/40 py-3 border-b border-[--cream]/5 select-none"
+            style={{ paddingInline: "var(--pad-x)" }}
+          >
+            {wisdom}
+          </p>
+        )}
         <div
           className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-4"
           style={{ paddingInline: "var(--pad-x)" }}
         >
           <p className="font-mono text-[8px] uppercase tracking-[0.12em] text-[--cream]/20">
-            © 2026 Drip Theka · Made in Delhi · Pour #001 / V1.0
+            © 2026 Drip Theka · {copy.footer.madeIn} · Pour #001 / V1.0
           </p>
           <nav aria-label="Legal" className="flex items-center gap-4">
             {[

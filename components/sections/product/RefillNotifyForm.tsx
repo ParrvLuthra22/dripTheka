@@ -4,9 +4,10 @@
 // Collects email and adds to Klaviyo restock flow.
 
 import { useState, type FormEvent } from "react";
+import { copy } from "@/data/copy";
 
 interface RefillNotifyFormProps {
-  productId: string;
+  productId:   string;
   productName: string;
 }
 
@@ -20,7 +21,6 @@ export function RefillNotifyForm({ productId, productName }: RefillNotifyFormPro
     setStatus("loading");
 
     try {
-      // V1: uses the same regulars endpoint with a product tag
       const res = await fetch("/api/regulars", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
@@ -39,7 +39,7 @@ export function RefillNotifyForm({ productId, productName }: RefillNotifyFormPro
           You&apos;re on the list.
         </p>
         <p className="font-sans text-sm text-[--ink]/50">
-          We&apos;ll ping you if {productName} gets a refill. Don&apos;t hold your breath — but hey, stranger things have happened.
+          {copy.forms.success.refillNotify} Don&apos;t hold your breath — but hey, stranger things have happened.
         </p>
       </div>
     );
@@ -48,7 +48,7 @@ export function RefillNotifyForm({ productId, productName }: RefillNotifyFormPro
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink]/40">
-        Tell me on Refill
+        {copy.cta.refillNotify}
       </p>
       <div className="flex gap-2">
         <input
@@ -56,7 +56,7 @@ export function RefillNotifyForm({ productId, productName }: RefillNotifyFormPro
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="your@email.com"
+          placeholder={copy.forms.placeholders.email}
           className="flex-1 bg-transparent border-b border-[--ink]/20 focus:border-[--ink] font-sans text-sm text-[--ink] placeholder-[--ink]/25 py-2 outline-none transition-colors"
         />
         <button
@@ -64,11 +64,11 @@ export function RefillNotifyForm({ productId, productName }: RefillNotifyFormPro
           disabled={status === "loading"}
           className="font-mono text-[9px] uppercase tracking-[0.14em] border border-[--ink]/20 px-3 py-2 hover:border-[--ink] transition-colors disabled:opacity-40"
         >
-          {status === "loading" ? "…" : "Notify"}
+          {status === "loading" ? "…" : copy.cta.submitGeneric}
         </button>
       </div>
       {status === "error" && (
-        <p className="font-mono text-[9px] text-red-500">Something went wrong. Try again.</p>
+        <p className="font-mono text-[9px] text-red-500">{copy.forms.errors.genericError}</p>
       )}
     </form>
   );

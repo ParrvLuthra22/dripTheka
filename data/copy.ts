@@ -138,6 +138,7 @@ export const copy = {
     freshlyPoured: "Freshly Poured · abhi nikla hai",
     happyHour:     "Happy Hour Exclusive",
     tappedOut:     "Tapped Out · khatam",
+    lastRound:     "Last Round · khatam hone wala hai",
     nowPouring:    "Now Pouring",
     openingSoon:   "Opening Night · doors khulne wale hain",
   },

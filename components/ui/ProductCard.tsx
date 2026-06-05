@@ -11,15 +11,16 @@ import { TappedOutStamp } from "@/components/glass/TappedOutStamp";
 import { ProductIllustration } from "@/components/sections/ProductIllustration";
 import { isTappedOut, getPriceDisplay, POUR_001 } from "@/data/pour-001";
 import type { Product } from "@/data/pour-001";
+import { copy } from "@/data/copy";
 
-// Theka-language tag palette
+// Theka-language tag palette — strings sourced from copy.ts
 const TAGS: Record<string, string> = {
-  "dt-001-001": "Freshly Poured",
-  "dt-001-002": "Happy Hour",
-  "dt-001-003": "Freshly Poured",
-  "dt-001-004": "Last Round",
-  "dt-001-005": "Tapped Out",
-  "dt-001-006": "Freshly Poured",
+  "dt-001-001": copy.status.freshlyPoured,
+  "dt-001-002": copy.status.happyHour,
+  "dt-001-003": copy.status.freshlyPoured,
+  "dt-001-004": copy.status.lastRound,
+  "dt-001-005": copy.status.tappedOut,
+  "dt-001-006": copy.status.freshlyPoured,
 };
 
 interface ProductCardProps {
@@ -35,7 +36,7 @@ export function ProductCard({
 }: ProductCardProps) {
   const router     = useRouter();
   const tappedOut  = isTappedOut(product.sizes);
-  const tag        = TAGS[product.id] ?? "Freshly Poured";
+  const tag        = TAGS[product.id] ?? copy.status.freshlyPoured;
   const primary    = product.colors[0];
   const accent     = product.colors[1] ?? "#E4E2DD";
   const productNum = POUR_001.products.findIndex((p) => p.id === product.id) + 1;
@@ -179,7 +180,7 @@ export function ProductCard({
                 data-cursor="add"
                 className="font-mono text-[10px] uppercase tracking-[0.14em] px-4 py-2 bg-[--neon] text-black border-2 border-black shadow-[2px_2px_0_0_#141518] hover:shadow-[0px_0px_0_0_#141518] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
               >
-                ADD TO CART
+                {copy.cta.addToGlass}
               </button>
             </div>
           )}

@@ -8,11 +8,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";
 import { Reveal } from "@/components/motion/Reveal";
 import { LiquidButton } from "@/components/ui/LiquidButton";
+import { copy } from "@/data/copy";
 
 const schema = z.object({
-  email:      z.string().email("Enter a valid email address"),
-  name:       z.string().min(2, "Name is required"),
-  city:       z.string().min(2, "City is required"),
+  email:      z.string().email(copy.forms.errors.badEmail),
+  name:       z.string().min(2, copy.forms.errors.missingField),
+  city:       z.string().min(2, copy.forms.errors.missingField),
   college:    z.string().optional(),
   instagram:  z.string().optional(),
   heard_from: z.string().optional(),
@@ -132,7 +133,7 @@ export default function RegularsPage() {
                 className="space-y-8"
               >
                 <h2 className="font-display italic text-[#E4E2DD] leading-tight" style={{ fontSize: "clamp(2rem, 5vw, 4rem)" }}>
-                  Welcome, Regular.
+                  {copy.forms.success.regulars}
                 </h2>
                 <p className="font-display italic text-[#E4E2DD]/60 max-w-[460px]" style={{ fontSize: "clamp(1rem, 1.8vw, 1.3rem)" }}>
                   You&apos;re on the list. This is your referral code. Share it.
@@ -167,46 +168,46 @@ export default function RegularsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-7">
                   <div>
                     <label className="block font-mono text-[8px] uppercase tracking-[0.16em] text-[#E4E2DD]/35 mb-2" htmlFor="email">Email *</label>
-                    <input id="email" name="email" type="email" required value={form.email} onChange={handle} placeholder="you@wherever.com" className={INPUT} />
+                    <input id="email" name="email" type="email" required value={form.email} onChange={handle} placeholder={copy.forms.placeholders.email} className={INPUT} />
                     <Err msg={errors.email} />
                   </div>
                   <div>
                     <label className="block font-mono text-[8px] uppercase tracking-[0.16em] text-[#E4E2DD]/35 mb-2" htmlFor="name">Name *</label>
-                    <input id="name" name="name" type="text" required value={form.name} onChange={handle} placeholder="Your name" className={INPUT} />
+                    <input id="name" name="name" type="text" required value={form.name} onChange={handle} placeholder={copy.forms.placeholders.name} className={INPUT} />
                     <Err msg={errors.name} />
                   </div>
                 </div>
                 <div>
                   <label className="block font-mono text-[8px] uppercase tracking-[0.16em] text-[#E4E2DD]/35 mb-2" htmlFor="city">City *</label>
-                  <input id="city" name="city" type="text" required value={form.city} onChange={handle} placeholder="New Delhi" className={INPUT} />
+                  <input id="city" name="city" type="text" required value={form.city} onChange={handle} placeholder={copy.forms.placeholders.city} className={INPUT} />
                   <Err msg={errors.city} />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-7">
                   <div>
                     <label className="block font-mono text-[8px] uppercase tracking-[0.16em] text-[#E4E2DD]/35 mb-2" htmlFor="college">College / University</label>
-                    <input id="college" name="college" type="text" value={form.college} onChange={handle} placeholder="Optional" className={INPUT} />
+                    <input id="college" name="college" type="text" value={form.college} onChange={handle} placeholder={copy.forms.placeholders.college} className={INPUT} />
                   </div>
                   <div>
                     <label className="block font-mono text-[8px] uppercase tracking-[0.16em] text-[#E4E2DD]/35 mb-2" htmlFor="instagram">Instagram handle</label>
-                    <input id="instagram" name="instagram" type="text" value={form.instagram} onChange={handle} placeholder="@optional" className={INPUT} />
+                    <input id="instagram" name="instagram" type="text" value={form.instagram} onChange={handle} placeholder={copy.forms.placeholders.instagram} className={INPUT} />
                   </div>
                 </div>
                 <div>
                   <label className="block font-mono text-[8px] uppercase tracking-[0.16em] text-[#E4E2DD]/35 mb-2" htmlFor="heard_from">How did you hear about us?</label>
-                  <textarea id="heard_from" name="heard_from" value={form.heard_from} onChange={handle} placeholder="Optional — friend, Instagram, a corner of the internet..." rows={2} className={INPUT + " resize-none"} />
+                  <textarea id="heard_from" name="heard_from" value={form.heard_from} onChange={handle} placeholder={copy.forms.placeholders.referralSource} rows={2} className={INPUT + " resize-none"} />
                 </div>
 
                 {status === "error" && (
                   <p className="font-mono text-[9px] text-[#FFB3B3] uppercase tracking-widest">
-                    Something went wrong. Try again.
+                    {copy.forms.errors.genericError}
                   </p>
                 )}
 
                 <LiquidButton
                   type="submit"
                   state={status === "idle" || status === "error" ? "idle" : status}
-                  label="Reserve your stool →"
-                  doneLabel="Welcome, Regular. 🍺"
+                  label={copy.cta.signUpRegular}
+                  doneLabel={copy.forms.success.regulars}
                   fillColor="#E4E2DD"
                   fillTextColor="#004AAD"
                   className="border-[#E4E2DD]/40 text-[#E4E2DD]"

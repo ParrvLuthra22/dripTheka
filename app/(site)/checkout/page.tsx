@@ -11,19 +11,21 @@ import { useCartStore } from "@/lib/store/cart";
 import { formatPrice } from "@/lib/utils/format";
 import { ProductIllustration } from "@/components/sections/ProductIllustration";
 import Link from "next/link";
+import { copy } from "@/data/copy";
+import { pickRandom } from "@/lib/utils/copy";
 
-// ── Zod schema ────────────────────────────────────────────────────────────────
+// ── Zod schema — error messages from copy.ts ──────────────────────────────────
 const schema = z.object({
-  email:    z.string().email("Enter a valid email address"),
-  name:     z.string().min(2,   "Full name is required"),
+  email:    z.string().email(copy.forms.errors.badEmail),
+  name:     z.string().min(2,  copy.forms.errors.missingField),
   phone:    z.string()
-              .regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit Indian mobile number"),
-  address1: z.string().min(5,  "Enter a complete street address"),
+              .regex(/^[6-9]\d{9}$/, copy.forms.errors.badPhone),
+  address1: z.string().min(5, copy.forms.errors.missingField),
   address2: z.string().optional(),
-  city:     z.string().min(2,  "City is required"),
-  state:    z.string().min(2,  "Select your state"),
+  city:     z.string().min(2, copy.forms.errors.missingField),
+  state:    z.string().min(2, copy.forms.errors.missingField),
   pincode:  z.string()
-              .regex(/^\d{6}$/, "Must be a 6-digit Indian pincode"),
+              .regex(/^\d{6}$/, copy.forms.errors.badPincode),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -117,10 +119,10 @@ export default function CheckoutPage() {
     return (
       <div className="min-h-screen bg-[--cream] flex items-center justify-center">
         <div className="text-center space-y-4">
-          <p className="font-display italic text-3xl text-[--ink]/30">Empty glass.</p>
+          <p className="font-display italic text-3xl text-[--ink]/30">{copy.cart.empty}</p>
           <Link href="/cart"
             className="font-mono text-[10px] uppercase tracking-widest border border-[--blue] text-[--blue] px-5 py-2 hover:bg-[--blue] hover:text-[--cream] transition-all">
-            Back to cart
+            {copy.cta.backToHome}
           </Link>
         </div>
       </div>
@@ -184,7 +186,7 @@ export default function CheckoutPage() {
 
       if (!reserveRes.ok) {
         const { error } = await reserveRes.json() as { error: string };
-        throw new Error(error ?? "Could not create reservation. Try again.");
+        throw new Error(error ?? copy.forms.errors.networkError);
       }
 
       const { reservationId, razorpayOrderId, depositPaise, keyId } =
@@ -239,7 +241,7 @@ export default function CheckoutPage() {
               `&total=${totalFull()}`
             );
           } else {
-            setPayErr("Payment verification failed. Contact us with your payment ID.");
+            setPayErr(copy.forms.errors.paymentFailed);
             setLoading(false);
           }
         },
@@ -250,7 +252,7 @@ export default function CheckoutPage() {
       rzp.open();
 
     } catch (err) {
-      setPayErr(err instanceof Error ? err.message : "Something went wrong.");
+      setPayErr(err instanceof Error ? err.message : copy.forms.errors.genericError);
       setLoading(false);
     }
   }
@@ -281,7 +283,7 @@ export default function CheckoutPage() {
               <input
                 id="email" name="email" type="email" required
                 value={form.email} onChange={handle}
-                placeholder="you@wherever.com"
+                placeholder={copy.forms.placeholders.email}
                 autoComplete="email"
                 data-error={errors.email ? true : undefined}
                 className={INPUT_BASE}
@@ -298,7 +300,7 @@ export default function CheckoutPage() {
             <Field label="Full name *" name="name" error={errors.name}>
               <input id="name" name="name" type="text" required
                 value={form.name} onChange={handle}
-                placeholder="Parv Luthra"
+                placeholder={copy.forms.placeholders.name}
                 autoComplete="name"
                 className={INPUT_BASE} />
             </Field>
@@ -306,7 +308,7 @@ export default function CheckoutPage() {
             <Field label="Phone (10-digit Indian mobile) *" name="phone" error={errors.phone}>
               <input id="phone" name="phone" type="tel" required
                 value={form.phone} onChange={handle}
-                placeholder="98765 43210"
+                placeholder={copy.forms.placeholders.phone}
                 autoComplete="tel"
                 inputMode="numeric"
                 className={INPUT_BASE} />
@@ -315,7 +317,7 @@ export default function CheckoutPage() {
             <Field label="Address line 1 *" name="address1" error={errors.address1}>
               <input id="address1" name="address1" type="text" required
                 value={form.address1} onChange={handle}
-                placeholder="House / Flat / Block, Street"
+                placeholder={copy.forms.placeholders.addressLine1}
                 autoComplete="address-line1"
                 className={INPUT_BASE} />
             </Field>
@@ -323,7 +325,7 @@ export default function CheckoutPage() {
             <Field label="Address line 2 (optional)" name="address2" error={errors.address2}>
               <input id="address2" name="address2" type="text"
                 value={form.address2 ?? ""} onChange={handle}
-                placeholder="Locality / Area"
+                placeholder="Locality / Area (optional)"
                 autoComplete="address-line2"
                 className={INPUT_BASE} />
             </Field>
@@ -332,7 +334,7 @@ export default function CheckoutPage() {
               <Field label="City *" name="city" error={errors.city}>
                 <input id="city" name="city" type="text" required
                   value={form.city} onChange={handle}
-                  placeholder="New Delhi"
+                  placeholder={copy.forms.placeholders.city}
                   autoComplete="address-level2"
                   className={INPUT_BASE} />
               </Field>
@@ -340,7 +342,7 @@ export default function CheckoutPage() {
               <Field label="Pincode *" name="pincode" error={errors.pincode}>
                 <input id="pincode" name="pincode" type="text" required
                   value={form.pincode} onChange={handle}
-                  placeholder="110001"
+                  placeholder={copy.forms.placeholders.pincode}
                   autoComplete="postal-code"
                   inputMode="numeric"
                   maxLength={6}
@@ -380,7 +382,7 @@ export default function CheckoutPage() {
             className="w-full py-4 font-mono text-[10px] uppercase tracking-[0.16em] bg-[--blue] text-[--cream] hover:bg-[--ink] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading
-              ? "Opening the bar…"
+              ? pickRandom(copy.loading.checkout)
               : `Pay ${formatPrice(totalDeposit())} now → Razorpay`}
           </button>
 

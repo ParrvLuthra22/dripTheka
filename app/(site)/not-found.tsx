@@ -6,6 +6,7 @@
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { copy } from "@/data/copy";
 
 interface Blob {
   id: number; homeX: number; homeY: number;
@@ -108,7 +109,7 @@ export default function NotFound() {
         className="font-tanker uppercase text-[#E4E2DD] text-center"
         style={{ fontSize: "clamp(3rem, 10vw, 8rem)", lineHeight: 0.82 }}
       >
-        WRONG THEKA.
+        {copy.notFound.title}
       </motion.h1>
 
       <motion.p
@@ -117,7 +118,7 @@ export default function NotFound() {
         className="font-sans text-[#E4E2DD]/55 text-center max-w-[420px] mt-5 leading-relaxed px-6"
         style={{ fontSize: "clamp(0.9rem, 1.6vw, 1.1rem)" }}
       >
-        This corner of the bar doesn&apos;t exist. Or maybe you&apos;re a little too far in.
+        {copy.notFound.subtitle}
       </motion.p>
 
       <motion.div
@@ -127,7 +128,7 @@ export default function NotFound() {
       >
         <Link href="/" data-hover
           className="font-mono text-[10px] uppercase tracking-[0.16em] border border-[#E4E2DD]/35 text-[#E4E2DD] px-6 py-3 hover:bg-[#E4E2DD] hover:text-[#004AAD] transition-all duration-200">
-          Walk back to the entrance →
+          {copy.notFound.cta}
         </Link>
       </motion.div>
 

@@ -16,6 +16,7 @@ import {
   getDepositAmount,
 } from "@/data/pour-001";
 import type { Product, Size } from "@/data/pour-001";
+import { copy } from "@/data/copy";
 
 // ── Mono detail list generator ─────────────────────────────────────────────
 function buildDetails(product: Product): string[] {
@@ -34,14 +35,14 @@ function buildDetails(product: Product): string[] {
   ];
 }
 
-// ── Tag colours ────────────────────────────────────────────────────────────
+// ── Tag labels — sourced from copy.ts ─────────────────────────────────────
 const TAGS: Record<string, string> = {
-  "dt-001-001": "Freshly Poured",
-  "dt-001-002": "Happy Hour",
-  "dt-001-003": "Freshly Poured",
-  "dt-001-004": "Last Round",
-  "dt-001-005": "Tapped Out",
-  "dt-001-006": "Freshly Poured",
+  "dt-001-001": copy.status.freshlyPoured,
+  "dt-001-002": copy.status.happyHour,
+  "dt-001-003": copy.status.freshlyPoured,
+  "dt-001-004": copy.status.lastRound,
+  "dt-001-005": copy.status.tappedOut,
+  "dt-001-006": copy.status.freshlyPoured,
 };
 
 type AddState = "idle" | "adding" | "poured";
@@ -55,7 +56,7 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
   const { muted, play } = useSound();
 
   const tappedOut = isTappedOut(product.sizes);
-  const tag       = TAGS[product.id] ?? "Freshly Poured";
+  const tag       = TAGS[product.id] ?? copy.status.freshlyPoured;
   const details   = buildDetails(product);
 
   const availableSizes = product.sizes.filter((s) => s.stock > 0);
@@ -103,7 +104,7 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
               : "bg-[--ink] text-[--cream]"
           )}
         >
-          {tappedOut ? "Tapped Out" : tag}
+          {tappedOut ? copy.status.tappedOut : tag}
         </span>
       </div>
 
@@ -284,7 +285,7 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
                     transition={{ duration: 0.2 }}
                     className="block"
                   >
-                    {selectedSize ? "Reserve · Pour into Glass" : "Pick a size"}
+                    {selectedSize ? copy.cta.reserve : "Pick a size"}
                   </motion.span>
                 )}
               </AnimatePresence>
@@ -306,7 +307,7 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
             disabled
             className="w-full py-4 font-mono text-[10px] uppercase tracking-[0.16em] bg-[--ink]/8 text-[--ink]/25 cursor-not-allowed"
           >
-            Tapped Out
+            {copy.status.tappedOut}
           </button>
 
           {/* Secondary CTA — refill notify */}

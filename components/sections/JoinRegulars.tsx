@@ -8,6 +8,7 @@ import { z } from "zod";
 import { Reveal } from "@/components/motion/Reveal";
 import { LiquidButton } from "@/components/ui/LiquidButton";
 import { useSound } from "@/components/sound/SoundProvider";
+import { copy } from "@/data/copy";
 
 const schema = z.object({
   email: z
@@ -52,7 +53,7 @@ export function JoinRegulars() {
         setTimeout(() => setStatus("idle"), 4000);
       } else {
         setStatus("error");
-        setError("Something went wrong. Try again.");
+        setError(copy.forms.errors.networkError);
       }
     } catch {
       setStatus("error");
@@ -107,7 +108,7 @@ export function JoinRegulars() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={status === "loading" || status === "success"}
-                placeholder="your email · we'll send the Last Call"
+                placeholder={copy.forms.placeholders.email}
                 autoComplete="email"
                 className={[
                   "w-full bg-transparent",
@@ -128,8 +129,8 @@ export function JoinRegulars() {
             <LiquidButton
               type="submit"
               state={status === "idle" || status === "error" ? "idle" : status}
-              label="Reserve your stool →"
-              doneLabel="Welcome, Regular. 🍺"
+              label={copy.cta.signUpRegular}
+              doneLabel={copy.forms.success.regulars}
               fillColor="#E4E2DD"
               fillTextColor="#004AAD"
               className="border-[#E4E2DD]/40 text-[#E4E2DD]"

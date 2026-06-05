@@ -12,6 +12,8 @@ import { CountUp }     from "@/components/motion/CountUp";
 import { DROP_DATE } from "@/data/pour-001";
 import { ProductIllustration } from "@/components/sections/ProductIllustration";
 import { cn } from "@/lib/utils/cn";
+import { copy } from "@/data/copy";
+import { getCartMessage } from "@/lib/utils/copy";
 
 // ── viewBox constants matching PintGlass (0 0 72 96) ─────────────────────────
 const BOWL_BOT_Y = 84;
@@ -126,7 +128,7 @@ export default function CartPage() {
           className="font-display italic text-[--ink] text-center mt-6"
           style={{ fontSize: "clamp(1.75rem, 4vw, 3rem)" }}
         >
-          {empty ? "Your glass is empty." : "What's in your glass."}
+          {getCartMessage(count)}
         </motion.h1>
 
         {empty && (
@@ -142,7 +144,7 @@ export default function CartPage() {
               data-hover
               className="inline-block font-mono text-[10px] uppercase tracking-[0.14em] border border-[--blue] text-[--blue] px-5 py-2.5 hover:bg-[--blue] hover:text-[--cream] transition-all duration-200"
             >
-              Browse Pour #001 →
+              {copy.cta.viewAll}
             </Link>
           </motion.div>
         )}
@@ -302,7 +304,7 @@ export default function CartPage() {
                 data-hover-big
                 className="block w-full text-center font-mono text-[10px] uppercase tracking-[0.16em] bg-[--ink] text-[--cream] py-4 hover:bg-[--blue] transition-colors duration-200"
               >
-                Walk to the counter → Checkout
+                {copy.cta.checkout}
               </Link>
 
               <p className="font-mono text-[9px] text-[--ink]/25 text-center uppercase tracking-[0.1em] leading-relaxed">
