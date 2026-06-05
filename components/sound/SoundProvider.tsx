@@ -19,7 +19,7 @@ import {
 } from "react";
 import { useSoundStore } from "@/lib/store/sound";
 
-type SoundName = "pour" | "clink";
+type SoundName = "pour" | "clink" | "cap";
 
 interface HowlInstance {
   play:   () => number;
@@ -43,6 +43,7 @@ const SoundContext = createContext<SoundContextValue>({
 const SOUND_FILES: Record<SoundName, { src: string; volume: number }> = {
   pour:  { src: "/sounds/pour.mp3",  volume: 0.5  },
   clink: { src: "/sounds/clink.mp3", volume: 0.55 },
+  cap:   { src: "/sounds/cap.mp3",   volume: 0.35 },
 };
 
 export function SoundProvider({ children }: { children: ReactNode }) {

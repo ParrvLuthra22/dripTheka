@@ -4,12 +4,13 @@
 // Editorial interstitial injected after product 5.
 // All filtering/sorting is client-side — no re-fetch needed.
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Reveal } from "@/components/motion/Reveal";
+import { BottleCap } from "@/components/ui/BottleCap";
 import { POUR_001 } from "@/data/pour-001";
 import type { GarmentType } from "@/data/pour-001";
 import { cn } from "@/lib/utils/cn";
@@ -82,6 +83,27 @@ function EditorialBreak() {
 export function PourProductGrid() {
   const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
   const [activeSort,   setActiveSort]   = useState<SortKey>("newest");
+  const filterGroupRef = useRef<HTMLDivElement>(null);
+
+  // Arrow-key cycling through enabled filter caps
+  const handleFilterKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) return;
+      e.preventDefault();
+      const enabled = FILTERS.filter((f) => !f.disabled);
+      const cur = enabled.findIndex((f) => f.key === activeFilter);
+      const next =
+        e.key === "ArrowRight" || e.key === "ArrowDown"
+          ? (cur + 1) % enabled.length
+          : (cur - 1 + enabled.length) % enabled.length;
+      setActiveFilter(enabled[next].key);
+      const radios = filterGroupRef.current?.querySelectorAll<HTMLButtonElement>(
+        '[role="radio"]:not([disabled])'
+      );
+      radios?.[next]?.focus();
+    },
+    [activeFilter]
+  );
 
   const products = useMemo(() => {
     let list = [...POUR_001.products];
@@ -117,27 +139,31 @@ export function PourProductGrid() {
     >
       {/* ── Filter + Sort controls ─────────────────────────────── */}
       <Reveal className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-10 pb-6 border-b border-[--ink]/10">
-        {/* Filter chips */}
-        <div className="flex items-center gap-2 flex-wrap" role="group" aria-label="Filter by type">
-          {FILTERS.map(({ key, label, disabled }) => (
-            <button
-              key={key}
-              onClick={() => !disabled && setActiveFilter(key)}
-              disabled={disabled}
-              aria-pressed={activeFilter === key}
-              className={cn(
-                "font-mono text-[9px] uppercase tracking-[0.14em] px-3 py-1.5",
-                "border transition-all duration-200",
-                disabled
-                  ? "border-[--ink]/10 text-[--ink]/20 cursor-not-allowed"
-                  : activeFilter === key
-                  ? "border-[--blue] bg-[--blue] text-[--cream]"
-                  : "border-[--ink]/25 text-[--ink] hover:border-[--blue] hover:text-[--blue]"
-              )}
-            >
-              {label}
-            </button>
-          ))}
+        {/* Filter BottleCaps */}
+        <div
+          ref={filterGroupRef}
+          className="flex items-center gap-2 flex-wrap"
+          role="radiogroup"
+          aria-label="Filter by type"
+          onKeyDown={handleFilterKeyDown}
+        >
+          {FILTERS.map(({ key, label, disabled }) => {
+            const isActive = activeFilter === key;
+            const tabIdx = disabled ? -1 : isActive ? 0 : -1;
+
+            return (
+              <BottleCap
+                key={key}
+                label={label}
+                active={isActive}
+                disabled={disabled}
+                onClick={() => setActiveFilter(key)}
+                size="sm"
+                tabIndex={tabIdx}
+                ariaLabel={`${label}, ${isActive ? "active" : "inactive"}${disabled ? ", coming soon" : ""}`}
+              />
+            );
+          })}
         </div>
 
         {/* Sort dropdown */}

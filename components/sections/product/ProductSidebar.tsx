@@ -3,11 +3,12 @@
 // ProductSidebar — sticky right column on desktop, normal flow on mobile.
 // Size selector → qty stepper → Add to Glass → pint fills automatically.
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCartStore } from "@/lib/store/cart";
 import { useSound } from "@/components/sound/SoundProvider";
 import { RefillNotifyForm } from "./RefillNotifyForm";
+import { BottleCap } from "@/components/ui/BottleCap";
 import { cn } from "@/lib/utils/cn";
 import {
   POUR_001,
@@ -66,6 +67,29 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
   );
   const [qty,      setQty]      = useState(1);
   const [addState, setAddState] = useState<AddState>("idle");
+  const sizeGroupRef = useRef<HTMLDivElement>(null);
+
+  // Arrow-key cycling for radiogroup keyboard nav
+  const handleSizeKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) return;
+      e.preventDefault();
+      const avail = product.sizes.filter((s) => s.stock > 0).map((s) => s.size);
+      if (avail.length === 0) return;
+      const cur = selectedSize ? avail.indexOf(selectedSize) : 0;
+      const next =
+        e.key === "ArrowRight" || e.key === "ArrowDown"
+          ? (cur + 1) % avail.length
+          : (cur - 1 + avail.length) % avail.length;
+      setSelectedSize(avail[next]);
+      // Focus the newly selected radio
+      const radios = sizeGroupRef.current?.querySelectorAll<HTMLButtonElement>(
+        '[role="radio"]:not([disabled])'
+      );
+      radios?.[next]?.focus();
+    },
+    [product.sizes, selectedSize]
+  );
 
   // ── Add to glass ────────────────────────────────────────────────────────
   const handleAdd = useCallback(async () => {
@@ -175,37 +199,34 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
               </button>
             </div>
 
-            {/* Chip grid — fixed dimensions prevent layout shift */}
+            {/* BottleCap size selector */}
             <div
-              className="flex flex-wrap gap-2"
-              role="group"
+              ref={sizeGroupRef}
+              className="flex flex-wrap gap-3"
+              role="radiogroup"
               aria-label="Select size"
+              onKeyDown={handleSizeKeyDown}
             >
               {product.sizes.map(({ size, stock }) => {
                 const available = stock > 0;
                 const selected  = selectedSize === size;
+                // tabIndex: selected cap gets 0; if nothing selected, first available gets 0
+                const isFirst   = availableSizes[0]?.size === size;
+                const tabIdx    = available
+                  ? selected || (!selectedSize && isFirst) ? 0 : -1
+                  : -1;
 
                 return (
-                  <button
+                  <BottleCap
                     key={size}
-                    onClick={() => available && setSelectedSize(size)}
+                    label={size}
+                    active={selected}
                     disabled={!available}
-                    aria-pressed={selected}
-                    aria-label={`Size ${size}${!available ? " — out of stock" : ""}`}
-                    className={cn(
-                      // Fixed dimensions — no layout shift on selection
-                      "min-w-[52px] h-10 px-2",
-                      "font-mono text-[10px] uppercase tracking-[0.1em]",
-                      "border transition-all duration-150",
-                      !available
-                        ? "border-[--ink]/10 text-[--ink]/20 cursor-not-allowed line-through"
-                        : selected
-                        ? "border-[--blue] bg-[--blue] text-[--cream]"
-                        : "border-[--ink]/25 text-[--ink] hover:border-[--blue] hover:text-[--blue]"
-                    )}
-                  >
-                    {size}
-                  </button>
+                    onClick={() => setSelectedSize(size)}
+                    size="md"
+                    tabIndex={tabIdx}
+                    ariaLabel={`Size ${size}, ${selected ? "active" : "inactive"}${!available ? ", disabled" : ""}`}
+                  />
                 );
               })}
             </div>
