@@ -17,6 +17,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
+import { useHangoverStore } from "@/lib/store/hangover";
 
 type CursorVariant = "default" | "hover" | "hover-big" | "label";
 type CursorLabel   = string;
@@ -38,6 +39,10 @@ export function Cursor() {
   const ring   = useRef({ x: 0, y: 0 });
   const rafId  = useRef<number>(0);
 
+  const { isHungover } = useHangoverStore();
+  const isHungoverRef  = useRef(isHungover);
+  useEffect(() => { isHungoverRef.current = isHungover; }, [isHungover]);
+
   useEffect(() => {
     const isDesktop = window.matchMedia("(pointer: fine)").matches;
     if (!isDesktop) return;
@@ -47,9 +52,10 @@ export function Cursor() {
     const lbl = labelRef.current;
     if (!dot || !rng || !lbl) return;
 
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     const onMouseMove = (e: MouseEvent) => {
       mouse.current = { x: e.clientX, y: e.clientY };
-      gsap.set(dot, { x: e.clientX - DOT_R, y: e.clientY - DOT_R });
       gsap.set(lbl, { x: e.clientX, y: e.clientY });
       if (!visible) {
         ring.current = { x: e.clientX, y: e.clientY };
@@ -86,11 +92,24 @@ export function Cursor() {
 
     const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
     const tick = () => {
+      const t = performance.now();
+      const wobbleX = isHungoverRef.current && !reducedMotion
+        ? 2 * Math.sin(2 * Math.PI * t / 1200)
+        : 0;
+      const wobbleY = isHungoverRef.current && !reducedMotion
+        ? 2 * Math.sin(2 * Math.PI * t / 1200 + Math.PI / 2)
+        : 0;
+
+      gsap.set(dot, {
+        x: mouse.current.x - DOT_R + wobbleX,
+        y: mouse.current.y - DOT_R + wobbleY,
+      });
+
       ring.current.x = lerp(ring.current.x, mouse.current.x, 0.15);
       ring.current.y = lerp(ring.current.y, mouse.current.y, 0.15);
       gsap.set(rng, {
-        x: ring.current.x - RING_R,
-        y: ring.current.y - RING_R,
+        x: ring.current.x - RING_R + wobbleX,
+        y: ring.current.y - RING_R + wobbleY,
       });
       rafId.current = requestAnimationFrame(tick);
     };

@@ -17,6 +17,8 @@
 //   ThekaEgg           → z-100 — keyboard easter egg (type "theka")
 //   HappyHour          → z-100 — Konami easter egg
 //   FounderSecret      → z-60  — scroll-to-bottom secret
+//   HangoverMode       → z-250 — idle toast (body.is-hungover class)
+//   DrunkScroll        → z-250 — fast-scroll toast (body.is-wobbly class)
 //   LoadingScreen      → z-200 — brand intro, once per session
 //   Bouncer            → z-300 — 18+ age gate (above everything)
 
@@ -36,6 +38,8 @@ import { FounderSecret }      from "@/components/layout/FounderSecret";
 import { MorphingLogo }       from "@/components/glass/MorphingLogo";
 import { ScrollProgressDrip } from "@/components/motion/ScrollProgressDrip";
 import { AudioReactive }      from "@/components/motion/AudioReactive";
+import { HangoverMode }       from "@/components/motion/HangoverMode";
+import { DrunkScroll }        from "@/components/motion/DrunkScroll";
 
 export default function SiteLayout({
   children,
@@ -69,6 +73,10 @@ export default function SiteLayout({
 
       {/* Right-edge scroll progress indicator */}
       <ScrollProgressDrip />
+
+      {/* Self-aware interactive states */}
+      <HangoverMode />
+      <DrunkScroll />
 
       {/* Easter eggs */}
       <ThekaEgg />

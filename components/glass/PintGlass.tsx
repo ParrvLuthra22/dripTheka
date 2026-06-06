@@ -25,6 +25,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { gsap } from "gsap";
 import { useCartStore } from "@/lib/store/cart";
+import { useHangoverStore } from "@/lib/store/hangover";
 import { useSound } from "@/components/sound/SoundProvider";
 import { cn } from "@/lib/utils/cn";
 
@@ -62,6 +63,7 @@ export function PintGlass({ className }: PintGlassProps) {
   const pathname = usePathname();
   const { items, totalItems } = useCartStore();
   const { muted, play } = useSound();
+  const { isHungover } = useHangoverStore();
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -148,6 +150,16 @@ export function PintGlass({ className }: PintGlassProps) {
       duration: 0.3,
     });
   }, [count, muted, play]);
+
+  // ── Hangover: foam goes flat ──────────────────────────────────────────────
+  useEffect(() => {
+    if (!foamRef.current) return;
+    if (isHungover) {
+      gsap.to(foamRef.current, { scaleY: 0.33, duration: 1.5, ease: "expo.out", overwrite: true });
+    } else {
+      gsap.to(foamRef.current, { scaleY: 1, duration: 0.5, ease: "power2.out", overwrite: true });
+    }
+  }, [isHungover]);
 
   // ── Hover ─────────────────────────────────────────────────────────────────
   const onEnter = useCallback((_e: ReactPointerEvent<HTMLDivElement>) => {
