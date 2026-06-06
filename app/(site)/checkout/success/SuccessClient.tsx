@@ -48,7 +48,7 @@ export function SuccessClient({ orderNumber, deposit, total, dropStr }: SuccessC
     const bubbleTimer = setTimeout(() => setBubbleActive(true), 1400);
     const phaseTimer  = setTimeout(() => {
       setPhase(2);
-      if (!muted) play("clink");
+      if (!muted) play("print");
     }, 1500);
 
     return () => {
