@@ -48,21 +48,55 @@ export function getCartMessage(itemCount: number): string {
 
 // ── getBadge ──────────────────────────────────────────────────────────────
 
+export interface Badge {
+  label: string;
+  tier: number;
+  perk?: string;
+}
+
+/** Tier table — index doubles as the `tier` number. Order count is inclusive of `min`. */
+const BADGE_TIERS: ReadonlyArray<{ min: number; label: string; perk?: string }> = [
+  { min: 0, label: "WALK-IN" },
+  { min: 1, label: "FIRST-TIMER",        perk: "you broke the seal" },
+  { min: 2, label: "FAMILIAR FACE",      perk: "we're starting to recognise you" },
+  { min: 4, label: "REGULAR",            perk: "your stool is waiting" },
+  { min: 6, label: "VIP · ON THE HOUSE", perk: "next round's on us (figuratively)" },
+];
+
 /**
- * Map a user's total confirmed order count to their loyalty badge label.
+ * Map a user's total confirmed order count to their Regular Status badge.
  *
- *   getBadge(0)  → "Walk-in · aao baithe raho"
- *   getBadge(1)  → "First Round · welcome"
- *   getBadge(4)  → "Familiar Face · waapas aa gaye"
- *   getBadge(8)  → "Regular · table ready hai"
- *   getBadge(11) → "Khaas Mehman · permanent tab"
+ *   getBadge(0) → { label: "WALK-IN", tier: 0 }
+ *   getBadge(1) → { label: "FIRST-TIMER", tier: 1, perk: "you broke the seal" }
+ *   getBadge(5) → { label: "REGULAR", tier: 3, perk: "your stool is waiting" }
+ *   getBadge(6) → { label: "VIP · ON THE HOUSE", tier: 4, perk: "..." }
  */
-export function getBadge(orderCount: number): string {
-  if (orderCount <= 0) return copy.badges.walkIn;
-  if (orderCount === 1) return copy.badges.firstTimer;
-  if (orderCount <= 5) return copy.badges.familiarFace;
-  if (orderCount <= 10) return copy.badges.regular;
-  return copy.badges.vip;
+export function getBadge(orderCount: number): Badge {
+  let tier = 0;
+  for (let i = 0; i < BADGE_TIERS.length; i++) {
+    if (orderCount >= BADGE_TIERS[i].min) tier = i;
+  }
+  const { label, perk } = BADGE_TIERS[tier];
+  return { label, tier, perk };
+}
+
+/**
+ * Progress toward the next Regular Status tier.
+ * Returns null once the user has hit the top tier (VIP).
+ *
+ *   getBadgeProgress(4) → { current: 4, target: 6, nextLabel: "VIP · ON THE HOUSE", percent: 50 }
+ */
+export function getBadgeProgress(
+  orderCount: number
+): { current: number; target: number; nextLabel: string; percent: number } | null {
+  const { tier } = getBadge(orderCount);
+  if (tier >= BADGE_TIERS.length - 1) return null;
+
+  const prevThreshold = BADGE_TIERS[tier].min;
+  const target        = BADGE_TIERS[tier + 1].min;
+  const percent       = Math.min(100, ((orderCount - prevThreshold) / (target - prevThreshold)) * 100);
+
+  return { current: orderCount, target, nextLabel: BADGE_TIERS[tier + 1].label, percent };
 }
 
 // ── getSessionWisdom ──────────────────────────────────────────────────────

@@ -130,6 +130,7 @@ export const copy = {
     submitGeneric: "Cheers →",
     viewAll:       "See the full pour →",
     readStory:     "Read the full story →",
+    seeWhy:        "see why · view product →",
   },
 
   // ── Status labels ─────────────────────────────────────────────────────────
@@ -141,17 +142,6 @@ export const copy = {
     lastRound:     "Last Round · khatam hone wala hai",
     nowPouring:    "Now Pouring",
     openingSoon:   "Opening Night · doors khulne wale hain",
-  },
-
-  // ── Loyalty badges ────────────────────────────────────────────────────────
-  // Used by getBadge(orderCount) in lib/utils/copy.ts.
-
-  badges: {
-    walkIn:       "Walk-in · aao baithe raho",
-    firstTimer:   "First Round · welcome",
-    familiarFace: "Familiar Face · waapas aa gaye",
-    regular:      "Regular · table ready hai",
-    vip:          "Khaas Mehman · permanent tab",
   },
 
   // ── Footer ────────────────────────────────────────────────────────────────
@@ -198,6 +188,7 @@ export const copy = {
     lastRound:        { en: "Last Round",         hi: "khatam hone wala hai"    },
     regulars:         { en: "Regulars",           hi: "permanent customers"      },
     wrongTheka:       { en: "Wrong Theka",        hi: "galat gully"             },
+    bartendersPick:   { en: "Bartender's Pick",   hi: "is hafte yeh chal raha hai" },
   },
 
   // ── 404 ───────────────────────────────────────────────────────────────────

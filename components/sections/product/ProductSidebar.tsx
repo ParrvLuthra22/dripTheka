@@ -9,6 +9,7 @@ import { useCartStore } from "@/lib/store/cart";
 import { useSound } from "@/components/sound/SoundProvider";
 import { RefillNotifyForm } from "./RefillNotifyForm";
 import { BottleCap } from "@/components/ui/BottleCap";
+import { PriceTag } from "@/components/ui/PriceTag";
 import { cn } from "@/lib/utils/cn";
 import {
   POUR_001,
@@ -149,13 +150,8 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
       </div>
 
       {/* ── Price ────────────────────────────────────────────────── */}
-      <div className="space-y-0.5">
-        <p
-          className="font-mono text-[--ink] tabular-nums"
-          style={{ fontSize: "clamp(1.2rem, 2vw, 1.6rem)" }}
-        >
-          {getPriceDisplay(product.price)}
-        </p>
+      <div className="space-y-2">
+        <PriceTag price={product.price} size="md" />
         {!tappedOut && (
           <p className="font-mono text-[9px] text-[--blue] tracking-[0.1em]">
             {getPriceDisplay(getDepositAmount(product.price))} deposit · 70% on Opening Night

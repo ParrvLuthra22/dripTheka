@@ -11,6 +11,7 @@ import { formatPrice } from "@/lib/utils/format";
 import { CountUp }     from "@/components/motion/CountUp";
 import { DROP_DATE } from "@/data/pour-001";
 import { ProductIllustration } from "@/components/sections/ProductIllustration";
+import { PriceTag } from "@/components/ui/PriceTag";
 import { cn } from "@/lib/utils/cn";
 import { copy } from "@/data/copy";
 import { getCartMessage } from "@/lib/utils/copy";
@@ -232,11 +233,9 @@ export default function CartPage() {
                       </div>
 
                       {/* Line price */}
-                      <div className="text-right shrink-0">
-                        <p className="font-mono text-sm text-[--ink] tabular-nums">
-                          {formatPrice(item.product.price * item.quantity)}
-                        </p>
-                        <p className="font-mono text-[9px] text-[--blue] mt-0.5 tabular-nums">
+                      <div className="text-right shrink-0 flex flex-col items-end gap-1.5">
+                        <PriceTag price={item.product.price * item.quantity} size="sm" />
+                        <p className="font-mono text-[9px] text-[--blue] tabular-nums">
                           {formatPrice(item.depositAmount * item.quantity)} now
                         </p>
                       </div>

@@ -267,3 +267,21 @@ export function isTappedOut(variants: SizeVariant[]): boolean {
 export function getAvailableSizes(variants: SizeVariant[]): SizeVariant[] {
   return variants.filter((v) => v.stock > 0);
 }
+
+// ── Bartender's Pick ─────────────────────────────────────────────────────
+// Manually curated weekly pick — surfaced in the homepage BartendersPick section.
+
+export interface BartendersPickData {
+  productSlug: string;
+  pickedBy: "Ayaan" | "Parrv";
+  quote: string;
+  date: string; // ISO
+}
+
+export const BARTENDERS_PICK: BartendersPickData = {
+  productSlug: "last-call-hoodie",
+  pickedBy: "Ayaan",
+  quote:
+    "I designed three jackets before this hoodie happened by accident. Sometimes the side quest is the main quest.",
+  date: "2026-06-01T00:00:00+05:30",
+};

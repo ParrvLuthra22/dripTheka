@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Hero }                from "@/components/sections/Hero";
 import { HomeMarquee }         from "@/components/sections/HomeMarquee";
 import { CurrentlyPouring }    from "@/components/sections/CurrentlyPouring";
+import { BartendersPick }      from "@/components/sections/BartendersPick";
 import { StoryTeaser }         from "@/components/sections/StoryTeaser";
 import { BuildingTeaser }      from "@/components/sections/BuildingTeaser";
 import { JoinRegulars }        from "@/components/sections/JoinRegulars";
@@ -31,6 +32,9 @@ export default function HomePage() {
 
       {/* 3. Currently Pouring — asymmetric product grid */}
       <CurrentlyPouring />
+
+      {/* 3.5. Bartender's Pick — one product, hand-picked, weekly */}
+      <BartendersPick />
 
       {/* 4. Story Teaser — manifesto copy */}
       <StoryTeaser />

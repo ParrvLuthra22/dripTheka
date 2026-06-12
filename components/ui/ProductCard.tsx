@@ -9,10 +9,11 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import { TappedOutStamp } from "@/components/glass/TappedOutStamp";
 import { ProductIllustration } from "@/components/sections/ProductIllustration";
-import { isTappedOut, getPriceDisplay, POUR_001 } from "@/data/pour-001";
+import { isTappedOut, POUR_001 } from "@/data/pour-001";
 import type { Product } from "@/data/pour-001";
 import { copy } from "@/data/copy";
 import { ThekaLabel, type ThekaKey } from "@/components/ui/ThekaLabel";
+import { PriceTag } from "@/components/ui/PriceTag";
 
 // Theka-language tag palette — maps product IDs → copy.language keys
 // Tag pills use showHi={false}: Hinglish makes them too wide on mobile
@@ -135,12 +136,12 @@ export function ProductCard({
             />
           </div>
 
-          {/* Price — top right */}
-          <div className="absolute top-3 right-3 z-10">
-            <span className="font-mono text-[9px] text-[--cream] bg-[--ink]/70 px-2 py-1 tabular-nums">
-              {getPriceDisplay(product.price)}
-            </span>
-          </div>
+          {/* Price — top right, hangtag */}
+          {!tappedOut && (
+            <div className="absolute top-3 right-3 z-10">
+              <PriceTag price={product.price} size="sm" />
+            </div>
+          )}
         </div>
 
         {/* ── Metadata ──────────────────────────────────────────── */}
@@ -172,10 +173,7 @@ export function ProductCard({
           </p>
 
           {!tappedOut && (
-            <div className="flex items-center justify-between mt-4">
-              <p className="font-mono text-[9px] text-[--blue] font-bold tracking-[0.1em]">
-                {getPriceDisplay(product.price)}
-              </p>
+            <div className="flex items-center justify-end mt-4">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
