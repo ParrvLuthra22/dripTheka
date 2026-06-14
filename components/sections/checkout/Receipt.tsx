@@ -493,14 +493,14 @@ export function Receipt({
         <button
           onClick={handleShare}
           data-hover
-          className="font-mono text-[9px] uppercase tracking-[0.14em] border border-[--ink]/20 text-[--ink] px-4 py-2.5 hover:border-[--blue] hover:text-[--blue] transition-all duration-200 flex items-center gap-2"
+          className="font-mono text-[9px] uppercase tracking-[0.14em] border border-[--ink]/40 text-[--ink] px-4 py-2.5 hover:border-[--blue] hover:text-[--blue] transition-all duration-200 flex items-center gap-2"
         >
           <span aria-hidden="true">📸</span> Share to Story
         </button>
         <button
           onClick={handleDownload}
           data-hover
-          className="font-mono text-[9px] uppercase tracking-[0.14em] border border-[--ink]/20 text-[--ink] px-4 py-2.5 hover:border-[--blue] hover:text-[--blue] transition-all duration-200 flex items-center gap-2"
+          className="font-mono text-[9px] uppercase tracking-[0.14em] border border-[--ink]/40 text-[--ink] px-4 py-2.5 hover:border-[--blue] hover:text-[--blue] transition-all duration-200 flex items-center gap-2"
         >
           <span aria-hidden="true">📥</span> Download
         </button>

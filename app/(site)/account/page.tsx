@@ -155,7 +155,7 @@ export default function AccountPage() {
             onClick={async () => { setSOP(true); await signOut({ callbackUrl: "/" }); }}
             disabled={signOutPending}
             data-hover
-            className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink]/30 hover:text-[--ink] transition-colors"
+            className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink]/60 border border-[--ink]/30 px-3 py-1.5 hover:bg-[--ink] hover:text-[--cream] hover:border-[--ink] transition-colors"
           >
             {signOutPending ? "Leaving…" : "Sign out"}
           </button>
@@ -225,7 +225,7 @@ export default function AccountPage() {
                 <button
                   onClick={() => setShowRedeemed((v) => !v)}
                   data-hover
-                  className="font-mono text-[9px] uppercase tracking-[0.14em] text-(--blue) hover:text-(--cream) transition-colors"
+                  className="font-mono text-[9px] uppercase tracking-[0.14em] text-[#CCFF00] underline decoration-dotted underline-offset-2 hover:text-[#E4E2DD] transition-colors"
                 >
                   {showRedeemed ? "hide ↑" : "you brought these regulars in →"}
                 </button>
@@ -274,7 +274,7 @@ export default function AccountPage() {
           <button
             onClick={() => copyToClipboard(referralCode, setCopied)}
             data-hover
-            className="font-mono text-[9px] uppercase tracking-[0.14em] border border-[--cream]/25 text-[--cream] px-4 py-2 hover:bg-[--cream] hover:text-[--ink] transition-all duration-200 whitespace-nowrap"
+            className="font-mono text-[9px] uppercase tracking-[0.14em] border border-[#CCFF00] text-[#CCFF00] px-4 py-2 hover:bg-[#CCFF00] hover:text-[#141518] transition-all duration-200 whitespace-nowrap"
           >
             {copied ? "Copied ✓" : "Copy Code"}
           </button>
@@ -353,7 +353,7 @@ export default function AccountPage() {
               key={href}
               href={href}
               data-hover
-              className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink]/40 hover:text-[--blue] transition-colors"
+              className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink]/65 underline decoration-dotted underline-offset-2 hover:text-[--blue] hover:decoration-solid transition-colors"
             >
               {label} →
             </Link>

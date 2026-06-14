@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";
 import { Reveal } from "@/components/motion/Reveal";
 import { LiquidButton } from "@/components/ui/LiquidButton";
+import { Sticker } from "@/components/ui/Sticker";
 import { copy } from "@/data/copy";
 
 const schema = z.object({
@@ -97,7 +98,16 @@ export default function RegularsPage() {
     <div data-nav-tone="light" className="min-h-screen flex flex-col" style={{ backgroundColor: "#004AAD" }}>
 
       {/* ── Hero ──────────────────────────────────────────────────── */}
-      <header className="py-20 md:py-28" style={{ paddingInline: "var(--pad-x)" }}>
+      <header className="relative py-20 md:py-28" style={{ paddingInline: "var(--pad-x)" }}>
+        {/* Sticker chaos — desktop only */}
+        <div className="absolute inset-0 pointer-events-none hidden lg:block" aria-hidden="true">
+          <Sticker variant="slap" tone="neon" rotate={9} className="absolute right-[8vw] top-[30%]">
+            certified regular
+          </Sticker>
+          <Sticker variant="stamp" tone="neon" rotate={-10} className="absolute right-[18vw] top-[58%]">
+            members<br />only
+          </Sticker>
+        </div>
         <Reveal className="mb-4">
           <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#E4E2DD]/40">
             The Regulars
@@ -150,7 +160,8 @@ export default function RegularsPage() {
                     </span>
                     <button
                       onClick={copyCode}
-                      className="font-mono text-[9px] uppercase tracking-widest border border-[#E4E2DD]/30 text-[#E4E2DD]/70 px-3 py-1.5 hover:border-[#E4E2DD] hover:text-[#E4E2DD] transition-colors"
+                      data-hover
+                      className="font-mono text-[9px] uppercase tracking-widest border border-[#E4E2DD] text-[#E4E2DD] px-3 py-1.5 hover:bg-[#E4E2DD] hover:text-[#004AAD] transition-colors"
                     >
                       {copied ? "Copied ✓" : "Copy"}
                     </button>

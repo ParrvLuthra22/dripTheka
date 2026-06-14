@@ -4,8 +4,9 @@
 //   • Google OAuth (primary)
 //   • Credentials (email-only, no password — magic link in V1.1)
 //
-// Adapter: @auth/drizzle-adapter → Neon Postgres
-// Session strategy: JWT (works without DB for SSR; adapter persists to DB when available)
+// Adapter: @auth/drizzle-adapter → Neon Postgres (persists users/accounts)
+// Session strategy: JWT always — sessions live in a signed token, never the DB.
+// The adapter still records the user/account rows on OAuth sign-in.
 //
 // REQUIRED ENV VARS:
 //   AUTH_SECRET            — random string, generate with: npx auth secret
@@ -42,8 +43,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth(async () => {
 
   return {
     adapter,
-    // JWT strategy works even without DB (falls back gracefully)
-    session: { strategy: adapter ? "database" : "jwt" },
+    // JWT always — stateless signed-token sessions, no DB session lookups.
+    session: { strategy: "jwt" },
 
     providers: [
       Google({
@@ -59,11 +60,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth(async () => {
     },
 
     callbacks: {
-      // Include user.id in session for easy lookup
-      async session({ session, token, user }) {
+      // On sign-in, stamp the user id into the token so it survives in the JWT.
+      async jwt({ token, user }) {
+        if (user?.id) token.id = user.id;
+        return token;
+      },
+      // Expose the user id on the session from the token.
+      async session({ session, token }) {
         if (session.user) {
-          if (user?.id) session.user.id = user.id;
-          else if (token?.sub) session.user.id = token.sub;
+          session.user.id = (token.id as string | undefined) ?? token.sub ?? session.user.id;
         }
         return session;
       },

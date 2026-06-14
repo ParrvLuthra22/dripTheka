@@ -22,6 +22,7 @@ import { gsap } from "gsap";
 import { Button } from "@/components/ui/Button";
 import { ScrambleText } from "@/components/motion/ScrambleText";
 import { FoamParticles } from "@/components/motion/FoamParticles";
+import { Sticker } from "@/components/ui/Sticker";
 import { useSound } from "@/components/sound/SoundProvider";
 
 const SESSION_KEY = "dt-hero-played";
@@ -211,6 +212,26 @@ export function Hero() {
         <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-[#E4E2DD]/40">
           Est.&nbsp;MMXXVI&nbsp;·&nbsp;Delhi
         </span>
+      </div>
+
+      {/* ── Sticker layer — slapped-on streetwear chaos (desktop only) ──── */}
+      <div className="absolute inset-0 z-10 pointer-events-none hidden lg:block" aria-hidden="true">
+        <Sticker variant="stamp" tone="neon" rotate={-12}
+          className="absolute left-[5vw] top-[26%]">
+          est<br />mmxxvi<br />delhi
+        </Sticker>
+        <Sticker variant="slap" tone="neon" rotate={7}
+          className="absolute right-[6vw] top-[30%]">
+          no restocks
+        </Sticker>
+        <Sticker variant="tape" tone="cream" rotate={-4}
+          className="absolute left-[8vw] bottom-[24%]">
+          100% cotton · 0% chill
+        </Sticker>
+        <Sticker variant="slap" tone="cream" rotate={-9}
+          className="absolute right-[7vw] bottom-[28%]">
+          buy or cry
+        </Sticker>
       </div>
 
       {/* Drifting foam particles behind everything */}

@@ -159,7 +159,7 @@ export default async function BuildingPostPage({ params }: Props) {
         <Link
           href="/building"
           data-hover
-          className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink]/30 hover:text-[--blue] transition-colors"
+          className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink]/60 underline decoration-dotted underline-offset-2 hover:text-[--blue] hover:decoration-solid transition-colors"
         >
           ← All dispatches
         </Link>

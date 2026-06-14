@@ -111,7 +111,7 @@ export function UpsellModal() {
               <button
                 onClick={hide}
                 data-hover
-                className="flex-1 font-mono text-[10px] uppercase tracking-[0.16em] border border-[--ink]/20 text-[--ink] py-3.5 hover:bg-[--ink]/5 transition-colors"
+                className="flex-1 font-mono text-[10px] uppercase tracking-[0.16em] border border-[--ink]/35 text-[--ink] py-3.5 hover:bg-[--ink]/5 transition-colors"
               >
                 {copy.upsell.keepBrowsing}
               </button>

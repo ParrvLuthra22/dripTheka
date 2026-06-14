@@ -120,9 +120,9 @@ export default function LoginPage() {
         </button>
 
         {/* Guest checkout note */}
-        <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-[#E4E2DD]/30 text-center">
+        <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-[#E4E2DD]/50 text-center">
           Or&nbsp;
-          <Link href="/checkout" className="underline hover:text-[#E4E2DD]/60 transition-colors">
+          <Link href="/checkout" data-hover className="text-[#E4E2DD] underline underline-offset-2 hover:text-[#CCFF00] transition-colors">
             continue as guest
           </Link>
           &nbsp;— you can always sign in later
