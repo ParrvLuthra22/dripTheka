@@ -4,7 +4,7 @@
 // Hero illustration + 3 detail views, each with GSAP parallax (-8 yPercent on scroll).
 // Editorial captions in italic Fraunces between images.
 
-import { useRef } from "react";
+import { useRef, useCallback } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -28,6 +28,7 @@ interface ProductHeroProps {
 export function ProductHero({ product }: ProductHeroProps) {
   const containerRef  = useRef<HTMLDivElement>(null);
   const imgRefs       = useRef<(HTMLDivElement | null)[]>([]);
+  const zoomRefs      = useRef<(HTMLDivElement | null)[]>([]);
 
   const primaryColor  = product.colors[0];
   const accentColor   = product.colors[1] ?? "#E4E2DD";
@@ -38,6 +39,22 @@ export function ProductHero({ product }: ProductHeroProps) {
     `${product.fit.charAt(0).toUpperCase() + product.fit.slice(1)} fit · ${product.careInstructions[0].toLowerCase()}`,
     `Pour #${product.dropNumber} · ${product.totalUnits} pieces, worldwide.`,
   ];
+
+  // ── Cursor-driven zoom — magnifies toward the pointer on hover ─────────
+  const onPanelMove = useCallback((e: React.MouseEvent<HTMLDivElement>, i: number) => {
+    const el = zoomRefs.current[i];
+    if (!el) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width  - 0.5; // -0.5..0.5
+    const y = (e.clientY - rect.top)  / rect.height - 0.5;
+    el.style.transform = `scale(1.18) translate(${-x * 14}%, ${-y * 14}%)`;
+  }, []);
+
+  const onPanelLeave = useCallback((i: number) => {
+    const el = zoomRefs.current[i];
+    if (!el) return;
+    el.style.transform = "scale(1) translate(0%, 0%)";
+  }, []);
 
   useGSAP(() => {
     imgRefs.current.forEach((el) => {
@@ -63,6 +80,8 @@ export function ProductHero({ product }: ProductHeroProps) {
           {/* Illustration panel */}
           <div
             className="relative overflow-hidden"
+            onMouseMove={(e) => onPanelMove(e, i)}
+            onMouseLeave={() => onPanelLeave(i)}
             style={{
               backgroundColor: i === 0 ? primaryColor : i % 2 === 0 ? "#141518" : "#E4E2DD",
               aspectRatio:     i === 0 ? "4/5" : "5/4",
@@ -83,17 +102,28 @@ export function ProductHero({ product }: ProductHeroProps) {
                   transformOrigin:"center center",
                 }}
               >
-                <ProductIllustration
-                  type={product.type}
-                  primaryColor={
-                    // Invert colors on dark backgrounds for contrast
-                    i % 2 === 0 ? primaryColor : accentColor
-                  }
-                  accentColor={
-                    i % 2 === 0 ? accentColor : primaryColor
-                  }
-                  className="w-full h-full"
-                />
+                {/* Cursor-zoom layer — independent of the GSAP/static transforms above */}
+                <div
+                  ref={(el) => { zoomRefs.current[i] = el; }}
+                  style={{
+                    width:      "100%",
+                    height:     "100%",
+                    transition: "transform 0.5s cubic-bezier(.2,.9,.3,1)",
+                    willChange: "transform",
+                  }}
+                >
+                  <ProductIllustration
+                    type={product.type}
+                    primaryColor={
+                      // Invert colors on dark backgrounds for contrast
+                      i % 2 === 0 ? primaryColor : accentColor
+                    }
+                    accentColor={
+                      i % 2 === 0 ? accentColor : primaryColor
+                    }
+                    className="w-full h-full"
+                  />
+                </div>
               </div>
             </div>
 

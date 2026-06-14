@@ -12,6 +12,7 @@
 import { NextResponse }          from "next/server";
 import { z }                     from "zod";
 import { verifyPaymentSignature } from "@/lib/razorpay/client";
+import { sendOrderConfirmationEmail } from "@/lib/email";
 
 // ── Schema ────────────────────────────────────────────────────────────────
 
@@ -164,6 +165,33 @@ export async function POST(request: Request) {
       depositPaise: reservation.depositPaise,
       balancePaise: reservation.balancePaise,
     });
+
+    // 6b. Order confirmation email via Resend (non-blocking)
+    void (async () => {
+      try {
+        const lineItems = await db
+          .select({
+            productName:    reservationItems.productName,
+            size:           reservationItems.size,
+            qty:            reservationItems.qty,
+            lineTotalPaise: reservationItems.lineTotalPaise,
+          })
+          .from(reservationItems)
+          .where(eq(reservationItems.reservationId, reservationId));
+
+        await sendOrderConfirmationEmail({
+          to:            reservation.email,
+          customerName:  reservation.name,
+          orderNumber:   reservation.orderNumber,
+          items:         lineItems,
+          subtotalPaise: reservation.subtotalPaise,
+          depositPaise:  reservation.depositPaise,
+          balancePaise:  reservation.balancePaise,
+        });
+      } catch (e) {
+        console.warn("[confirm] Failed to send order confirmation email:", e);
+      }
+    })();
 
     // 7. Done
     return NextResponse.json({ ok: true, orderNumber: reservation.orderNumber });

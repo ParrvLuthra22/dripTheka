@@ -101,6 +101,23 @@ const INPUT_BASE =
   "font-sans text-sm text-[--ink] placeholder-[--ink]/25 " +
   "px-3 py-2.5 outline-none transition-colors duration-200";
 
+// ── 3D tilt on hover — "Your Glass" panel (gentle, large surface) ──────────
+function onPanelMove(e: React.MouseEvent<HTMLDivElement>) {
+  const el = e.currentTarget;
+  const rect = el.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / rect.width  - 0.5;
+  const y = (e.clientY - rect.top)  / rect.height - 0.5;
+  el.style.transform = `perspective(1400px) rotateX(${-y * 3}deg) rotateY(${x * 4}deg)`;
+}
+function onPanelLeave(e: React.MouseEvent<HTMLDivElement>) {
+  e.currentTarget.style.transform = "perspective(1400px) rotateX(0deg) rotateY(0deg)";
+}
+
+const SECTION_VARIANTS = {
+  initial: { opacity: 0, y: 24 },
+  animate: { opacity: 1, y: 0 },
+};
+
 // ── Main component ────────────────────────────────────────────────────────────
 export default function CheckoutPage() {
   const router = useRouter();
@@ -264,7 +281,11 @@ export default function CheckoutPage() {
 
         {/* LEFT — form */}
         <form onSubmit={handleSubmit} noValidate className="space-y-12">
-          <div>
+          <motion.div
+            initial={SECTION_VARIANTS.initial}
+            animate={SECTION_VARIANTS.animate}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          >
             <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink]/30 mb-2">
               Checkout
             </p>
@@ -272,10 +293,16 @@ export default function CheckoutPage() {
               style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)" }}>
               Pour it out.
             </h1>
-          </div>
+          </motion.div>
 
           {/* ── Section 1: Contact ──────────────────────────────────── */}
-          <section className="space-y-5">
+          <motion.section
+            initial={SECTION_VARIANTS.initial}
+            whileInView={SECTION_VARIANTS.animate}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.5, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-5"
+          >
             <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[--ink] border-b border-[--ink]/10 pb-2">
               01 · Contact
             </p>
@@ -289,10 +316,16 @@ export default function CheckoutPage() {
                 className={INPUT_BASE}
               />
             </Field>
-          </section>
+          </motion.section>
 
           {/* ── Section 2: Shipping ─────────────────────────────────── */}
-          <section className="space-y-5">
+          <motion.section
+            initial={SECTION_VARIANTS.initial}
+            whileInView={SECTION_VARIANTS.animate}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.5, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-5"
+          >
             <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[--ink] border-b border-[--ink]/10 pb-2">
               02 · Shipping
             </p>
@@ -361,7 +394,7 @@ export default function CheckoutPage() {
                 ))}
               </select>
             </Field>
-          </section>
+          </motion.section>
 
           {/* Payment error */}
           {payErr && (
@@ -391,9 +424,23 @@ export default function CheckoutPage() {
           </p>
         </form>
 
-        {/* RIGHT — Your Glass (sticky order summary) */}
-        <div className="lg:sticky lg:top-[calc(var(--header-h)+2rem)] lg:h-fit">
-          <div className="bg-[--ink] p-6 space-y-5">
+        {/* RIGHT — Your Glass (sticky order summary, gentle 3D tilt on hover) */}
+        <motion.div
+          initial={{ opacity: 0, x: 24 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          className="lg:sticky lg:top-[calc(var(--header-h)+2rem)] lg:h-fit"
+        >
+          <div
+            onMouseMove={onPanelMove}
+            onMouseLeave={onPanelLeave}
+            className="bg-[--ink] p-6 space-y-5"
+            style={{
+              transformStyle: "preserve-3d",
+              transition: "transform 0.4s cubic-bezier(.2,.9,.3,1)",
+              willChange: "transform",
+            }}
+          >
             <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[--cream]/30">
               Your Glass
             </p>
@@ -467,7 +514,7 @@ export default function CheckoutPage() {
               Remaining balance collected on Opening Night · No charges now beyond the deposit
             </p>
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

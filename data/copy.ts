@@ -80,6 +80,7 @@ export const copy = {
       regulars:      "welcome to the regulars. you're one of us now.",
       reservation:   "locked in. drop incoming. check your inbox.",
       refillNotify:  "we'll ping you when it's back. we remember.",
+      waitlist:      "you're on the list. we'll holler.",
     },
   },
 
@@ -127,9 +128,11 @@ export const copy = {
     signUpRegular: "Become a regular →",
     backToHome:    "← Back to the bar",
     refillNotify:  "Bell me when it's back",
+    joinWaitlist:  "Not ready yet? Get drop alerts →",
     submitGeneric: "Cheers →",
     viewAll:       "See the full pour →",
     readStory:     "Read the full story →",
+    seeWhy:        "see why · view product →",
   },
 
   // ── Status labels ─────────────────────────────────────────────────────────
@@ -141,17 +144,6 @@ export const copy = {
     lastRound:     "Last Round · khatam hone wala hai",
     nowPouring:    "Now Pouring",
     openingSoon:   "Opening Night · doors khulne wale hain",
-  },
-
-  // ── Loyalty badges ────────────────────────────────────────────────────────
-  // Used by getBadge(orderCount) in lib/utils/copy.ts.
-
-  badges: {
-    walkIn:       "Walk-in · aao baithe raho",
-    firstTimer:   "First Round · welcome",
-    familiarFace: "Familiar Face · waapas aa gaye",
-    regular:      "Regular · table ready hai",
-    vip:          "Khaas Mehman · permanent tab",
   },
 
   // ── Footer ────────────────────────────────────────────────────────────────
@@ -198,6 +190,21 @@ export const copy = {
     lastRound:        { en: "Last Round",         hi: "khatam hone wala hai"    },
     regulars:         { en: "Regulars",           hi: "permanent customers"      },
     wrongTheka:       { en: "Wrong Theka",        hi: "galat gully"             },
+    bartendersPick:   { en: "Bartender's Pick",   hi: "is hafte yeh chal raha hai" },
+    theBoard:         { en: "The Board",          hi: "aaj ka board"            },
+    freshPour:        { en: "Fresh Pour",         hi: "naya maal"               },
+    mostPoured:       { en: "Most Poured",        hi: "sabse zyada chala"       },
+    recentlyViewed:   { en: "Recently Viewed",    hi: "tumne dekha tha"         },
+  },
+
+  // ── Upsell modal ─────────────────────────────────────────────────────────
+  // Shown right after Add to Cart — "would you like anything else?"
+
+  upsell: {
+    eyebrow:      "before you settle up",
+    title:        "One more before last call?",
+    subtitle:     "pairs well with what's already in your glass.",
+    keepBrowsing: "Keep browsing",
   },
 
   // ── 404 ───────────────────────────────────────────────────────────────────

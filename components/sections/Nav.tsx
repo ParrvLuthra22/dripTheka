@@ -21,6 +21,7 @@ import { gsap } from "gsap";
 
 import { useSoundStore } from "@/lib/store/sound";
 import { useCartStore }  from "@/lib/store/cart";
+import { useKhataStore } from "@/lib/store/khata";
 import { CountUp }       from "@/components/motion/CountUp";
 import { UserMenu }      from "@/components/auth/UserMenu";
 
@@ -31,6 +32,7 @@ const LEFT_LINKS = [
   { label: "Story",     href: "/story" },
   { label: "Building",  href: "/building" },
   { label: "Regulars",  href: "/regulars" },
+  { label: "Khata",     href: "/khata" },
 ] as const;
 
 const MOBILE_LINKS = [
@@ -38,6 +40,7 @@ const MOBILE_LINKS = [
   { label: "Story",    href: "/story" },
   { label: "Building", href: "/building" },
   { label: "Regulars", href: "/regulars" },
+  { label: "Khata",    href: "/khata" },
   { label: "Cart",     href: "/cart" },
   { label: "Account",  href: "/account" },
 ] as const;
@@ -174,6 +177,7 @@ function PourIndicator({ count }: { count: number }) {
     <Link
       href="/cart"
       data-hover
+      data-cart-target
       aria-label={`Cart, ${count} item${count !== 1 ? "s" : ""}`}
       className="hidden min-[900px]:flex items-center gap-2 hover:opacity-80 transition-opacity"
     >
@@ -232,6 +236,7 @@ export function Nav() {
   const { muted, toggle: toggleSound } = useSoundStore();
   const { totalItems } = useCartStore();
   const count = totalItems();
+  const khataCount = useKhataStore((s) => s.slugs.length);
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -317,7 +322,14 @@ export function Nav() {
               >
                 {LEFT_LINKS.map(({ label, href }) => (
                   <NavLink key={href} href={href}>
-                    {label}
+                    <span className="inline-flex items-center gap-1.5">
+                      {label}
+                      {href === "/khata" && mounted && khataCount > 0 && (
+                        <span className="inline-flex items-center justify-center min-w-[14px] h-[14px] px-[3px] rounded-full bg-[--neon] text-black text-[8px] font-bold leading-none tabular-nums">
+                          {khataCount}
+                        </span>
+                      )}
+                    </span>
                   </NavLink>
                 ))}
               </nav>
@@ -433,6 +445,11 @@ export function Nav() {
                       >
                         {label}.
                       </span>
+                      {href === "/khata" && mounted && khataCount > 0 && (
+                        <span className="font-mono text-xs px-2.5 py-1 rounded-full bg-[--neon] text-black self-center tabular-nums">
+                          {khataCount}
+                        </span>
+                      )}
                     </Link>
                   </motion.li>
                 ))}
