@@ -10,6 +10,7 @@ import { useSound } from "@/components/sound/SoundProvider";
 import { RefillNotifyForm } from "./RefillNotifyForm";
 import { BottleCap } from "@/components/ui/BottleCap";
 import { PriceTag } from "@/components/ui/PriceTag";
+import { SizeGuideModal } from "@/components/ui/SizeGuideModal";
 import { cn } from "@/lib/utils/cn";
 import {
   POUR_001,
@@ -68,6 +69,7 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
   );
   const [qty,      setQty]      = useState(1);
   const [addState, setAddState] = useState<AddState>("idle");
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const sizeGroupRef = useRef<HTMLDivElement>(null);
 
   // Arrow-key cycling for radiogroup keyboard nav
@@ -188,6 +190,8 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
                 Size
               </p>
               <button
+                onClick={() => setSizeGuideOpen(true)}
+                data-hover
                 className="font-mono text-[9px] uppercase tracking-[0.12em] text-[--blue] hover:text-[--ink] transition-colors underline decoration-dotted"
                 aria-label="Open size guide"
               >
@@ -350,6 +354,12 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
           Limited
         </span>
       </div>
+
+      <SizeGuideModal
+        open={sizeGuideOpen}
+        onClose={() => setSizeGuideOpen(false)}
+        product={product}
+      />
     </div>
   );
 }

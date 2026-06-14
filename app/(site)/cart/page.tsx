@@ -15,6 +15,19 @@ import { PriceTag } from "@/components/ui/PriceTag";
 import { cn } from "@/lib/utils/cn";
 import { copy } from "@/data/copy";
 import { getCartMessage } from "@/lib/utils/copy";
+import { useToastStore } from "@/lib/store/toast";
+
+// ── 3D tilt on hover — thumbnail (no refs needed, uses currentTarget) ───────
+function onThumbMove(e: React.MouseEvent<HTMLDivElement>) {
+  const el = e.currentTarget;
+  const rect = el.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / rect.width  - 0.5;
+  const y = (e.clientY - rect.top)  / rect.height - 0.5;
+  el.style.transform = `perspective(600px) rotateX(${-y * 16}deg) rotateY(${x * 20}deg) scale(1.06)`;
+}
+function onThumbLeave(e: React.MouseEvent<HTMLDivElement>) {
+  e.currentTarget.style.transform = "perspective(600px) rotateX(0deg) rotateY(0deg) scale(1)";
+}
 
 // ── viewBox constants matching PintGlass (0 0 72 96) ─────────────────────────
 const BOWL_BOT_Y = 84;
@@ -103,9 +116,15 @@ function fmtDate(d: Date) {
 export default function CartPage() {
   const { items, removeItem, updateQuantity, totalItems, totalFull, totalDeposit } =
     useCartStore();
+  const pushToast = useToastStore((s) => s.push);
   const count = totalItems();
   const fill  = Math.min(1, count / 10);
   const empty = items.length === 0;
+
+  const handleRemove = (item: (typeof items)[number]) => {
+    removeItem(item.product.id, item.size);
+    pushToast(`Removed · ${item.product.name} (${item.size})`);
+  };
 
   return (
     <div data-nav-tone="dark" className="bg-[--cream] min-h-screen">
@@ -173,10 +192,17 @@ export default function CartPage() {
                     className="overflow-hidden"
                   >
                     <div className="flex gap-4 py-6">
-                      {/* Thumbnail */}
+                      {/* Thumbnail — 3D tilt on hover */}
                       <div
+                        onMouseMove={onThumbMove}
+                        onMouseLeave={onThumbLeave}
                         className="shrink-0 rounded-sm overflow-hidden"
-                        style={{ width: 72, height: 90, backgroundColor: primary }}
+                        style={{
+                          width: 72, height: 90, backgroundColor: primary,
+                          transformStyle: "preserve-3d",
+                          transition: "transform 0.4s cubic-bezier(.2,.9,.3,1)",
+                          willChange: "transform",
+                        }}
                       >
                         <ProductIllustration
                           type={item.product.type}
@@ -224,7 +250,7 @@ export default function CartPage() {
                           </div>
 
                           <button
-                            onClick={() => removeItem(item.product.id, item.size)}
+                            onClick={() => handleRemove(item)}
                             className="font-mono text-[9px] uppercase tracking-[0.12em] text-[--ink]/30 hover:text-red-500 transition-colors"
                           >
                             Remove

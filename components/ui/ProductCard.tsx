@@ -1,19 +1,28 @@
 "use client";
 
 // Shared ProductCard — used in CurrentlyPouring (home) and PourProductGrid (pour page).
-// Includes 3D perspective tilt on hover (cursor drives rotateX/Y).
+// Includes 3D perspective tilt on hover (cursor drives rotateX/Y), a Khata
+// (wishlist) toggle, and true quick-add: tap ADD → pick a size → it flies
+// into the nav pint glass.
 
-import { useRef, useCallback } from "react";
-import { motion } from "framer-motion";
+import { useRef, useCallback, useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import { TappedOutStamp } from "@/components/glass/TappedOutStamp";
 import { ProductIllustration } from "@/components/sections/ProductIllustration";
 import { isTappedOut, POUR_001 } from "@/data/pour-001";
-import type { Product } from "@/data/pour-001";
+import type { Product, Size } from "@/data/pour-001";
 import { copy } from "@/data/copy";
 import { ThekaLabel, type ThekaKey } from "@/components/ui/ThekaLabel";
 import { PriceTag } from "@/components/ui/PriceTag";
+import { BottleCap } from "@/components/ui/BottleCap";
+import { useKhataStore } from "@/lib/store/khata";
+import { useCartStore } from "@/lib/store/cart";
+import { useToastStore } from "@/lib/store/toast";
+import { useSound } from "@/components/sound/SoundProvider";
+import { flyToCart } from "@/lib/utils/flyToCart";
+import { pickRandom } from "@/lib/utils/copy";
 
 // Theka-language tag palette — maps product IDs → copy.language keys
 // Tag pills use showHi={false}: Hinglish makes them too wide on mobile
@@ -25,6 +34,32 @@ const TAGS: Record<string, ThekaKey> = {
   "dt-001-005": "tappedOut",
   "dt-001-006": "freshlyPoured",
 };
+
+// ── Heart icon — outline (Khata empty) / filled (Khata saved) ──────────────
+function HeartIcon({ filled }: { filled: boolean }) {
+  const d =
+    "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z";
+  return (
+    <motion.svg
+      key={filled ? "on" : "off"}
+      initial={{ scale: 0.4, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: "spring", stiffness: 520, damping: 16 }}
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        d={d}
+        fill={filled ? "var(--blue)" : "none"}
+        stroke={filled ? "var(--blue)" : "var(--ink)"}
+        strokeWidth="1.75"
+        strokeLinejoin="round"
+      />
+    </motion.svg>
+  );
+}
 
 interface ProductCardProps {
   product: Product;
@@ -43,6 +78,29 @@ export function ProductCard({
   const primary    = product.colors[0];
   const accent     = product.colors[1] ?? "#E4E2DD";
   const productNum = POUR_001.products.findIndex((p) => p.id === product.id) + 1;
+
+  const inKhata     = useKhataStore((s) => s.slugs.includes(product.slug));
+  const toggleKhata = useKhataStore((s) => s.toggle);
+  const addItem     = useCartStore((s) => s.addItem);
+  const { play, muted } = useSound();
+
+  const availableSizes = product.sizes.filter((s) => s.stock > 0);
+
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [justAdded,  setJustAdded]  = useState(false);
+  const addBtnRef   = useRef<HTMLButtonElement>(null);
+  const pickerRef   = useRef<HTMLDivElement>(null);
+
+  // Close the size picker on outside click
+  useEffect(() => {
+    if (!pickerOpen) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (pickerRef.current?.contains(e.target as Node)) return;
+      setPickerOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [pickerOpen]);
 
   // ── 3D tilt on hover ───────────────────────────────────────────────────
   const imgRef = useRef<HTMLDivElement>(null);
@@ -66,6 +124,41 @@ export function ProductCard({
   const handleClick = () => {
     if (!tappedOut) router.push(`/product/${product.slug}`);
   };
+
+  // ── Quick add ────────────────────────────────────────────────────────
+  const pushToast = useToastStore((s) => s.push);
+
+  const quickAdd = useCallback((size: Size) => {
+    addItem(product, size, product.colorNames[0]);
+    if (!muted) play("pour");
+    flyToCart(addBtnRef.current);
+    pushToast(`${pickRandom(copy.cart.addedToast)} · ${product.name} (${size})`, "blue");
+    setPickerOpen(false);
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 1500);
+  }, [addItem, product, muted, play, pushToast]);
+
+  const handleAddClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (justAdded) return;
+    if (availableSizes.length <= 1) {
+      if (availableSizes[0]) quickAdd(availableSizes[0].size);
+      return;
+    }
+    setPickerOpen((v) => !v);
+  }, [availableSizes, justAdded, quickAdd]);
+
+  const handleKhataToggle = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const willAdd = !inKhata;
+    toggleKhata(product.slug);
+    if (!muted) play("cap");
+    pushToast(
+      willAdd ? `Saved · ${product.name}` : `Removed from khata · ${product.name}`
+    );
+  }, [toggleKhata, product.slug, product.name, inKhata, muted, play, pushToast]);
 
   return (
     <motion.article
@@ -142,6 +235,19 @@ export function ProductCard({
               <PriceTag price={product.price} size="sm" />
             </div>
           )}
+
+          {/* Khata (wishlist) toggle — bottom right */}
+          <button
+            onClick={handleKhataToggle}
+            data-hover
+            aria-pressed={inKhata}
+            aria-label={inKhata ? `Remove ${product.name} from your khata` : `Save ${product.name} to your khata`}
+            className="absolute bottom-3 right-3 z-10 w-9 h-9 rounded-full bg-[--cream]/90 backdrop-blur-sm flex items-center justify-center border border-[--ink]/10 shadow-sm hover:scale-110 active:scale-95 transition-transform duration-200"
+          >
+            <AnimatePresence mode="wait" initial={false}>
+              <HeartIcon filled={inKhata} />
+            </AnimatePresence>
+          </button>
         </div>
 
         {/* ── Metadata ──────────────────────────────────────────── */}
@@ -173,18 +279,71 @@ export function ProductCard({
           </p>
 
           {!tappedOut && (
-            <div className="flex items-center justify-end mt-4">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  router.push(`/product/${product.slug}`);
-                }}
+            <div className="relative flex items-center justify-end mt-4">
+              {/* Size picker popover — opens above the ADD button */}
+              <AnimatePresence>
+                {pickerOpen && (
+                  <motion.div
+                    ref={pickerRef}
+                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                    transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="absolute bottom-full right-0 mb-2 z-20 flex flex-wrap justify-end gap-1.5 bg-[--cream] border-2 border-black p-2.5 shadow-[2px_2px_0_0_#141518] max-w-[210px]"
+                  >
+                    {availableSizes.map(({ size }) => (
+                      <BottleCap
+                        key={size}
+                        label={size}
+                        size="sm"
+                        onClick={() => quickAdd(size)}
+                        ariaLabel={`Add size ${size} to glass`}
+                      />
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <motion.button
+                ref={addBtnRef}
+                onClick={handleAddClick}
+                whileTap={{ scale: 0.94 }}
+                aria-expanded={availableSizes.length > 1 ? pickerOpen : undefined}
                 data-cursor="add"
-                className="font-mono text-[10px] uppercase tracking-[0.14em] px-4 py-2 bg-[--neon] text-black border-2 border-black shadow-[2px_2px_0_0_#141518] hover:shadow-[0px_0px_0_0_#141518] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                className={cn(
+                  "font-mono text-[10px] uppercase tracking-[0.14em] px-4 py-2 border-2 border-black transition-all",
+                  justAdded
+                    ? "bg-[--blue] text-[--cream] shadow-[0px_0px_0_0_#141518] translate-x-[2px] translate-y-[2px]"
+                    : "bg-[--neon] text-black shadow-[2px_2px_0_0_#141518] hover:shadow-[0px_0px_0_0_#141518] hover:translate-x-[2px] hover:translate-y-[2px]"
+                )}
               >
-                {copy.cta.addToGlass}
-              </button>
+                <AnimatePresence mode="wait" initial={false}>
+                  {justAdded ? (
+                    <motion.span
+                      key="added"
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.15 }}
+                      className="block"
+                    >
+                      Poured ✓
+                    </motion.span>
+                  ) : (
+                    <motion.span
+                      key="add"
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.15 }}
+                      className="block"
+                    >
+                      {availableSizes.length > 1 ? `${copy.cta.addToGlass} →` : copy.cta.addToGlass}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </motion.button>
             </div>
           )}
         </div>

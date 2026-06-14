@@ -17,6 +17,7 @@
 //   ThekaEgg           → z-100 — keyboard easter egg (type "theka")
 //   HappyHour          → z-100 — Konami easter egg
 //   FounderSecret      → z-60  — scroll-to-bottom secret
+//   ToastStack         → z-150 — cart/khata confirmation slips, bottom-right
 //   HangoverMode       → z-250 — idle toast (body.is-hungover class)
 //   DrunkScroll        → z-250 — fast-scroll toast (body.is-wobbly class)
 //   LoadingScreen      → z-200 — brand intro, once per session
@@ -30,6 +31,7 @@ import { Footer }             from "@/components/sections/Footer";
 import { PintGlass }          from "@/components/glass/PintGlass";
 import { PourTransition }     from "@/components/transitions/PourTransition";
 import { Cursor }             from "@/components/ui/Cursor";
+import { ToastStack }         from "@/components/ui/ToastStack";
 import { LoadingScreen }      from "@/components/layout/LoadingScreen";
 import { Bouncer }            from "@/components/layout/Bouncer";
 import { ThekaEgg }           from "@/components/layout/ThekaEgg";
@@ -64,6 +66,7 @@ export default function SiteLayout({
       <PintGlass />
       <SoundToggle />
       <Cursor />
+      <ToastStack />
 
       {/* The signature moment — scroll-driven logo morph */}
       <MorphingLogo />
