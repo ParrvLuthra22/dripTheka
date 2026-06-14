@@ -20,6 +20,7 @@ import { BottleCap } from "@/components/ui/BottleCap";
 import { useKhataStore } from "@/lib/store/khata";
 import { useCartStore } from "@/lib/store/cart";
 import { useToastStore } from "@/lib/store/toast";
+import { useUpsellStore } from "@/lib/store/upsell";
 import { useSound } from "@/components/sound/SoundProvider";
 import { flyToCart } from "@/lib/utils/flyToCart";
 import { pickRandom } from "@/lib/utils/copy";
@@ -65,12 +66,15 @@ interface ProductCardProps {
   product: Product;
   aspectRatio?: string;
   animDelay?: number;
+  /** Show the "anything else?" upsell modal after a quick-add. Default true. */
+  triggerUpsell?: boolean;
 }
 
 export function ProductCard({
   product,
   aspectRatio = "aspect-[3/4]",
   animDelay   = 0,
+  triggerUpsell = true,
 }: ProductCardProps) {
   const router     = useRouter();
   const tappedOut  = isTappedOut(product.sizes);
@@ -136,7 +140,10 @@ export function ProductCard({
     setPickerOpen(false);
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1500);
-  }, [addItem, product, muted, play, pushToast]);
+    if (triggerUpsell) {
+      setTimeout(() => useUpsellStore.getState().show(product.slug), 900);
+    }
+  }, [addItem, product, muted, play, pushToast, triggerUpsell]);
 
   const handleAddClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();

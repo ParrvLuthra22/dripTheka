@@ -18,6 +18,7 @@
 //   HappyHour          → z-100 — Konami easter egg
 //   FounderSecret      → z-60  — scroll-to-bottom secret
 //   ToastStack         → z-150 — cart/khata confirmation slips, bottom-right
+//   UpsellModal        → z-200 — "anything else?" after Add to Cart
 //   HangoverMode       → z-250 — idle toast (body.is-hungover class)
 //   DrunkScroll        → z-250 — fast-scroll toast (body.is-wobbly class)
 //   LoadingScreen      → z-200 — brand intro, once per session
@@ -32,6 +33,7 @@ import { PintGlass }          from "@/components/glass/PintGlass";
 import { PourTransition }     from "@/components/transitions/PourTransition";
 import { Cursor }             from "@/components/ui/Cursor";
 import { ToastStack }         from "@/components/ui/ToastStack";
+import { UpsellModal }        from "@/components/ui/UpsellModal";
 import { LoadingScreen }      from "@/components/layout/LoadingScreen";
 import { Bouncer }            from "@/components/layout/Bouncer";
 import { ThekaEgg }           from "@/components/layout/ThekaEgg";
@@ -67,6 +69,7 @@ export default function SiteLayout({
       <SoundToggle />
       <Cursor />
       <ToastStack />
+      <UpsellModal />
 
       {/* The signature moment — scroll-driven logo morph */}
       <MorphingLogo />

@@ -268,6 +268,26 @@ export function getAvailableSizes(variants: SizeVariant[]): SizeVariant[] {
   return variants.filter((v) => v.stock > 0);
 }
 
+// ── The Board — homepage "what's on tap" helpers ─────────────────────────
+
+/** Units sold so far = total minted minus what's still on the shelf. */
+export function getUnitsPoured(product: Product): number {
+  const remaining = product.sizes.reduce((sum, v) => sum + v.stock, 0);
+  return product.totalUnits - remaining;
+}
+
+/** Best-sellers — highest units poured first. */
+export function getMostPoured(limit = 4): Product[] {
+  return [...POUR_001.products]
+    .sort((a, b) => getUnitsPoured(b) - getUnitsPoured(a))
+    .slice(0, limit);
+}
+
+/** Newest additions to the pour — last in the lineup, most recent first. */
+export function getFreshPour(limit = 4): Product[] {
+  return [...POUR_001.products].slice(-limit).reverse();
+}
+
 // ── Bartender's Pick ─────────────────────────────────────────────────────
 // Manually curated weekly pick — surfaced in the homepage BartendersPick section.
 

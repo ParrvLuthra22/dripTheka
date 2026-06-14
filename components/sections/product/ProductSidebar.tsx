@@ -3,11 +3,14 @@
 // ProductSidebar — sticky right column on desktop, normal flow on mobile.
 // Size selector → qty stepper → Add to Glass → pint fills automatically.
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCartStore } from "@/lib/store/cart";
+import { useRecentlyViewedStore } from "@/lib/store/recentlyViewed";
+import { useUpsellStore } from "@/lib/store/upsell";
 import { useSound } from "@/components/sound/SoundProvider";
 import { RefillNotifyForm } from "./RefillNotifyForm";
+import { WaitlistForm } from "@/components/ui/WaitlistForm";
 import { BottleCap } from "@/components/ui/BottleCap";
 import { PriceTag } from "@/components/ui/PriceTag";
 import { SizeGuideModal } from "@/components/ui/SizeGuideModal";
@@ -72,6 +75,11 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const sizeGroupRef = useRef<HTMLDivElement>(null);
 
+  // Record this product for the homepage "Recently Viewed" row
+  useEffect(() => {
+    useRecentlyViewedStore.getState().record(product.slug);
+  }, [product.slug]);
+
   // Arrow-key cycling for radiogroup keyboard nav
   const handleSizeKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -111,6 +119,9 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
     // Button: "Pour into Glass" → "Poured ✓" → back to idle
     setAddState("poured");
     setTimeout(() => setAddState("idle"), 1800);
+
+    // "Would you like anything else?" — after the button feedback settles
+    setTimeout(() => useUpsellStore.getState().show(product.slug), 900);
   }, [selectedSize, tappedOut, qty, product, addItem, updateQuantity, muted, play]);
 
   return (
@@ -319,6 +330,9 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
             <p className="font-mono text-[9px] text-[--ink]/30 text-center uppercase tracking-[0.12em] leading-relaxed">
               30% deposit charged today&nbsp;·&nbsp;70% on Opening Night
             </p>
+
+            {/* Secondary CTA — join the general waitlist, separate from Khata */}
+            <WaitlistForm slug={product.slug} productName={product.name} />
           </div>
         </>
       )}
