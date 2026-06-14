@@ -53,7 +53,7 @@ export function WaitlistForm({ slug, productName }: WaitlistFormProps) {
       <button
         onClick={() => setOpen(true)}
         data-hover
-        className="w-full font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink]/40 hover:text-[--blue] transition-colors text-center"
+        className="w-full font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink]/70 border border-dashed border-[--ink]/40 py-2.5 hover:border-solid hover:border-[--blue] hover:text-[--blue] transition-colors text-center"
       >
         {copy.cta.joinWaitlist}
       </button>

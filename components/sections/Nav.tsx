@@ -314,8 +314,19 @@ export function Nav() {
             className="h-full flex items-center justify-between gap-4"
             style={{ paddingInline: "var(--pad-x)" }}
           >
-            {/* ── LEFT — nav links (desktop) / blank (mobile) ─────── */}
+            {/* ── LEFT — nav links (desktop) / brand wordmark (mobile) ─────── */}
             <div className="flex items-center min-w-0">
+              {/* Mobile-only brand link home — the morph logo doesn't dock on
+                  mobile, so give small screens an explicit way back. */}
+              <Link
+                href="/"
+                data-hover
+                aria-label="Drip Theka — home"
+                className="min-[900px]:hidden font-tanker uppercase text-[#E4E2DD] text-lg leading-none tracking-tight"
+              >
+                Drip&nbsp;Theka
+              </Link>
+
               <nav
                 className="hidden min-[900px]:flex items-center gap-7"
                 aria-label="Primary navigation"

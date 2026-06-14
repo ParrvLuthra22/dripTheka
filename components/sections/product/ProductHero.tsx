@@ -9,6 +9,7 @@ import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ProductIllustration } from "@/components/sections/ProductIllustration";
+import { Sticker } from "@/components/ui/Sticker";
 import type { Product } from "@/data/pour-001";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -133,6 +134,14 @@ export function ProductHero({ product }: ProductHeroProps) {
                 {String(i + 1).padStart(2, "0")}
               </span>
             </div>
+
+            {/* Slapped sticker — only on the first (hero) panel */}
+            {i === 0 && (
+              <Sticker variant="slap" tone="neon" rotate={-10}
+                className="absolute bottom-5 right-5 z-10">
+                pour&nbsp;#{String(product.dropNumber).padStart(3, "0")}
+              </Sticker>
+            )}
           </div>
 
           {/* Editorial caption — italic Fraunces, between each image */}

@@ -74,7 +74,7 @@ export default function KhataPage() {
                     exit={{ opacity: 0, x: -8 }}
                     onClick={() => setConfirmClear(true)}
                     data-hover
-                    className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink]/40 hover:text-[--ink] transition-colors"
+                    className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink]/60 underline decoration-dotted underline-offset-2 hover:text-red-500 hover:decoration-solid transition-colors"
                   >
                     Clear khata
                   </motion.button>

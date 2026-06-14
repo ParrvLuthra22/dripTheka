@@ -234,7 +234,7 @@ export function Bouncer() {
                 ref={secondaryRef}
                 onClick={handleDecline}
                 data-hover
-                className="font-mono text-[11px] uppercase tracking-[0.16em] px-8 py-4 border border-[#E4E2DD]/35 text-[#E4E2DD]/60 hover:border-[#E4E2DD] hover:text-[#E4E2DD] transition-all duration-300 focus-visible:outline-2 focus-visible:outline-[#E4E2DD] focus-visible:outline-offset-3 whitespace-nowrap"
+                className="font-mono text-[11px] uppercase tracking-[0.16em] px-8 py-4 border border-[#E4E2DD]/55 text-[#E4E2DD]/80 hover:border-[#E4E2DD] hover:text-[#E4E2DD] transition-all duration-300 focus-visible:outline-2 focus-visible:outline-[#E4E2DD] focus-visible:outline-offset-3 whitespace-nowrap"
               >
                 no, take me to disney+
               </button>

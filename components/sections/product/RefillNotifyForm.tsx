@@ -62,7 +62,8 @@ export function RefillNotifyForm({ productId, productName }: RefillNotifyFormPro
         <button
           type="submit"
           disabled={status === "loading"}
-          className="font-mono text-[9px] uppercase tracking-[0.14em] border border-[--ink]/20 px-3 py-2 hover:border-[--ink] transition-colors disabled:opacity-40"
+          data-hover
+          className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--cream] bg-[--ink] px-4 py-2 hover:bg-[--blue] transition-colors disabled:opacity-40"
         >
           {status === "loading" ? "…" : copy.cta.submitGeneric}
         </button>
