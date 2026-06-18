@@ -290,13 +290,13 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
               disabled={!selectedSize || addState === "adding"}
               data-hover-big
               className={cn(
-                "w-full py-4 font-mono text-[10px] uppercase tracking-[0.16em]",
-                "transition-all duration-300 relative overflow-hidden",
+                "w-full py-5 font-mono text-xs uppercase tracking-[0.18em]",
+                "border-2 transition-all duration-150 relative overflow-hidden",
                 !selectedSize
-                  ? "bg-[--ink]/10 text-[--ink]/30 cursor-not-allowed"
+                  ? "bg-[#141518]/8 text-[#141518]/25 border-[#141518]/15 cursor-not-allowed"
                   : addState === "poured"
-                  ? "bg-[--blue] text-[--cream]"
-                  : "bg-[--ink] text-[--cream] hover:bg-[--blue]"
+                  ? "bg-[#004AAD] text-[#E4E2DD] border-[#141518] shadow-[4px_4px_0_0_#141518] translate-x-[1px] translate-y-[1px]"
+                  : "bg-[#141518] text-[#CCFF00] border-[#141518] shadow-[5px_5px_0_0_#CCFF00] hover:shadow-[2px_2px_0_0_#CCFF00] hover:translate-x-[3px] hover:translate-y-[3px]"
               )}
             >
               <AnimatePresence mode="wait">

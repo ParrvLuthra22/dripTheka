@@ -335,7 +335,7 @@ export default function CartPage() {
               <Link
                 href="/checkout"
                 data-hover-big
-                className="block w-full text-center font-mono text-[10px] uppercase tracking-[0.16em] bg-[--ink] text-[--cream] py-4 hover:bg-[--blue] transition-colors duration-200"
+                className="block w-full text-center font-mono text-xs uppercase tracking-[0.18em] py-5 bg-[#141518] text-[#CCFF00] border-2 border-[#141518] shadow-[5px_5px_0_0_#CCFF00] hover:shadow-[2px_2px_0_0_#CCFF00] hover:translate-x-[3px] hover:translate-y-[3px] active:shadow-none active:translate-x-[5px] active:translate-y-[5px] transition-all duration-150"
               >
                 {copy.cta.checkout}
               </Link>
