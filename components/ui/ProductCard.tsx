@@ -322,7 +322,7 @@ export function ProductCard({
                   "font-mono text-[10px] uppercase tracking-[0.14em] px-4 py-2 border-2 border-[#141518] transition-all duration-150",
                   justAdded
                     ? "bg-[#004AAD] text-[#E4E2DD] shadow-[0px_0px_0_0_#141518] translate-x-[2px] translate-y-[2px]"
-                    : "bg-[#CCFF00] text-[#141518] shadow-[3px_3px_0_0_#141518] hover:shadow-[1px_1px_0_0_#141518] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[3px] active:translate-y-[3px]"
+                    : "bg-[#004AAD] text-[#E4E2DD] shadow-[3px_3px_0_0_#141518] hover:shadow-[1px_1px_0_0_#141518] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[3px] active:translate-y-[3px]"
                 )}
               >
                 <AnimatePresence mode="wait" initial={false}>
