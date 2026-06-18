@@ -194,9 +194,6 @@ export function MorphingLogo() {
         pointerEvents: visible ? "auto" : "none",
         transition: "opacity 0.5s ease",
         willChange: "left, top, width, height",
-        // z-index: above the nav stacking context (z-50) so the nav background
-        // doesn't paint over the logo. The logo is centered so it never
-        // overlaps the left/right nav links.
         zIndex: 51,
       }}
     >
@@ -213,8 +210,14 @@ export function MorphingLogo() {
           width={1412}
           height={564}
           priority
+          unoptimized
           draggable={false}
           className="w-full h-full object-contain"
+          style={{
+            // PNG has solid #004AAD bg matching the nav — brighten to lift the
+            // cream logo text to white, then glow it so it reads at small sizes.
+            filter: "brightness(1.8) drop-shadow(0 0 5px rgba(228,226,221,0.9))",
+          }}
         />
       </button>
     </div>
