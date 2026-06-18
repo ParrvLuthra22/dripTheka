@@ -111,14 +111,14 @@ export function UpsellModal() {
               <button
                 onClick={hide}
                 data-hover
-                className="flex-1 font-mono text-[10px] uppercase tracking-[0.16em] border border-[--ink]/35 text-[--ink] py-3.5 hover:bg-[--ink]/5 transition-colors"
+                className="flex-1 font-mono text-[10px] uppercase tracking-[0.16em] border-2 border-[#141518] text-[#141518] py-3.5 shadow-[3px_3px_0_0_#141518] hover:shadow-[1px_1px_0_0_#141518] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[3px] active:translate-y-[3px] transition-all duration-150"
               >
                 {copy.upsell.keepBrowsing}
               </button>
               <button
                 onClick={() => { hide(); router.push("/checkout"); }}
                 data-hover-big
-                className="flex-1 font-mono text-[10px] uppercase tracking-[0.16em] bg-[--ink] text-[--cream] py-3.5 hover:bg-[--blue] transition-colors"
+                className="flex-1 font-mono text-[10px] uppercase tracking-[0.16em] bg-[#004AAD] text-[#E4E2DD] border-2 border-[#141518] py-3.5 shadow-[3px_3px_0_0_#141518] hover:shadow-[1px_1px_0_0_#141518] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[3px] active:translate-y-[3px] transition-all duration-150"
               >
                 {copy.cta.checkout}
               </button>

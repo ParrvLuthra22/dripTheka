@@ -194,9 +194,7 @@ export function MorphingLogo() {
         pointerEvents: visible ? "auto" : "none",
         transition: "opacity 0.5s ease",
         willChange: "left, top, width, height",
-        // z-index: above page content (z-30) but below nav links (z-50)
-        // so the nav's text isn't covered when logo is small inside the nav
-        zIndex: 45,
+        zIndex: 51,
       }}
     >
       <button
@@ -212,6 +210,7 @@ export function MorphingLogo() {
           width={1412}
           height={564}
           priority
+          unoptimized
           draggable={false}
           className="w-full h-full object-contain"
         />

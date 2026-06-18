@@ -15,8 +15,8 @@ import { POUR_001, BARTENDERS_PICK } from "@/data/pour-001";
 import { copy } from "@/data/copy";
 
 const FOUNDER_ROLES: Record<"Ayaan" | "Parrv", string> = {
-  Ayaan: "creative director",
-  Parrv: "founder",
+  Ayaan: "CoFounder",
+  Parrv: "CoFounder",
 };
 
 function relativeDate(iso: string): string {

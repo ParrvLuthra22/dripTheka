@@ -85,7 +85,7 @@ export function BuildingTeaser() {
               className="font-display italic text-[--ink] leading-none"
               style={{ fontSize: "clamp(2rem, 5vw, 4rem)" }}
             >
-              From the Founder.
+              From the Founders.
             </h2>
           </div>
           {/* "dispatches" is a count, not a Theka proper noun — keep as Eyebrow inline */}
