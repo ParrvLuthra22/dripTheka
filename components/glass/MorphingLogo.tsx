@@ -213,11 +213,6 @@ export function MorphingLogo() {
           unoptimized
           draggable={false}
           className="w-full h-full object-contain"
-          style={{
-            // PNG has solid #004AAD bg matching the nav — brighten to lift the
-            // cream logo text to white, then glow it so it reads at small sizes.
-            filter: "brightness(1.8) drop-shadow(0 0 5px rgba(228,226,221,0.9))",
-          }}
         />
       </button>
     </div>
