@@ -54,7 +54,7 @@ function JournalCard({ post, index }: { post: (typeof BUILDING_POSTS)[number]; i
       </p>
 
       {/* Arrow */}
-      <div className="absolute bottom-6 right-6 font-mono text-xs font-bold text-[--neon] uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity duration-200 drop-shadow-[1px_1px_0_rgba(0,0,0,1)]">
+      <div className="absolute bottom-6 right-6 font-mono text-xs font-bold text-[--blue] uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity duration-200">
         READ →
       </div>
     </Link>

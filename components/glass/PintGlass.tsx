@@ -42,7 +42,7 @@ const BOWL_TOP_Y  = 14;  // where liquid starts at full (just below rim inner)
 const BOWL_BOT_Y  = 84;  // where liquid hits the base
 const BOWL_H      = BOWL_BOT_Y - BOWL_TOP_Y; // 70
 const BOWL_STROKE = "var(--ink)";
-const LIQUID_FILL = "var(--neon)";
+const LIQUID_FILL = "var(--blue)";
 
 // Foam bubble data (relative to SVG coordinate space)
 const FOAM = [

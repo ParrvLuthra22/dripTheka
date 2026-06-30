@@ -82,7 +82,7 @@ export function BottleCap({
   const hoverRotation   = reducedMotion || disabled ? undefined : { rotate: active ? 30 : 15 };
 
   const fill     = active ? "#004AAD" : "#141518";
-  const textFill = active ? "#CCFF00" : "#E4E2DD";
+  const textFill = "#E4E2DD";
   // 1 CSS-px border regardless of svg scale: 100 ÷ rendered-px
   const strokeW  = (100 / px).toFixed(2);
 

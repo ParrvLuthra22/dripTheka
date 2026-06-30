@@ -17,7 +17,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses: Record<ButtonVariant, string> = {
   solid: [
-    "bg-[--blue] text-[--neon]",
+    "bg-[--blue] text-[--cream]",
     "border-2 border-[--ink]",
     "shadow-[4px_4px_0_0_var(--ink)]",
     "hover:shadow-[0px_0px_0_0_var(--ink)] hover:translate-x-1 hover:translate-y-1",
@@ -27,12 +27,12 @@ const variantClasses: Record<ButtonVariant, string> = {
     "bg-[--cream] text-[--ink]",
     "border-2 border-[--ink]",
     "shadow-[4px_4px_0_0_var(--ink)]",
-    "hover:bg-[--neon] hover:shadow-[0px_0px_0_0_var(--ink)] hover:translate-x-1 hover:translate-y-1",
+    "hover:bg-[--ink] hover:text-[--cream] hover:shadow-[0px_0px_0_0_var(--ink)] hover:translate-x-1 hover:translate-y-1",
     "disabled:border-[--ink]/20 disabled:text-[--ink]/20 disabled:shadow-none",
   ].join(" "),
   ghost: [
     "text-[--ink] font-bold",
-    "hover:text-[--neon] hover:bg-[--ink]",
+    "hover:text-[--cream] hover:bg-[--ink]",
     "disabled:text-[--ink]/30",
   ].join(" "),
 };

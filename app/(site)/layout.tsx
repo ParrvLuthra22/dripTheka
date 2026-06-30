@@ -44,6 +44,7 @@ import { ScrollProgressDrip } from "@/components/motion/ScrollProgressDrip";
 import { AudioReactive }      from "@/components/motion/AudioReactive";
 import { HangoverMode }       from "@/components/motion/HangoverMode";
 import { DrunkScroll }        from "@/components/motion/DrunkScroll";
+import { ContrastDevTool }   from "@/components/dev/ContrastDevTool";
 
 export default function SiteLayout({
   children,
@@ -91,6 +92,9 @@ export default function SiteLayout({
 
       {/* First-session brand intro */}
       <LoadingScreen />
+
+      {/* Dev-only contrast checker — tree-shaken in production */}
+      {process.env.NODE_ENV === "development" && <ContrastDevTool />}
 
       {/* 18+ age gate — z-[300], above everything. Legal pages exempt. */}
       <Bouncer />

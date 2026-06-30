@@ -412,7 +412,7 @@ export default function CheckoutPage() {
             type="submit"
             disabled={loading}
             data-hover-big
-            className="w-full py-5 font-mono text-xs uppercase tracking-[0.18em] bg-[#CCFF00] text-[#141518] border-2 border-[#141518] shadow-[5px_5px_0_0_#141518] hover:shadow-[2px_2px_0_0_#141518] hover:translate-x-[3px] hover:translate-y-[3px] active:shadow-none active:translate-x-[5px] active:translate-y-[5px] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-x-0 disabled:translate-y-0"
+            className="w-full py-5 font-mono text-xs uppercase tracking-[0.18em] bg-[#004AAD] text-[#E4E2DD] border-2 border-[#141518] shadow-[5px_5px_0_0_#141518] hover:shadow-[2px_2px_0_0_#141518] hover:translate-x-[3px] hover:translate-y-[3px] active:shadow-none active:translate-x-[5px] active:translate-y-[5px] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-x-0 disabled:translate-y-0"
           >
             {loading
               ? pickRandom(copy.loading.checkout)

@@ -36,10 +36,10 @@ interface StickerProps {
 // Hex literals throughout — bare CSS-var arbitrary values like `text-[--neon]`
 // are ambiguous in Tailwind v4 (color vs length) and can silently drop.
 const toneClasses: Record<StickerTone, string> = {
-  neon:  "bg-[#CCFF00] text-black     border-black",
+  neon:  "bg-[#004AAD] text-[#E4E2DD] border-black",
   blue:  "bg-[#004AAD] text-[#E4E2DD] border-black",
   cream: "bg-[#E4E2DD] text-[#141518] border-[#141518]",
-  ink:   "bg-[#141518] text-[#CCFF00] border-black",
+  ink:   "bg-[#141518] text-[#E4E2DD] border-black",
 };
 
 export function Sticker({
@@ -67,9 +67,9 @@ export function Sticker({
       "text-[10px] md:text-[12px] w-20 h-20 md:w-24 md:h-24 rounded-full",
       "border-[3px] border-double",
       "opacity-90",
-      tone === "ink" || tone === "blue"
+      tone === "ink" || tone === "blue" || tone === "neon"
         ? cn(toneClasses[tone])
-        : cn("bg-transparent", tone === "neon" ? "text-[#CCFF00] border-[#CCFF00]" : "text-[#141518] border-[#141518]"),
+        : cn("bg-transparent", "text-[#141518] border-[#141518]"),
     ),
     tape: cn(
       "inline-flex items-center justify-center",
@@ -78,8 +78,7 @@ export function Sticker({
       "backdrop-blur-[1px]",
       tone === "cream" ? "bg-[#E4E2DD]/70 text-[#141518]" :
       tone === "ink"   ? "bg-[#141518]/70 text-[#E4E2DD]" :
-      tone === "blue"  ? "bg-[#004AAD]/70 text-[#E4E2DD]" :
-                         "bg-[#CCFF00]/70 text-black",
+                         "bg-[#004AAD]/70 text-[#E4E2DD]",
     ),
   };
 

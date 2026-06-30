@@ -336,7 +336,7 @@ export function Nav() {
                     <span className="inline-flex items-center gap-1.5">
                       {label}
                       {href === "/khata" && mounted && khataCount > 0 && (
-                        <span className="inline-flex items-center justify-center min-w-[14px] h-[14px] px-[3px] rounded-full bg-[--neon] text-black text-[8px] font-bold leading-none tabular-nums">
+                        <span className="inline-flex items-center justify-center min-w-[14px] h-[14px] px-[3px] rounded-full bg-[--blue] text-[--cream] text-[8px] font-bold leading-none tabular-nums">
                           {khataCount}
                         </span>
                       )}
@@ -457,7 +457,7 @@ export function Nav() {
                         {label}.
                       </span>
                       {href === "/khata" && mounted && khataCount > 0 && (
-                        <span className="font-mono text-xs px-2.5 py-1 rounded-full bg-[--neon] text-black self-center tabular-nums">
+                        <span className="font-mono text-xs px-2.5 py-1 rounded-full bg-[--cream] text-[--ink] self-center tabular-nums">
                           {khataCount}
                         </span>
                       )}

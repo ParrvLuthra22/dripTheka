@@ -296,7 +296,7 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
                   ? "bg-[#141518]/8 text-[#141518]/25 border-[#141518]/15 cursor-not-allowed"
                   : addState === "poured"
                   ? "bg-[#004AAD] text-[#E4E2DD] border-[#141518] shadow-[4px_4px_0_0_#141518] translate-x-[1px] translate-y-[1px]"
-                  : "bg-[#141518] text-[#CCFF00] border-[#141518] shadow-[5px_5px_0_0_#CCFF00] hover:shadow-[2px_2px_0_0_#CCFF00] hover:translate-x-[3px] hover:translate-y-[3px]"
+                  : "bg-[#004AAD] text-[#E4E2DD] border-[#141518] shadow-[5px_5px_0_0_#141518] hover:shadow-[2px_2px_0_0_#141518] hover:translate-x-[3px] hover:translate-y-[3px]"
               )}
             >
               <AnimatePresence mode="wait">

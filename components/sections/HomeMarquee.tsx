@@ -14,7 +14,7 @@ function Separator() {
   return (
     <span
       aria-hidden="true"
-      className="font-tanker text-[--ink] text-3xl md:text-5xl shrink-0 mx-4 select-none uppercase"
+      className="font-tanker text-[--cream] text-3xl md:text-5xl shrink-0 mx-4 select-none uppercase"
       style={{ transform: "translateY(-0.1em)" }}
     >
       ✺
@@ -27,7 +27,7 @@ function MarqueeItem() {
     <>
       {PHRASES.map((phrase, i) => (
         <span key={i} className="inline-flex items-center gap-4 shrink-0">
-          <span className="font-tanker text-[--ink] text-3xl md:text-5xl whitespace-nowrap uppercase leading-none tracking-tight">
+          <span className="font-tanker text-[--cream] text-3xl md:text-5xl whitespace-nowrap uppercase leading-none tracking-tight">
             {phrase}
           </span>
           <Separator />
@@ -39,7 +39,7 @@ function MarqueeItem() {
 
 export function HomeMarquee() {
   return (
-    <div className="relative border-y-4 border-[--ink] bg-[--neon] overflow-hidden py-4 md:py-6 rotate-[-1deg] scale-[1.02] z-20 shadow-2xl">
+    <div className="relative border-y-4 border-[--ink] bg-[--blue] overflow-hidden py-4 md:py-6 rotate-[-1deg] scale-[1.02] z-20 shadow-2xl">
       {/* Two identical tracks side by side — seamless infinite loop */}
       <div
         className="flex gap-4 w-max"

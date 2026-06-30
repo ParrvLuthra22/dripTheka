@@ -43,7 +43,7 @@ const STATUS_LABEL: Record<string, string> = {
 const STATUS_COLOR: Record<string, string> = {
   pending:       "text-[--cream]/40",
   deposit_paid:  "text-[--blue]",
-  drop_unlocked: "text-[#CCFF00]",
+  drop_unlocked: "text-[--blue]",
   fulfilled:     "text-[--cream]/60",
   refunded:      "text-[--cream]/30",
   cancelled:     "text-[--cream]/20",
@@ -225,7 +225,7 @@ export default function AccountPage() {
                 <button
                   onClick={() => setShowRedeemed((v) => !v)}
                   data-hover
-                  className="font-mono text-[9px] uppercase tracking-[0.14em] text-[#CCFF00] underline decoration-dotted underline-offset-2 hover:text-[#E4E2DD] transition-colors"
+                  className="font-mono text-[9px] uppercase tracking-[0.14em] text-[#E4E2DD]/70 underline decoration-dotted underline-offset-2 hover:text-[#E4E2DD] transition-colors"
                 >
                   {showRedeemed ? "hide ↑" : "you brought these regulars in →"}
                 </button>
@@ -274,7 +274,7 @@ export default function AccountPage() {
           <button
             onClick={() => copyToClipboard(referralCode, setCopied)}
             data-hover
-            className="font-mono text-[9px] uppercase tracking-[0.14em] border border-[#CCFF00] text-[#CCFF00] px-4 py-2 hover:bg-[#CCFF00] hover:text-[#141518] transition-all duration-200 whitespace-nowrap"
+            className="font-mono text-[9px] uppercase tracking-[0.14em] border border-[#E4E2DD] text-[#E4E2DD] px-4 py-2 hover:bg-[#E4E2DD] hover:text-[#141518] transition-all duration-200 whitespace-nowrap"
           >
             {copied ? "Copied ✓" : "Copy Code"}
           </button>

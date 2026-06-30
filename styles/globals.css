@@ -28,8 +28,6 @@
   --color-cream-warm: var(--cream-warm);
   --color-ink:        var(--ink);
   --color-ink-soft:   var(--ink-soft);
-  --color-neon:       var(--neon);
-
   /* ── Fonts ─────────────────────────────────────────────────────────────
      font-tanker  → Tanker — loud, chunky, for hero / marquees / 404 / menu
      font-display → Fraunces italic — editorial, section headlines, body copy
@@ -61,7 +59,6 @@
   --cream-warm:  #EFEAD8;
   --ink:         #141518;
   --ink-soft:    #2A2B2F;
-  --neon:        #CCFF00;
 
   /* Layout */
   --container: 1440px;
