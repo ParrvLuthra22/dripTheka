@@ -8,6 +8,8 @@ import Link from "next/link";
 import { ThekaLabel }    from "@/components/ui/ThekaLabel";
 import { Reveal }        from "@/components/motion/Reveal";
 import { SplitReveal }   from "@/components/motion/SplitReveal";
+import { Grain }         from "@/components/ui/Grain";
+import { Sticker }       from "@/components/ui/Sticker";
 
 export default function StoryPage() {
   return (
@@ -15,9 +17,12 @@ export default function StoryPage() {
 
       {/* ═══════════════════════════════════════════ HERO ══════ */}
       <header
-        className="min-h-[70vh] flex flex-col justify-center"
+        className="relative min-h-[70vh] flex flex-col justify-center"
         style={{ paddingInline: "var(--pad-x)", paddingBlock: "clamp(4rem, 8vw, 8rem)" }}
       >
+        <Grain opacity={0.05} />
+        <Sticker variant="wine-glass" rotate={-8} size={72}
+          className="absolute right-[4vw] top-[35%] max-md:hidden z-10" />
         <Reveal className="mb-6">
           <ThekaLabel k="theStory" />
         </Reveal>

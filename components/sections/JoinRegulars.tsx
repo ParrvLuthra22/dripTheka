@@ -9,6 +9,7 @@ import { Reveal } from "@/components/motion/Reveal";
 import { LiquidButton } from "@/components/ui/LiquidButton";
 import { useSound } from "@/components/sound/SoundProvider";
 import { copy } from "@/data/copy";
+import { Sticker } from "@/components/ui/Sticker";
 
 const schema = z.object({
   email: z
@@ -64,10 +65,12 @@ export function JoinRegulars() {
   return (
     <section
       data-nav-tone="light"
-      className="py-20 md:py-32 overflow-hidden"
+      className="relative py-20 md:py-32 overflow-hidden"
       style={{ backgroundColor: "#004AAD" }}
       aria-labelledby="regulars-heading"
     >
+      <Sticker variant="regulars-only" rotate={-6} size={72}
+        className="absolute top-[18%] right-[4vw] max-md:hidden z-10" />
       <div
         className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 items-center"
         style={{ paddingInline: "var(--pad-x)" }}

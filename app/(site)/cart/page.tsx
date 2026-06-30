@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils/cn";
 import { copy } from "@/data/copy";
 import { getCartMessage } from "@/lib/utils/copy";
 import { useToastStore } from "@/lib/store/toast";
-import { Sticker } from "@/components/ui/Sticker";
+import { TextSticker } from "@/components/ui/TextSticker";
 
 // ── 3D tilt on hover — thumbnail (no refs needed, uses currentTarget) ───────
 function onThumbMove(e: React.MouseEvent<HTMLDivElement>) {
@@ -278,10 +278,10 @@ export default function CartPage() {
           <div className="py-10 md:border-l md:border-[--ink]/8 md:pl-10">
             <div className="relative md:sticky md:top-[calc(var(--header-h)+2rem)] space-y-5">
               {/* Slapped-on sticker */}
-              <Sticker variant="slap" tone="neon" rotate={8}
+              <TextSticker variant="slap" tone="neon" rotate={8}
                 className="absolute -top-5 right-0 z-10 hidden md:inline-flex">
                 limited · loud
-              </Sticker>
+              </TextSticker>
 
               <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[--ink]/40">
                 Order Summary

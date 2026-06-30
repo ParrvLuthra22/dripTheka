@@ -8,6 +8,7 @@ import Link from "next/link";
 import { ThekaLabel } from "@/components/ui/ThekaLabel";
 import { Reveal }  from "@/components/motion/Reveal";
 import { TypeOnScroll, type Segment as TypeSegment } from "@/components/motion/TypeOnScroll";
+import { Sticker } from "@/components/ui/Sticker";
 
 // Manifesto paragraphs. Strings are typed char-by-char; node segments
 // (the blue highlights) are revealed atomically.
@@ -33,9 +34,11 @@ export function StoryTeaser() {
   return (
     <section
       data-nav-tone="dark"
-      className="bg-[--cream] py-20 md:py-32"
+      className="relative bg-[--cream] py-20 md:py-32"
       aria-labelledby="story-heading"
     >
+      <Sticker variant="bottle-cap" rotate={12} size={72}
+        className="absolute right-[4vw] bottom-[12%] max-md:hidden z-10" />
       <div style={{ paddingInline: "var(--pad-x)" }}>
         {/* Top eyebrow */}
         <Reveal className="flex justify-end mb-12">

@@ -8,6 +8,8 @@ import { ProductCard } from "@/components/ui/ProductCard";
 import { ThekaLabel } from "@/components/ui/ThekaLabel";
 import { Reveal } from "@/components/motion/Reveal";
 import { POUR_001 } from "@/data/pour-001";
+import { Grain } from "@/components/ui/Grain";
+import { Sticker } from "@/components/ui/Sticker";
 
 // Asymmetric editorial grid spans — row1 (7+5), row2 (4+4+4), row3 (12)
 const COL_SPANS = [
@@ -34,12 +36,15 @@ export function CurrentlyPouring() {
       id="currently-pouring"
       data-section="currently-pouring"
       data-nav-tone="dark"
-      className="bg-[--cream] py-20 md:py-28"
+      className="relative bg-[--cream] py-20 md:py-28"
       aria-labelledby="pouring-heading"
     >
+      <Grain opacity={0.04} />
       <div style={{ paddingInline: "var(--pad-x)" }}>
         {/* Section header */}
-        <Reveal className="flex items-start justify-between mb-12 border-b border-[--ink]/10 pb-8">
+        <Reveal className="relative flex items-start justify-between mb-12 border-b border-[--ink]/10 pb-8">
+          <Sticker variant="freshly-poured" rotate={-10} size={80}
+            className="absolute -right-4 -top-10 max-md:hidden z-10" />
           <div>
             <ThekaLabel k="currentlyPouring" color="ink" className="mb-3" />
             <h2

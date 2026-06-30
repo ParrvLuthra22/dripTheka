@@ -22,7 +22,9 @@ import { gsap } from "gsap";
 import { Button } from "@/components/ui/Button";
 import { ScrambleText } from "@/components/motion/ScrambleText";
 import { FoamParticles } from "@/components/motion/FoamParticles";
+import { TextSticker } from "@/components/ui/TextSticker";
 import { Sticker } from "@/components/ui/Sticker";
+import { Grain } from "@/components/ui/Grain";
 import { useSound } from "@/components/sound/SoundProvider";
 
 const SESSION_KEY = "dt-hero-played";
@@ -216,37 +218,34 @@ export function Hero() {
 
       {/* ── Sticker layer — slapped-on streetwear chaos (desktop only) ──── */}
       <div className="absolute inset-0 z-10 pointer-events-none hidden lg:block" aria-hidden="true">
-        <Sticker variant="stamp" tone="neon" rotate={-12}
+        <TextSticker variant="stamp" tone="neon" rotate={-12}
           className="absolute left-[5vw] top-[26%]">
           est<br />mmxxvi<br />delhi
-        </Sticker>
-        <Sticker variant="slap" tone="neon" rotate={7}
+        </TextSticker>
+        <TextSticker variant="slap" tone="neon" rotate={7}
           className="absolute right-[6vw] top-[30%]">
           no restocks
-        </Sticker>
-        <Sticker variant="tape" tone="cream" rotate={-4}
+        </TextSticker>
+        <TextSticker variant="tape" tone="cream" rotate={-4}
           className="absolute left-[8vw] bottom-[24%]">
           100% cotton · 0% chill
-        </Sticker>
-        <Sticker variant="slap" tone="cream" rotate={-9}
+        </TextSticker>
+        <TextSticker variant="slap" tone="cream" rotate={-9}
           className="absolute right-[7vw] bottom-[28%]">
           buy or cry
-        </Sticker>
+        </TextSticker>
+        {/* SVG decorative stickers */}
+        <Sticker variant="made-in-delhi" rotate={8} size={80}
+          className="absolute top-[12%] right-[10vw]" />
+        <Sticker variant="21-plus" rotate={-7} size={72}
+          className="absolute bottom-[16%] left-[8vw]" />
       </div>
 
       {/* Drifting foam particles behind everything */}
       <FoamParticles />
 
-      {/* Subtle grain texture overlay */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-[0.04]"
-        style={{
-          backgroundImage:
-            "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
-          backgroundRepeat: "repeat",
-          backgroundSize: "200px 200px",
-        }}
-      />
+      {/* Grain texture overlay */}
+      <Grain opacity={0.05} />
     </section>
   );
 }

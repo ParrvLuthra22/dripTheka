@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";
 import { Reveal } from "@/components/motion/Reveal";
 import { LiquidButton } from "@/components/ui/LiquidButton";
-import { Sticker } from "@/components/ui/Sticker";
+import { TextSticker } from "@/components/ui/TextSticker";
 import { copy } from "@/data/copy";
 
 const schema = z.object({
@@ -101,12 +101,12 @@ export default function RegularsPage() {
       <header className="relative py-20 md:py-28" style={{ paddingInline: "var(--pad-x)" }}>
         {/* Sticker chaos — desktop only */}
         <div className="absolute inset-0 pointer-events-none hidden lg:block" aria-hidden="true">
-          <Sticker variant="slap" tone="neon" rotate={9} className="absolute right-[8vw] top-[30%]">
+          <TextSticker variant="slap" tone="neon" rotate={9} className="absolute right-[8vw] top-[30%]">
             certified regular
-          </Sticker>
-          <Sticker variant="stamp" tone="neon" rotate={-10} className="absolute right-[18vw] top-[58%]">
+          </TextSticker>
+          <TextSticker variant="stamp" tone="neon" rotate={-10} className="absolute right-[18vw] top-[58%]">
             members<br />only
-          </Sticker>
+          </TextSticker>
         </div>
         <Reveal className="mb-4">
           <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#E4E2DD]/40">

@@ -12,6 +12,8 @@ import { ProductCard } from "@/components/ui/ProductCard";
 import { POUR_001, isTappedOut } from "@/data/pour-001";
 import { copy } from "@/data/copy";
 import { DripCloseIcon } from "@/components/icons/DripCloseIcon";
+import { Grain } from "@/components/ui/Grain";
+import { Sticker } from "@/components/ui/Sticker";
 
 export function UpsellModal() {
   const router = useRouter();
@@ -66,6 +68,9 @@ export function UpsellModal() {
             transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
             className="relative bg-[--cream] border-2 border-black shadow-[6px_6px_0_0_#141518] w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 md:p-8"
           >
+            <Grain opacity={0.04} />
+            <Sticker variant="freshly-poured" rotate={8} size={64}
+              className="absolute -top-8 left-4 max-md:hidden z-10" />
             {/* Close */}
             <button
               ref={closeRef}

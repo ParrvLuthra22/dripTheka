@@ -5,8 +5,8 @@ const PHRASES = [
   "DRIP THEKA",
   "SERVING FITS NOT DRINKS",
   "LIMITED STOCK",
-  "MAXED OUT",
-  "POUR #001",
+  "MAXING OUT",
+  "POUR #001 OUT SOON",
 ];
 
 // Asterisk separator — typographic instead of a decorative glass icon

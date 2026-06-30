@@ -98,6 +98,19 @@ export default function SiteLayout({
 
       {/* 18+ age gate — z-[300], above everything. Legal pages exempt. */}
       <Bouncer />
+
+      {/* Grain filter definition — rendered once, referenced by all <Grain> instances */}
+      <svg
+        aria-hidden="true"
+        focusable="false"
+        style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }}
+      >
+        <defs>
+          <filter id="dt-grain" x="0%" y="0%" width="100%" height="100%" colorInterpolationFilters="linearRGB">
+            <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch" />
+          </filter>
+        </defs>
+      </svg>
     </SoundProvider>
   );
 }

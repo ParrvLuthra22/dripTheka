@@ -7,6 +7,8 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { copy } from "@/data/copy";
+import { Grain } from "@/components/ui/Grain";
+import { Sticker } from "@/components/ui/Sticker";
 
 interface Blob {
   id: number; homeX: number; homeY: number;
@@ -84,6 +86,9 @@ export default function NotFound() {
 
   return (
     <div data-nav-tone="light" className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden" style={{ backgroundColor: "#004AAD" }}>
+      <Grain opacity={0.06} />
+      <Sticker variant="bottle-cap" rotate={15} size={72}
+        className="absolute top-[10%] right-[8vw] max-md:hidden z-10" />
 
       {/* Tipped pint + foam */}
       <motion.div

@@ -11,6 +11,8 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { copy } from "@/data/copy";
 import { getSessionWisdom } from "@/lib/utils/copy";
+import { Grain } from "@/components/ui/Grain";
+import { Sticker } from "@/components/ui/Sticker";
 
 const POURS = [
   { label: "Pour #001 — The First Round", href: "/pour/pour-001" },
@@ -47,8 +49,9 @@ export function Footer() {
   return (
     <footer
       data-nav-tone="light"
-      className="bg-[--ink] text-[--cream] overflow-hidden"
+      className="relative bg-[--ink] text-[--cream] overflow-hidden"
     >
+      <Grain opacity={0.08} />
       {/* ── Cinematic video section ────────────────────────────────────
            Uses aspect-ratio (16/7) so it scales at any zoom level
            rather than a vh-based fixed height.                         */}
@@ -98,13 +101,15 @@ export function Footer() {
 
       {/* ── Four-column grid ───────────────────────────────────────── */}
       <div
-        className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12"
+        className="relative grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12"
         style={{
           paddingInline:     "var(--pad-x)",
           paddingBlockStart: "clamp(2.5rem, 5vw, 4.5rem)",
           paddingBlockEnd:   "2.5rem",
         }}
       >
+        <Sticker variant="drip-theka-mark" rotate={5} size={72}
+          className="absolute top-6 right-[6vw] max-md:hidden z-10" />
         {/* Col 1 — Manifesto */}
         <div className="col-span-2 md:col-span-1 flex flex-col gap-4">
           <p
