@@ -7,6 +7,7 @@
 import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Product, Size } from "@/data/pour-001";
+import { DripCloseIcon } from "@/components/icons/DripCloseIcon";
 
 interface SizeGuideModalProps {
   open: boolean;
@@ -102,9 +103,9 @@ export function SizeGuideModal({ open, onClose, product }: SizeGuideModalProps) 
               onClick={onClose}
               aria-label="Close size guide"
               data-hover
-              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center font-mono text-sm text-[--ink]/50 hover:text-[--ink] hover:rotate-90 transition-all duration-300"
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[--ink]/50 hover:text-[--ink] hover:rotate-90 transition-all duration-300"
             >
-              ✕
+              <DripCloseIcon size={16} />
             </button>
 
             {/* Header */}

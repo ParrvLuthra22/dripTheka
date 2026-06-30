@@ -5,6 +5,7 @@ import {
   Geist,
 } from "next/font/google";
 import "../styles/globals.css";
+import "../styles/shadcn-overrides.css";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 
 /* ─── Fonts ──────────────────────────────────────────────────────────────── */

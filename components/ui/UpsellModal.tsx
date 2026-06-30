@@ -11,6 +11,7 @@ import { useUpsellStore } from "@/lib/store/upsell";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { POUR_001, isTappedOut } from "@/data/pour-001";
 import { copy } from "@/data/copy";
+import { DripCloseIcon } from "@/components/icons/DripCloseIcon";
 
 export function UpsellModal() {
   const router = useRouter();
@@ -71,9 +72,9 @@ export function UpsellModal() {
               onClick={hide}
               aria-label="Close"
               data-hover
-              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center font-mono text-sm text-[--ink]/50 hover:text-[--ink] hover:rotate-90 transition-all duration-300"
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[--ink]/50 hover:text-[--ink] hover:rotate-90 transition-all duration-300"
             >
-              ✕
+              <DripCloseIcon size={16} />
             </button>
 
             {/* Header */}

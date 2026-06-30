@@ -1,0 +1,117 @@
+/* ─── Brand form element overrides ──────────────────────────────────────────
+   No Shadcn in this project — these target native HTML elements to ensure
+   consistent brand styling regardless of Tailwind class coverage.
+   Imported after globals.css so it wins the cascade.               */
+
+/* ── Inputs & textareas ─────────────────────────────────────────────────── */
+
+@layer base {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]):not([type="reset"]),
+  textarea {
+    font-family: var(--font-sans, system-ui, sans-serif);
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid color-mix(in srgb, var(--ink) 20%, transparent);
+    border-radius: 2px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 200ms ease;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]):not([type="reset"]):focus-visible,
+  textarea:focus-visible {
+    border-color: var(--ink);
+    outline: 2px solid var(--blue);
+    outline-offset: 2px;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: color-mix(in srgb, var(--ink) 30%, transparent);
+  }
+}
+
+/* ── Select — remove native arrow, inject custom chevron ────────────────── */
+
+@layer base {
+  select {
+    font-family: var(--font-sans, system-ui, sans-serif);
+    color: var(--ink);
+    background-color: transparent;
+    border: 1px solid color-mix(in srgb, var(--ink) 20%, transparent);
+    border-radius: 2px;
+    padding: 10px 36px 10px 14px;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: border-color 200ms ease;
+
+    /* Custom chevron via background SVG */
+    background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 5 8 L 10 13 L 15 8' stroke='%23141518' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 20px 20px;
+  }
+
+  select:focus-visible {
+    border-color: var(--ink);
+    outline: 2px solid var(--blue);
+    outline-offset: 2px;
+  }
+
+  /* Dropdown option styling — limited but improves Win Chrome default */
+  select option {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: var(--font-sans, system-ui, sans-serif);
+  }
+}
+
+/* ── Dialog / modal baseline ────────────────────────────────────────────── */
+
+@layer base {
+  [role="dialog"] {
+    background: var(--cream);
+    color: var(--ink);
+  }
+
+  dialog::backdrop {
+    background: var(--ink);
+    opacity: 0.82;
+  }
+}
+
+/* ── Button fallback — catches any unstyled <button> that Tailwind missed ── */
+
+@layer base {
+  button:not([class]) {
+    font-family: var(--font-mono, monospace);
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    color: inherit;
+    padding: 0;
+  }
+}
+
+/* ── Toast / status messages ─────────────────────────────────────────────── */
+
+@layer base {
+  [role="status"]:not([class]) {
+    background: var(--ink);
+    color: var(--cream);
+    font-family: var(--font-mono, monospace);
+    font-size: 0.8125rem;
+    padding: 16px 20px;
+    border-radius: 2px;
+    border-left: 3px solid var(--blue);
+  }
+}
