@@ -21,12 +21,12 @@ import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import { Button } from "@/components/ui/Button";
 import { ScrambleText } from "@/components/motion/ScrambleText";
-import { FoamParticles } from "@/components/motion/FoamParticles";
 import { TextSticker } from "@/components/ui/TextSticker";
 import { Sticker } from "@/components/ui/Sticker";
 import { Grain } from "@/components/ui/Grain";
 import { ChalkMark } from "@/components/ui/ChalkMark";
 import { HandText } from "@/components/ui/HandText";
+import { useFoamStore } from "@/lib/store/foam";
 import { useSound } from "@/components/sound/SoundProvider";
 
 const SESSION_KEY = "dt-hero-played";
@@ -40,11 +40,13 @@ function dispatchReady() {
 
 export function Hero() {
   const { muted, play } = useSound();
+  const spawnFoam = useFoamStore((s) => s.spawn);
   const containerRef  = useRef<HTMLElement>(null);
   const taglineRef    = useRef<HTMLParagraphElement>(null);
   const ctaRef        = useRef<HTMLDivElement>(null);
   const metaRef       = useRef<HTMLDivElement>(null);
   const scrambleRef   = useRef<HTMLDivElement>(null);
+  const foamCooldown  = useRef(0);
 
   // Track whether the scramble has run; default true if session shows already-played
   const [alreadyPlayed, setAlreadyPlayed] = useState(false);
@@ -79,6 +81,30 @@ export function Hero() {
       gsap.delayedCall(1.6, () => play("pour"));
     }
   }, { scope: containerRef, dependencies: [muted] });
+
+  // Cobalt section enter → 2 foam bubbles (fires once per page load)
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    let fired = false;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !fired) {
+          fired = true;
+          const rect = entry.boundingClientRect;
+          spawnFoam({
+            x:      rect.left + Math.random() * rect.width,
+            y:      Math.min(rect.bottom, window.innerHeight),
+            count:  2,
+            source: "section-enter",
+          });
+        }
+      },
+      { threshold: 0.15 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [spawnFoam]);
 
   // Triggered when ScrambleText finishes
   const onScrambleComplete = () => {
@@ -199,7 +225,16 @@ export function Hero() {
               first round on us ↓
             </HandText>
             <div className="flex justify-center flex-wrap gap-4">
-              <Link href="/pour/pour-001">
+              <Link
+                href="/pour/pour-001"
+                onPointerEnter={(e) => {
+                  const now = Date.now();
+                  if (now - foamCooldown.current < 800) return;
+                  foamCooldown.current = now;
+                  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                  spawnFoam({ x: rect.left + rect.width / 2, y: rect.top, count: 1, source: "cta-hover" });
+                }}
+              >
                 <Button
                   variant="outline"
                   size="lg"
@@ -252,9 +287,6 @@ export function Hero() {
         <Sticker variant="21-plus" rotate={-7} size={72}
           className="absolute bottom-[16%] left-[8vw]" />
       </div>
-
-      {/* Drifting foam particles behind everything */}
-      <FoamParticles />
 
       {/* Grain texture overlay */}
       <Grain opacity={0.05} />

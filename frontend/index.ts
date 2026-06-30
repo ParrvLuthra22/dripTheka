@@ -30,7 +30,7 @@ export { SmoothScroll }    from "@/components/motion/SmoothScroll";
 export { ScrambleText }    from "@/components/motion/ScrambleText";
 export { TypeOnScroll }    from "@/components/motion/TypeOnScroll";
 export { CountUp }         from "@/components/motion/CountUp";
-export { FoamParticles }   from "@/components/motion/FoamParticles";
+export { Foam }            from "@/components/motion/Foam";
 export { ScrollProgressDrip } from "@/components/motion/ScrollProgressDrip";
 export { AudioReactive }   from "@/components/motion/AudioReactive";
 

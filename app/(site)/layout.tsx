@@ -44,6 +44,7 @@ import { ScrollProgressDrip } from "@/components/motion/ScrollProgressDrip";
 import { AudioReactive }      from "@/components/motion/AudioReactive";
 import { HangoverMode }       from "@/components/motion/HangoverMode";
 import { DrunkScroll }        from "@/components/motion/DrunkScroll";
+import { Foam }              from "@/components/motion/Foam";
 import { ContrastDevTool }   from "@/components/dev/ContrastDevTool";
 
 export default function SiteLayout({
@@ -64,6 +65,9 @@ export default function SiteLayout({
           <Footer />
         </PourTransition>
       </SmoothScroll>
+
+      {/* Global foam bubble renderer — event-driven, max 5 on screen */}
+      <Foam />
 
       {/* Fixed global chrome */}
       <PintGlass />

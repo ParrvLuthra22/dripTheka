@@ -26,6 +26,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { gsap } from "gsap";
 import { useCartStore } from "@/lib/store/cart";
 import { useHangoverStore } from "@/lib/store/hangover";
+import { useFoamStore } from "@/lib/store/foam";
 import { useSound } from "@/components/sound/SoundProvider";
 import { cn } from "@/lib/utils/cn";
 
@@ -64,6 +65,7 @@ export function PintGlass({ className }: PintGlassProps) {
   const { items, totalItems } = useCartStore();
   const { muted, play } = useSound();
   const { isHungover } = useHangoverStore();
+  const spawnFoam = useFoamStore((s) => s.spawn);
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -142,6 +144,17 @@ export function PintGlass({ className }: PintGlassProps) {
 
       // Sound
       if (!muted) play("pour");
+
+      // Foam bubbles from the glass top
+      const rect = wrapperRef.current?.getBoundingClientRect();
+      if (rect) {
+        spawnFoam({
+          x:      rect.left + rect.width / 2,
+          y:      rect.top + 16,
+          count:  3,
+          source: "cart-add",
+        });
+      }
     }
 
     // Foam visibility

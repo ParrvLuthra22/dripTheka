@@ -14,6 +14,7 @@ import { WaitlistForm } from "@/components/ui/WaitlistForm";
 import { BottleCap } from "@/components/ui/BottleCap";
 import { PriceTag } from "@/components/ui/PriceTag";
 import { ChalkMark } from "@/components/ui/ChalkMark";
+import { useFoamStore } from "@/lib/store/foam";
 import { SizeGuideModal } from "@/components/ui/SizeGuideModal";
 import { cn } from "@/lib/utils/cn";
 import {
@@ -62,6 +63,8 @@ interface ProductSidebarProps {
 export function ProductSidebar({ product }: ProductSidebarProps) {
   const { addItem, updateQuantity } = useCartStore();
   const { muted, play } = useSound();
+  const spawnFoam    = useFoamStore((s) => s.spawn);
+  const foamCooldown = useRef(0);
 
   const tappedOut = isTappedOut(product.sizes);
   const tagKey: ThekaKey = TAGS[product.id] ?? "freshlyPoured";
@@ -293,6 +296,13 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
               onClick={handleAdd}
               disabled={!selectedSize || addState === "adding"}
               data-hover-big
+              onPointerEnter={(e) => {
+                const now = Date.now();
+                if (now - foamCooldown.current < 800) return;
+                foamCooldown.current = now;
+                const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                spawnFoam({ x: rect.left + rect.width / 2, y: rect.top, count: 1, source: "cta-hover" });
+              }}
               className={cn(
                 "w-full py-5 font-mono text-xs uppercase tracking-[0.18em]",
                 "border-2 transition-all duration-150 relative overflow-hidden",

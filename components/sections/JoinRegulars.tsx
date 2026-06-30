@@ -3,7 +3,7 @@
 // Join the Regulars — Last Call email sign-up.
 // Blue background, cream type. Zod validation + POST /api/regulars.
 
-import { useState, type FormEvent } from "react";
+import { useState, useRef, useEffect, type FormEvent } from "react";
 import { z } from "zod";
 import { Reveal } from "@/components/motion/Reveal";
 import { LiquidButton } from "@/components/ui/LiquidButton";
@@ -12,6 +12,7 @@ import { copy } from "@/data/copy";
 import { Sticker } from "@/components/ui/Sticker";
 import { ChalkMark } from "@/components/ui/ChalkMark";
 import { HandText } from "@/components/ui/HandText";
+import { useFoamStore } from "@/lib/store/foam";
 
 const schema = z.object({
   email: z
@@ -27,6 +28,33 @@ export function JoinRegulars() {
   const [error,  setError]  = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const { muted, play } = useSound();
+  const spawnFoam = useFoamStore((s) => s.spawn);
+  const sectionRef = useRef<HTMLElement>(null);
+  const formRef    = useRef<HTMLFormElement>(null);
+
+  // Cobalt section enter → 2 bubbles (once per page load)
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    let fired = false;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !fired) {
+          fired = true;
+          const rect = entry.boundingClientRect;
+          spawnFoam({
+            x:      rect.left + Math.random() * rect.width,
+            y:      Math.min(rect.bottom, window.innerHeight),
+            count:  2,
+            source: "section-enter",
+          });
+        }
+      },
+      { threshold: 0.25 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [spawnFoam]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -52,6 +80,11 @@ export function JoinRegulars() {
         setEmail("");
         // Play clink — guarded inside play()
         if (!muted) play("clink");
+        // 4 bubbles from form bottom
+        const rect = formRef.current?.getBoundingClientRect();
+        if (rect) {
+          spawnFoam({ x: rect.left + rect.width / 2, y: rect.bottom, count: 4, source: "form-success" });
+        }
         // Reset to idle after 4s
         setTimeout(() => setStatus("idle"), 4000);
       } else {
@@ -66,6 +99,7 @@ export function JoinRegulars() {
 
   return (
     <section
+      ref={sectionRef}
       data-nav-tone="light"
       className="relative py-20 md:py-32 overflow-hidden"
       style={{ backgroundColor: "#004AAD" }}
@@ -100,7 +134,7 @@ export function JoinRegulars() {
 
         {/* RIGHT — form */}
         <Reveal delay={120}>
-          <form onSubmit={handleSubmit} noValidate className="space-y-4">
+          <form ref={formRef} onSubmit={handleSubmit} noValidate className="space-y-4">
             {/* Input */}
             <div>
               <div className="flex items-center gap-2 mb-3 max-sm:hidden" aria-hidden="true">

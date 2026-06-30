@@ -15,13 +15,16 @@ import { DripCloseIcon } from "@/components/icons/DripCloseIcon";
 import { Grain } from "@/components/ui/Grain";
 import { Sticker } from "@/components/ui/Sticker";
 import { ChalkMark } from "@/components/ui/ChalkMark";
+import { useFoamStore } from "@/lib/store/foam";
 
 export function UpsellModal() {
   const router = useRouter();
   const open        = useUpsellStore((s) => s.open);
   const excludeSlug = useUpsellStore((s) => s.excludeSlug);
   const hide        = useUpsellStore((s) => s.hide);
-  const closeRef = useRef<HTMLButtonElement>(null);
+  const closeRef    = useRef<HTMLButtonElement>(null);
+  const titleRef    = useRef<HTMLHeadingElement>(null);
+  const spawnFoam   = useFoamStore((s) => s.spawn);
 
   useEffect(() => {
     if (!open) return;
@@ -36,6 +39,24 @@ export function UpsellModal() {
       document.body.style.overflow = "";
     };
   }, [open, hide]);
+
+  // On open: 1 slow bubble drifts past the headline (duration override: 5s)
+  useEffect(() => {
+    if (!open) return;
+    const id = setTimeout(() => {
+      const rect = titleRef.current?.getBoundingClientRect();
+      if (rect) {
+        spawnFoam({
+          x:        rect.left + rect.width / 2,
+          y:        rect.bottom,
+          count:    1,
+          source:   "modal-headline",
+          duration: 5,
+        });
+      }
+    }, 320);
+    return () => clearTimeout(id);
+  }, [open, spawnFoam]);
 
   const related = POUR_001.products
     .filter((p) => p.slug !== excludeSlug && !isTappedOut(p.sizes))
@@ -88,6 +109,7 @@ export function UpsellModal() {
               {copy.upsell.eyebrow}
             </p>
             <h2
+              ref={titleRef}
               id="upsell-title"
               className="font-display italic text-[--ink] leading-tight mb-2"
               style={{ fontSize: "clamp(1.5rem, 3.5vw, 2.25rem)" }}

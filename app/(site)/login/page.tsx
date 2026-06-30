@@ -45,24 +45,6 @@ export default function LoginPage() {
       className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden"
       style={{ backgroundColor: "#004AAD" }}
     >
-      {/* Foam particles bg */}
-      <div aria-hidden="true" className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
-        {[...Array(12)].map((_, i) => (
-          <span
-            key={i}
-            className="absolute rounded-full bg-[#E4E2DD]"
-            style={{
-              width:  `${8 + (i * 7) % 20}px`,
-              height: `${8 + (i * 7) % 20}px`,
-              left:   `${(i * 13 + 5) % 95}%`,
-              bottom: `-${(i * 7) % 20}px`,
-              animation: `foam-drift ${10 + i * 1.5}s linear ${-i * 2}s infinite`,
-              opacity: 0.1 + (i % 5) * 0.05,
-            }}
-          />
-        ))}
-      </div>
-
       {/* Card */}
       <div
         className="relative z-10 w-full max-w-[420px] flex flex-col items-center gap-8 py-12 px-8"
