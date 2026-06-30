@@ -7,6 +7,7 @@
 import { useRef, useEffect, useState, useCallback, useId } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
+import { HandText } from "@/components/ui/HandText";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -236,7 +237,7 @@ export function FillBar() {
       </div>
 
       {/* ── Count ticker ─────────────────────────────────────────── */}
-      <div className="mt-6 flex items-baseline gap-3">
+      <div className="mt-6 flex items-baseline gap-3 flex-wrap">
         <span
           className="font-mono tabular-nums text-[--ink]"
           style={{ fontSize: "clamp(1.5rem, 4vw, 3rem)" }}
@@ -252,6 +253,9 @@ export function FillBar() {
         <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink]/30 self-center ml-2">
           Reserved
         </span>
+        <HandText size="sm" rotate={-3} color="var(--ink)" className="opacity-35 self-center ml-3 max-sm:hidden">
+          when this fills, doors open
+        </HandText>
       </div>
 
       {/* ── Caption ──────────────────────────────────────────────── */}

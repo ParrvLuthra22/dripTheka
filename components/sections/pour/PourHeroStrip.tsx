@@ -6,6 +6,7 @@
 import { useRef, useEffect, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
+import { ChalkMark } from "@/components/ui/ChalkMark";
 import { DROP_DATE, POUR_001 } from "@/data/pour-001";
 import { copy } from "@/data/copy";
 
@@ -124,6 +125,17 @@ export function PourHeroStrip() {
           {WORDS.map((word, wi) =>
             word.isSpace ? (
               <span key={wi}>&nbsp;</span>
+            ) : wi === WORDS.length - 1 ? (
+              // Last word — underline below via ChalkMark (outside overflow-hidden)
+              <span key={wi} className="relative inline-block align-bottom">
+                <span className="inline-block overflow-hidden align-bottom">
+                  {word.chars.map((ch, ci) => (
+                    <span key={ci} className="pour-hero-char inline-block" aria-hidden="true">{ch}</span>
+                  ))}
+                </span>
+                <ChalkMark variant="underline" color="#E4E2DD" animate={false}
+                  className="absolute -bottom-2 left-0 w-full h-[10px]" />
+              </span>
             ) : (
               <span key={wi} className="inline-block overflow-hidden align-bottom">
                 {word.chars.map((ch, ci) => (

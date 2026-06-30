@@ -10,6 +10,7 @@ import { Reveal } from "@/components/motion/Reveal";
 import { POUR_001 } from "@/data/pour-001";
 import { Grain } from "@/components/ui/Grain";
 import { Sticker } from "@/components/ui/Sticker";
+import { ChalkMark } from "@/components/ui/ChalkMark";
 
 // Asymmetric editorial grid spans — row1 (7+5), row2 (4+4+4), row3 (12)
 const COL_SPANS = [
@@ -46,7 +47,10 @@ export function CurrentlyPouring() {
           <Sticker variant="freshly-poured" rotate={-10} size={80}
             className="absolute -right-4 -top-10 max-md:hidden z-10" />
           <div>
-            <ThekaLabel k="currentlyPouring" color="ink" className="mb-3" />
+            <span className="relative inline-block p-1 mb-3">
+              <ThekaLabel k="currentlyPouring" color="ink" />
+              <ChalkMark variant="circle" color="var(--blue)" className="absolute inset-0 w-full h-full" />
+            </span>
             <h2
               id="pouring-heading"
               className="font-display italic text-[--ink] leading-none"

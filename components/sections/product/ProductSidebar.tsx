@@ -13,6 +13,7 @@ import { RefillNotifyForm } from "./RefillNotifyForm";
 import { WaitlistForm } from "@/components/ui/WaitlistForm";
 import { BottleCap } from "@/components/ui/BottleCap";
 import { PriceTag } from "@/components/ui/PriceTag";
+import { ChalkMark } from "@/components/ui/ChalkMark";
 import { SizeGuideModal } from "@/components/ui/SizeGuideModal";
 import { cn } from "@/lib/utils/cn";
 import {
@@ -164,7 +165,10 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
 
       {/* ── Price ────────────────────────────────────────────────── */}
       <div className="space-y-2">
-        <PriceTag price={product.price} size="md" />
+        <div className="flex items-center gap-2">
+          <PriceTag price={product.price} size="md" />
+          <ChalkMark variant="asterisk" color="var(--blue)" strokeWidth={1.5} className="w-4 h-4 opacity-55 shrink-0" />
+        </div>
         {!tappedOut && (
           <p className="font-mono text-[9px] text-[--blue] tracking-[0.1em]">
             {getPriceDisplay(getDepositAmount(product.price))} deposit · 70% on Opening Night

@@ -14,6 +14,7 @@ import { copy } from "@/data/copy";
 import { DripCloseIcon } from "@/components/icons/DripCloseIcon";
 import { Grain } from "@/components/ui/Grain";
 import { Sticker } from "@/components/ui/Sticker";
+import { ChalkMark } from "@/components/ui/ChalkMark";
 
 export function UpsellModal() {
   const router = useRouter();
@@ -91,7 +92,12 @@ export function UpsellModal() {
               className="font-display italic text-[--ink] leading-tight mb-2"
               style={{ fontSize: "clamp(1.5rem, 3.5vw, 2.25rem)" }}
             >
-              {copy.upsell.title}
+              One more before{" "}
+              <span className="relative inline-block">
+                last call
+                <ChalkMark variant="underline" color="var(--ink)" className="absolute -bottom-1 left-0 w-full h-[8px]" />
+              </span>
+              ?
             </h2>
             <p className="font-sans text-sm text-[--ink]/50 mb-6">
               {copy.upsell.subtitle}

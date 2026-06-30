@@ -10,6 +10,8 @@ import { LiquidButton } from "@/components/ui/LiquidButton";
 import { useSound } from "@/components/sound/SoundProvider";
 import { copy } from "@/data/copy";
 import { Sticker } from "@/components/ui/Sticker";
+import { ChalkMark } from "@/components/ui/ChalkMark";
+import { HandText } from "@/components/ui/HandText";
 
 const schema = z.object({
   email: z
@@ -101,6 +103,10 @@ export function JoinRegulars() {
           <form onSubmit={handleSubmit} noValidate className="space-y-4">
             {/* Input */}
             <div>
+              <div className="flex items-center gap-2 mb-3 max-sm:hidden" aria-hidden="true">
+                <ChalkMark variant="arrow" direction="down" color="#E4E2DD" strokeWidth={1.5} className="w-5 h-8 opacity-45" />
+                <HandText size="sm" rotate={3} color="#E4E2DD" className="opacity-45">yes, you</HandText>
+              </div>
               <label htmlFor="regulars-email" className="sr-only">
                 Your email address
               </label>

@@ -9,6 +9,8 @@ import { motion } from "framer-motion";
 import { copy } from "@/data/copy";
 import { Grain } from "@/components/ui/Grain";
 import { Sticker } from "@/components/ui/Sticker";
+import { ChalkMark } from "@/components/ui/ChalkMark";
+import { HandText } from "@/components/ui/HandText";
 
 interface Blob {
   id: number; homeX: number; homeY: number;
@@ -125,6 +127,15 @@ export default function NotFound() {
       >
         {copy.notFound.subtitle}
       </motion.p>
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+        transition={{ delay: 0.75, duration: 0.5 }}
+        className="flex items-center justify-center gap-3 mt-3 max-sm:hidden"
+        aria-hidden="true"
+      >
+        <ChalkMark variant="scribble" color="#E4E2DD" strokeWidth={1.5} className="w-16 h-8 opacity-25" />
+        <HandText size="sm" rotate={4} color="#E4E2DD" className="opacity-35">actually no</HandText>
+      </motion.div>
 
       <motion.div
         initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}

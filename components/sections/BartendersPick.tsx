@@ -11,6 +11,8 @@ import { ProductCard } from "@/components/ui/ProductCard";
 import { Button } from "@/components/ui/Button";
 import { WineGlassMark } from "@/components/glass/WineGlassMark";
 import { TypeOnScroll } from "@/components/motion/TypeOnScroll";
+import { ChalkMark } from "@/components/ui/ChalkMark";
+import { HandText } from "@/components/ui/HandText";
 import { POUR_001, BARTENDERS_PICK } from "@/data/pour-001";
 import { copy } from "@/data/copy";
 
@@ -39,7 +41,10 @@ export function BartendersPick() {
     <section data-nav-tone="dark" className="bg-[--cream] py-20 md:py-28">
       <div style={{ paddingInline: "var(--pad-x)" }}>
         <div className="mb-12 md:mb-16">
-          <ThekaLabel k="bartendersPick" color="ink" />
+          <span className="relative inline-block p-1">
+            <ThekaLabel k="bartendersPick" color="ink" />
+            <ChalkMark variant="circle" color="var(--blue)" className="absolute inset-0 w-full h-full" />
+          </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
@@ -75,6 +80,9 @@ export function BartendersPick() {
               className="bp-quote font-display italic text-[--ink] leading-snug"
               style={{ fontSize: "clamp(1.1rem, 2vw, 1.5rem)", maxWidth: 380 }}
             />
+            <HandText size="sm" rotate={-4} color="var(--ink)" className="opacity-40 max-sm:hidden mt-1">
+              this one's good, trust
+            </HandText>
 
             <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink]/30">
               picked {relativeDate(date)} · vol. 04

@@ -25,6 +25,8 @@ import { FoamParticles } from "@/components/motion/FoamParticles";
 import { TextSticker } from "@/components/ui/TextSticker";
 import { Sticker } from "@/components/ui/Sticker";
 import { Grain } from "@/components/ui/Grain";
+import { ChalkMark } from "@/components/ui/ChalkMark";
+import { HandText } from "@/components/ui/HandText";
 import { useSound } from "@/components/sound/SoundProvider";
 
 const SESSION_KEY = "dt-hero-played";
@@ -183,21 +185,31 @@ export function Hero() {
             className="font-display italic text-[#E4E2DD]/80 leading-tight"
             style={{ fontSize: "clamp(1.5rem, 3vw, 3rem)" }}
           >
-            Serving fits, not drinks.
+            Serving{" "}
+            <span className="relative inline-block">
+              fits
+              <ChalkMark variant="underline" color="#E4E2DD" className="absolute -bottom-1 left-0 w-full h-[9px]" />
+            </span>
+            , not drinks.
           </p>
 
           {/* CTA */}
-          <div ref={ctaRef} className="flex justify-center flex-wrap gap-4">
-            <Link href="/pour/pour-001">
-              <Button
-                variant="outline"
-                size="lg"
-                magnetic
-                className="border-[#E4E2DD] text-[#E4E2DD] hover:bg-[#E4E2DD] hover:text-[#004AAD]"
-              >
-                Walk in → Pour #001
-              </Button>
-            </Link>
+          <div ref={ctaRef} className="flex flex-col items-center gap-2">
+            <HandText size="sm" rotate={-2} color="#E4E2DD" className="opacity-50 max-sm:hidden">
+              first round on us ↓
+            </HandText>
+            <div className="flex justify-center flex-wrap gap-4">
+              <Link href="/pour/pour-001">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  magnetic
+                  className="border-[#E4E2DD] text-[#E4E2DD] hover:bg-[#E4E2DD] hover:text-[#004AAD]"
+                >
+                  Walk in → Pour #001
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>

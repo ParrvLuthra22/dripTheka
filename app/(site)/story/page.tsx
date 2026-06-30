@@ -10,6 +10,8 @@ import { Reveal }        from "@/components/motion/Reveal";
 import { SplitReveal }   from "@/components/motion/SplitReveal";
 import { Grain }         from "@/components/ui/Grain";
 import { Sticker }       from "@/components/ui/Sticker";
+import { ChalkMark }     from "@/components/ui/ChalkMark";
+import { HandText }      from "@/components/ui/HandText";
 
 export default function StoryPage() {
   return (
@@ -76,6 +78,11 @@ export default function StoryPage() {
               </p>
             </Reveal>
           ))}
+          <Reveal delay={300}>
+            <HandText size="sm" rotate={-3} color="var(--ink)" className="opacity-35 max-sm:hidden mt-2">
+              ← that voice note changed everything
+            </HandText>
+          </Reveal>
         </div>
       </section>
 
@@ -112,7 +119,11 @@ export default function StoryPage() {
               stagger={0.04}
               className="font-display italic text-[--ink] leading-tight mb-10"
             >
-              Theka. A word that carries weight.
+              Theka. A word that carries{" "}
+              <span className="relative inline-block">
+                weight.
+                <ChalkMark variant="underline" color="var(--blue)" className="absolute -bottom-1 left-0 w-full h-[8px]" />
+              </span>
             </SplitReveal>
 
             {[
@@ -206,10 +217,15 @@ export default function StoryPage() {
               as="h2"
               splitBy="words"
               stagger={0.04}
-              className="font-display italic text-[--ink] leading-tight mb-10"
+              className="font-display italic text-[--ink] leading-tight mb-4"
             >
               Six pieces. One colourway. 200 of each.
             </SplitReveal>
+            <Reveal delay={80}>
+              <HandText size="sm" rotate={2} color="var(--blue)" className="opacity-50 max-sm:hidden mb-8">
+                no more, no less
+              </HandText>
+            </Reveal>
 
             {[
               "The first round is not a test. It's a statement. Cobalt, cream, ink — three colours that say exactly what we mean. No confusion, no gradients, no trying to be everything to everyone.",

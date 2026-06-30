@@ -9,6 +9,8 @@ import { z } from "zod";
 import { Reveal } from "@/components/motion/Reveal";
 import { LiquidButton } from "@/components/ui/LiquidButton";
 import { TextSticker } from "@/components/ui/TextSticker";
+import { ChalkMark } from "@/components/ui/ChalkMark";
+import { HandText } from "@/components/ui/HandText";
 import { copy } from "@/data/copy";
 
 const schema = z.object({
@@ -142,6 +144,12 @@ export default function RegularsPage() {
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                 className="space-y-8"
               >
+                <div className="flex items-center gap-3">
+                  <ChalkMark variant="tick" color="#E4E2DD" strokeWidth={2.5} className="w-10 h-8 shrink-0" />
+                  <HandText size="lg" rotate={-2} color="#E4E2DD" className="opacity-80">
+                    you&apos;re in
+                  </HandText>
+                </div>
                 <h2 className="font-display italic text-[#E4E2DD] leading-tight" style={{ fontSize: "clamp(2rem, 5vw, 4rem)" }}>
                   {copy.forms.success.regulars}
                 </h2>

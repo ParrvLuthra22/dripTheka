@@ -3,6 +3,7 @@ import {
   Fraunces,
   JetBrains_Mono,
   Geist,
+  Caveat,
 } from "next/font/google";
 import "../styles/globals.css";
 import "../styles/shadcn-overrides.css";
@@ -41,6 +42,16 @@ const geist = Geist({
   preload:  true,
 });
 
+// Caveat — handwritten annotation font.
+// Used for chalk marks, margin notes, and scribbled labels.
+const caveat = Caveat({
+  subsets:  ["latin"],
+  variable: "--font-caveat",
+  weight:   ["400", "600"],
+  display:  "swap",
+  preload:  false,
+});
+
 /* ─── Metadata ───────────────────────────────────────────────────────────── */
 
 export const metadata: Metadata = {
@@ -77,7 +88,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${fraunces.variable} ${jetbrains.variable} ${geist.variable}`}
+      className={`${fraunces.variable} ${jetbrains.variable} ${geist.variable} ${caveat.variable}`}
     >
       <body>
         <SessionProvider>

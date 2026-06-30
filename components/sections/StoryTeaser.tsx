@@ -9,23 +9,24 @@ import { ThekaLabel } from "@/components/ui/ThekaLabel";
 import { Reveal }  from "@/components/motion/Reveal";
 import { TypeOnScroll, type Segment as TypeSegment } from "@/components/motion/TypeOnScroll";
 import { Sticker } from "@/components/ui/Sticker";
+import { ChalkMark } from "@/components/ui/ChalkMark";
 
 // Manifesto paragraphs. Strings are typed char-by-char; node segments
 // (the blue highlights) are revealed atomically.
 const PARAGRAPHS: TypeSegment[][] = [
   [
     "We didn't start a clothing brand. We started a ",
-    { node: <em key="1" className="not-italic text-[--blue]">theka</em>, chars: 5 },
+    { node: <span key="1" className="relative inline-block not-italic text-[--blue]">theka<ChalkMark variant="underline" color="currentColor" animate={false} className="absolute -bottom-0.5 left-0 w-full h-[7px]" /></span>, chars: 5 },
     " — a corner where the dripped meet, where heritage and concrete shake hands, where every fit ",
-    { node: <em key="2" className="not-italic text-[--blue]">means something.</em>, chars: 16 },
+    { node: <span key="2" className="relative inline-block not-italic text-[--blue]">means something.<ChalkMark variant="underline" color="currentColor" animate={false} className="absolute -bottom-0.5 left-0 w-full h-[7px]" /></span>, chars: 16 },
   ],
   [
     "Made in India, for the kids who code at midnight, ride at dawn, and dress like the city is theirs. ",
-    { node: <em key="3" className="not-italic text-[--blue]">Because it is.</em>, chars: 14 },
+    { node: <span key="3" className="relative inline-block not-italic text-[--blue]">Because it is.<ChalkMark variant="underline" color="currentColor" animate={false} className="absolute -bottom-0.5 left-0 w-full h-[7px]" /></span>, chars: 14 },
   ],
   [
     "Six pieces. One colourway. Two hundred of each. When it's gone it's ",
-    { node: <em key="4" className="not-italic text-[--blue]">Tapped Out</em>, chars: 10 },
+    { node: <span key="4" className="relative inline-block not-italic text-[--blue]">Tapped Out<ChalkMark variant="underline" color="currentColor" animate={false} className="absolute -bottom-0.5 left-0 w-full h-[7px]" /></span>, chars: 10 },
     " — no restocks, no waiting lists. You either got it or you didn't. That's not scarcity marketing; that's respect for your time.",
   ],
 ];
