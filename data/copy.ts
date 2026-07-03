@@ -189,6 +189,8 @@ export const copy = {
     freshlyPoured:    { en: "Freshly Poured",     hi: "abhi nikla hai"          },
     lastRound:        { en: "Last Round",         hi: "khatam hone wala hai"    },
     beforeYouBounce:  { en: "Before You Bounce",  hi: "ek aakhri baar"          },
+    sizeSelector:     { en: "Size",               hi: "kaunsa fit?"             },
+    colorSelector:    { en: "Color",              hi: "kaunsa shade?"           },
     regulars:         { en: "Regulars",           hi: "permanent customers"      },
     wrongTheka:       { en: "Wrong Theka",        hi: "galat gully"             },
     bartendersPick:   { en: "Bartender's Pick",   hi: "is hafte yeh chal raha hai" },

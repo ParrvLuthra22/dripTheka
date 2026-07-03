@@ -52,19 +52,27 @@ export function PriceTag({ price, label, size = "md", className }: PriceTagProps
         height={h}
         viewBox={`0 0 ${VB_W} ${VB_H}`}
         fill="none"
+        overflow="visible"
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden="true"
       >
-        {/* String — short curl toward the punch hole, sways on hover */}
-        <motion.path
-          d="M 4 4 Q 11 9 19 17"
-          stroke="var(--ink)"
-          strokeWidth="1"
-          fill="none"
-          opacity="0.35"
+        {/* String — extends above/left of SVG bounds from knot to punch hole */}
+        <motion.g
           variants={stringVariants}
           style={{ transformOrigin: "19px 17px" }}
-        />
+        >
+          {/* Knot at string end */}
+          <circle cx="-13" cy="-18" r="2.2" fill="var(--ink)" opacity="0.5" />
+          {/* String curve from knot down to punch hole */}
+          <path
+            d="M -13 -18 C -4 -10 6 0 19 17"
+            stroke="var(--ink)"
+            strokeWidth="1"
+            strokeLinecap="round"
+            fill="none"
+            opacity="0.55"
+          />
+        </motion.g>
 
         {/* Tag body */}
         <rect
