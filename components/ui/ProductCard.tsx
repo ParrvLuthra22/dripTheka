@@ -21,10 +21,17 @@ import { useKhataStore } from "@/lib/store/khata";
 import { useCartStore } from "@/lib/store/cart";
 import { useToastStore } from "@/lib/store/toast";
 import { useUpsellStore } from "@/lib/store/upsell";
+import { useFoamStore } from "@/lib/store/foam";
 import { useSound } from "@/components/sound/SoundProvider";
 import { flyToCart } from "@/lib/utils/flyToCart";
 import { pickRandom } from "@/lib/utils/copy";
 import { DripHeartIcon } from "@/components/icons/DripHeartIcon";
+
+function slugHash(slug: string): number {
+  let h = 0;
+  for (let i = 0; i < slug.length; i++) h = (h * 31 + slug.charCodeAt(i)) >>> 0;
+  return 3 + (h % 45);
+}
 
 // Theka-language tag palette — maps product IDs → copy.language keys
 // Tag pills use showHi={false}: Hinglish makes them too wide on mobile
@@ -69,6 +76,9 @@ export function ProductCard({
   const [justAdded,  setJustAdded]  = useState(false);
   const addBtnRef   = useRef<HTMLButtonElement>(null);
   const pickerRef   = useRef<HTMLDivElement>(null);
+  const lastFoamRef = useRef(0);
+
+  const spawnFoam = useFoamStore((s) => s.spawn);
 
   // Close the size picker on outside click
   useEffect(() => {
@@ -119,6 +129,16 @@ export function ProductCard({
       setTimeout(() => useUpsellStore.getState().show(product.slug), 900);
     }
   }, [addItem, product, muted, play, pushToast, triggerUpsell]);
+
+  const handleAddHover = useCallback(() => {
+    const now = Date.now();
+    if (now - lastFoamRef.current < 800) return;
+    lastFoamRef.current = now;
+    const btn = addBtnRef.current;
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    spawnFoam({ x: rect.left + rect.width / 2, y: rect.top, count: 1, source: "card-hover" });
+  }, [spawnFoam]);
 
   const handleAddClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -260,6 +280,10 @@ export function ProductCard({
             {product.name}
           </p>
 
+          <p className="font-mono text-[9px] text-[--ink]/28 tracking-[0.06em] mt-1">
+            available in {availableSizes.length} sizes&nbsp;·&nbsp;in {slugHash(product.slug)} glasses
+          </p>
+
           {!tappedOut && (
             <div className="relative flex items-center justify-end mt-4">
               {/* Size picker popover — opens above the ADD button */}
@@ -290,6 +314,7 @@ export function ProductCard({
               <motion.button
                 ref={addBtnRef}
                 onClick={handleAddClick}
+                onMouseEnter={handleAddHover}
                 whileTap={{ scale: 0.94 }}
                 aria-expanded={availableSizes.length > 1 ? pickerOpen : undefined}
                 data-cursor="add"

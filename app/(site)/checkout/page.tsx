@@ -10,6 +10,7 @@ import { z } from "zod";
 import { useCartStore } from "@/lib/store/cart";
 import { formatPrice } from "@/lib/utils/format";
 import { ProductIllustration } from "@/components/sections/ProductIllustration";
+import { Grain } from "@/components/ui/Grain";
 import Link from "next/link";
 import { copy } from "@/data/copy";
 import { pickRandom } from "@/lib/utils/copy";
@@ -276,7 +277,8 @@ export default function CheckoutPage() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div data-nav-tone="dark" className="bg-[--cream] min-h-screen py-12 md:py-20" style={{ paddingInline: "var(--pad-x)" }}>
+    <div data-nav-tone="dark" className="relative bg-[--cream] min-h-screen py-12 md:py-20" style={{ paddingInline: "var(--pad-x)" }}>
+      <Grain opacity={0.04} />
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-12 lg:gap-20">
 
         {/* LEFT — form */}

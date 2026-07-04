@@ -8,6 +8,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { ThekaLabel }    from "@/components/ui/ThekaLabel";
 import { Reveal }        from "@/components/motion/Reveal";
+import { Grain }         from "@/components/ui/Grain";
+import { HandText }      from "@/components/ui/HandText";
 import { BUILDING_POSTS } from "@/data/building";
 import { cn }             from "@/lib/utils/cn";
 
@@ -21,7 +23,8 @@ export default function BuildingIndexPage() {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   return (
-    <div data-nav-tone="dark" className="bg-[--cream] min-h-screen">
+    <div data-nav-tone="dark" className="relative bg-[--cream] min-h-screen">
+      <Grain opacity={0.04} />
       {/* Header */}
       <header
         className="py-16 md:py-24 border-b border-[--ink]/8"
@@ -101,6 +104,9 @@ export default function BuildingIndexPage() {
 
       {/* Footer note */}
       <div className="py-12 text-center border-t border-[--ink]/8" style={{ paddingInline: "var(--pad-x)" }}>
+        <HandText size="sm" rotate={-2} color="var(--ink)" className="opacity-25 mb-3">
+          more dispatches coming
+        </HandText>
         <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink]/20">
           {BUILDING_POSTS.length} dispatches · More coming
         </p>

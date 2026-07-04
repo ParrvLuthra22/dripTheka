@@ -105,7 +105,7 @@ export function BartendersPick() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, margin: "-80px" }}
               transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-              style={{ filter: "drop-shadow(0 24px 64px rgba(0,74,173,0.35))" }}
+              style={{ filter: "drop-shadow(0 24px 64px rgba(0,74,173,0.35))", transform: "rotate(-3deg)" }}
             >
               <ProductCard product={product} aspectRatio="aspect-[4/5]" />
             </motion.div>

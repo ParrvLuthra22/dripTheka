@@ -11,6 +11,7 @@ import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { HeroPourFallback } from "@/components/glass/HeroPour";
 import { Receipt, type ReceiptItem } from "@/components/sections/checkout/Receipt";
+import { Grain } from "@/components/ui/Grain";
 import { useSound } from "@/components/sound/SoundProvider";
 import { formatPrice } from "@/lib/utils/format";
 
@@ -110,6 +111,7 @@ export function SuccessClient({ orderNumber, deposit, total, dropStr }: SuccessC
         paddingBottom: 48,
       }}
     >
+      <Grain opacity={0.035} />
       {/* ── Phase 1: HeroPour + foam bubble ─────────────────────── */}
       <AnimatePresence>
         {phase === 1 && (

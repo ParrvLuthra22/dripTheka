@@ -9,6 +9,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useKhataStore } from "@/lib/store/khata";
 import { ProductCard } from "@/components/ui/ProductCard";
+import { Grain } from "@/components/ui/Grain";
 import { POUR_001 } from "@/data/pour-001";
 import type { Product } from "@/data/pour-001";
 import { copy } from "@/data/copy";
@@ -25,7 +26,8 @@ export default function KhataPage() {
   const empty = products.length === 0;
 
   return (
-    <div data-nav-tone="dark" className="bg-[--cream] min-h-screen">
+    <div data-nav-tone="dark" className="relative bg-[--cream] min-h-screen">
+      <Grain opacity={0.04} />
       <div style={{ paddingInline: "var(--pad-x)" }} className="py-16 md:py-24 max-w-[1400px] mx-auto">
 
         {/* ── Header ───────────────────────────────────────────────── */}
