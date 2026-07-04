@@ -21,7 +21,7 @@ import {
 } from "react";
 import { useSoundStore } from "@/lib/store/sound";
 
-export type SoundKey = "pour" | "clink" | "cap" | "shutter" | "print" | "wobble";
+export type SoundKey = "pour" | "clink" | "cap" | "shutter" | "print" | "wobble" | "flip";
 
 interface HowlInstance {
   play:    (sprite?: string) => number;
@@ -53,6 +53,7 @@ const FX_DEFS: Record<SoundKey, SoundDef> = {
   shutter: { src: "/sounds/shutter.mp3", baseVol: 0.60, preload: false },
   print:   { src: "/sounds/print.mp3",   baseVol: 0.45, preload: false },
   wobble:  { src: "/sounds/wobble.mp3",  baseVol: 0.30, preload: false },
+  flip:    { src: "/sounds/flip.mp3",    baseVol: 0.28, preload: false },
 };
 
 const AMBIENT_BASE_VOL = 0.08;

@@ -2,14 +2,17 @@
 
 // ProductHero — left scrollable column.
 // Hero illustration + 3 detail views, each with GSAP parallax (-8 yPercent on scroll).
-// Editorial captions in italic Fraunces between images.
+// Panel i=0 has persistent FRONT/BACK tab switcher.
 
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ProductIllustration } from "@/components/sections/ProductIllustration";
 import { TextSticker } from "@/components/ui/TextSticker";
+import { useSound } from "@/components/sound/SoundProvider";
+import { cn } from "@/lib/utils/cn";
 import type { Product } from "@/data/pour-001";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -30,6 +33,11 @@ export function ProductHero({ product }: ProductHeroProps) {
   const containerRef  = useRef<HTMLDivElement>(null);
   const imgRefs       = useRef<(HTMLDivElement | null)[]>([]);
   const zoomRefs      = useRef<(HTMLDivElement | null)[]>([]);
+
+  const [heroView, setHeroView] = useState<"front" | "back">("front");
+  const { play, muted }         = useSound();
+  const shouldReduceMotion      = useReducedMotion();
+  const flipDur                 = shouldReduceMotion ? 0 : 0.28;
 
   const primaryColor  = product.colors[0];
   const accentColor   = product.colors[1] ?? "#E4E2DD";
@@ -78,6 +86,32 @@ export function ProductHero({ product }: ProductHeroProps) {
     <div ref={containerRef} className="flex flex-col">
       {VIEWS.map((view, i) => (
         <div key={i}>
+          {/* FRONT / BACK tabs — only on the hero panel */}
+          {i === 0 && (
+            <div className="flex border-b border-[--ink]/10">
+              {(["front", "back"] as const).map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => {
+                    if (v === heroView) return;
+                    setHeroView(v);
+                    if (v === "back" && !muted) play("flip");
+                  }}
+                  className={cn(
+                    "font-mono text-[9px] uppercase tracking-[0.14em] px-5 py-2.5 transition-colors duration-150",
+                    v !== "front" && "border-l border-[--ink]/10",
+                    heroView === v
+                      ? "bg-[--ink] text-[--cream]"
+                      : "text-[--ink]/40 hover:text-[--ink]/70 bg-transparent"
+                  )}
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Illustration panel */}
           <div
             className="relative overflow-hidden"
@@ -103,7 +137,7 @@ export function ProductHero({ product }: ProductHeroProps) {
                   transformOrigin:"center center",
                 }}
               >
-                {/* Cursor-zoom layer — independent of the GSAP/static transforms above */}
+                {/* Cursor-zoom layer */}
                 <div
                   ref={(el) => { zoomRefs.current[i] = el; }}
                   style={{
@@ -111,19 +145,37 @@ export function ProductHero({ product }: ProductHeroProps) {
                     height:     "100%",
                     transition: "transform 0.5s cubic-bezier(.2,.9,.3,1)",
                     willChange: "transform",
+                    position:   "relative",
                   }}
                 >
-                  <ProductIllustration
-                    type={product.type}
-                    primaryColor={
-                      // Invert colors on dark backgrounds for contrast
-                      i % 2 === 0 ? primaryColor : accentColor
-                    }
-                    accentColor={
-                      i % 2 === 0 ? accentColor : primaryColor
-                    }
-                    className="w-full h-full"
-                  />
+                  {i === 0 ? (
+                    // Hero panel: AnimatePresence crossfade between front/back
+                    <AnimatePresence mode="sync" initial={false}>
+                      <motion.div
+                        key={heroView}
+                        className="absolute inset-0"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: flipDur, ease: "easeInOut" }}
+                      >
+                        <ProductIllustration
+                          type={product.type}
+                          view={heroView}
+                          primaryColor={primaryColor}
+                          accentColor={accentColor}
+                          className="w-full h-full"
+                        />
+                      </motion.div>
+                    </AnimatePresence>
+                  ) : (
+                    <ProductIllustration
+                      type={product.type}
+                      primaryColor={i % 2 === 0 ? primaryColor : accentColor}
+                      accentColor={i % 2 === 0 ? accentColor : primaryColor}
+                      className="w-full h-full"
+                    />
+                  )}
                 </div>
               </div>
             </div>

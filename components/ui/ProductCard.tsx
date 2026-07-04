@@ -26,6 +26,7 @@ import { useSound } from "@/components/sound/SoundProvider";
 import { flyToCart } from "@/lib/utils/flyToCart";
 import { pickRandom } from "@/lib/utils/copy";
 import { DripHeartIcon } from "@/components/icons/DripHeartIcon";
+import { GarmentFlip } from "@/components/ui/GarmentFlip";
 
 function slugHash(slug: string): number {
   let h = 0;
@@ -200,12 +201,30 @@ export function ProductCard({
             willChange: "transform",
           }}
         >
-          {/* Garment SVG */}
-          <div className="absolute inset-0 flex items-center justify-center p-[8%] transition-transform duration-500 ease-out group-hover:scale-[1.06]">
-            <ProductIllustration
-              type={product.type}
-              primaryColor={primary}
-              accentColor={accent}
+          {/* Garment — cross-fade flip */}
+          <div className="absolute inset-0 flex items-center justify-center p-[8%]">
+            <GarmentFlip
+              front={
+                <ProductIllustration
+                  type={product.type}
+                  view="front"
+                  primaryColor={primary}
+                  accentColor={accent}
+                  className="w-full h-full"
+                />
+              }
+              back={
+                tappedOut ? null : (
+                  <ProductIllustration
+                    type={product.type}
+                    view="back"
+                    primaryColor={primary}
+                    accentColor={accent}
+                    className="w-full h-full"
+                  />
+                )
+              }
+              alt={product.imageAlt}
               className="w-full h-full"
             />
           </div>
