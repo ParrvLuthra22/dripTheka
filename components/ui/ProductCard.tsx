@@ -315,13 +315,17 @@ export function ProductCard({
                     exit={{ opacity: 0, y: 8, scale: 0.96 }}
                     transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
                     onClick={(e) => e.stopPropagation()}
-                    className="absolute bottom-full right-0 mb-2 z-20 flex flex-wrap justify-end gap-1.5 bg-[--cream] border-2 border-black p-2.5 shadow-[2px_2px_0_0_#141518] max-w-[210px]"
+                    // Solid cream bg (the -[--var] Tailwind bracket form is inert
+                    // in this build, so bg-[--cream] rendered transparent and the
+                    // ink caps vanished into the dark image behind the popover).
+                    style={{ backgroundColor: "#E4E2DD" }}
+                    className="absolute bottom-full right-0 mb-2 z-20 flex flex-wrap justify-end gap-2 border-2 border-black p-3 shadow-[2px_2px_0_0_#141518] max-w-[240px]"
                   >
                     {availableSizes.map(({ size }) => (
                       <BottleCap
                         key={size}
                         label={size}
-                        size="sm"
+                        size="md"
                         onClick={() => quickAdd(size)}
                         ariaLabel={`Add size ${size} to glass`}
                       />
