@@ -44,8 +44,10 @@ export function CurrentlyPouring() {
       <div style={{ paddingInline: "var(--pad-x)" }}>
         {/* Section header */}
         <Reveal className="relative flex items-start justify-between mb-12 border-b border-[--ink]/10 pb-8">
-          <Sticker variant="freshly-poured" rotate={-10} size={80}
-            className="absolute -right-4 -top-10 max-md:hidden z-10" />
+          {/* Corner stamp — pushed up into the section's top padding so it never
+              overlaps the editorial note in the top-right of the header row. */}
+          <Sticker variant="freshly-poured" rotate={-10} size={72}
+            className="absolute right-0 -top-24 max-md:hidden z-10" />
           <div>
             {/* Eyebrow — the blue ChalkMark encircles the label (extra px/py so
                 the stroke rings the text rather than cutting through it), with a
