@@ -60,10 +60,10 @@ export function TheBoard() {
     >
       <div style={{ paddingInline: "var(--pad-x)" }}>
         <Reveal className="mb-12 border-b border-[--ink]/10 pb-8">
-          <ThekaLabel k="theBoard" color="ink" className="mb-3" />
+          <div className="mb-5"><ThekaLabel k="theBoard" color="ink" /></div>
           <h2
             id="board-heading"
-            className="font-display italic text-[--ink] leading-none"
+            className="font-display italic text-[--ink] leading-[1.05]"
             style={{ fontSize: "clamp(2rem, 5vw, 4rem)" }}
           >
             What&apos;s on tap.

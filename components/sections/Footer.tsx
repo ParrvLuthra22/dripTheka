@@ -7,7 +7,6 @@
 // Grid collapses gracefully with better responsive breakpoints.
 
 import Link  from "next/link";
-import Image from "next/image";
 import { useState, useEffect } from "react";
 import { copy } from "@/data/copy";
 import { getSessionWisdom } from "@/lib/utils/copy";
@@ -49,52 +48,31 @@ export function Footer() {
   return (
     <footer
       data-nav-tone="light"
-      className="relative bg-[--ink] text-[--cream] overflow-hidden"
+      data-surface="ink"
+      className="relative overflow-hidden"
+      // Explicit hex: the `-[--var]` Tailwind bracket form is inert in this
+      // build, so bg-[--ink]/text-[--cream] never applied. The footer relied on
+      // the (now-removed) video for its dark look — set it directly instead.
+      style={{ backgroundColor: "#141518", color: "#E4E2DD" }}
     >
       <Grain opacity={0.08} />
-      {/* ── Cinematic video section ────────────────────────────────────
-           Uses aspect-ratio (16/7) so it scales at any zoom level
-           rather than a vh-based fixed height.                         */}
+      {/* ── Wordmark band ──────────────────────────────────────────────
+           Large solid cream "DRIP THEKA" wordmark. (The footer video was
+           removed — this is the plain, high-clarity brand sign-off.)     */}
       <div
-        className="relative w-full overflow-hidden"
-        style={{ aspectRatio: "16 / 7", minHeight: 200, maxHeight: 560 }}
+        className="relative w-full flex flex-col items-center justify-center text-center overflow-hidden"
+        style={{
+          paddingBlock: "clamp(3rem, 8vw, 6rem)",
+          paddingInline: "var(--pad-x)",
+        }}
       >
-        <video
-          src="/videos/follow.mp4"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="metadata"
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{ filter: "brightness(0.55) saturate(1.05)" }}
-        />
-
-        {/* Vignette */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              "linear-gradient(to bottom, rgba(20,21,24,0.4) 0%, transparent 25%, transparent 65%, rgba(20,21,24,0.9) 100%)",
-          }}
-        />
-
-        {/* Logo overlay — centred, scales with the video */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <Image
-            src="/dtlogo-cropped.png"
-            alt="Drip Theka"
-            width={1412}
-            height={564}
-            draggable={false}
-            className="select-none w-[min(68%,600px)] h-auto"
-            style={{ opacity: 0.92, mixBlendMode: "lighten" }}
-          />
-        </div>
-
-        {/* Bottom meta */}
-        <p className="absolute bottom-4 left-0 right-0 text-center font-mono text-[9px] uppercase tracking-[0.18em] text-[--cream]/50 select-none px-4">
+        <h2
+          className="type-tanker-lg select-none leading-[0.9]"
+          style={{ letterSpacing: "-0.01em", color: "#E4E2DD" }}
+        >
+          DRIP THEKA
+        </h2>
+        <p className="mt-5 font-mono text-[9px] uppercase tracking-[0.18em] text-[--cream]/50 select-none">
           Follow&nbsp;·&nbsp;@driptheka&nbsp;·&nbsp;Made in Delhi
         </p>
       </div>

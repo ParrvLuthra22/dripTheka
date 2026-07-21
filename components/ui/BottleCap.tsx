@@ -4,9 +4,13 @@ import { useRef, useCallback } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useSoundStore } from "@/lib/store/sound";
 import { useSound } from "@/components/sound/SoundProvider";
+import { volumeForSize } from "@/lib/utils/sizes";
 
 const SIZE_PX  = { sm: 32, md: 48, lg: 64 } as const;
+// Single-letter face (fallback for unmapped sizes like XS)
 const FONT_PX  = { sm: 8,  md: 13, lg: 17 } as const;
+// Volume face ("30ml") is longer — dial the type down so it fits the crown
+const VOL_FONT_PX = { sm: 7, md: 10, lg: 13 } as const;
 
 // 12-peak bottle-cap crown in a 100×100 viewBox.
 // Peaks alternate between outer radius 45 and inner radius 38.
@@ -86,6 +90,11 @@ export function BottleCap({
   // 1 CSS-px border regardless of svg scale: 100 ÷ rendered-px
   const strokeW  = (100 / px).toFixed(2);
 
+  // Cap face shows the VOLUME ("30ml"); the size LETTER rides on the cursor.
+  const face       = volumeForSize(label);
+  const isVolume   = face !== label.toUpperCase();
+  const faceFontPx = isVolume ? VOL_FONT_PX[size] : FONT_PX[size];
+
   const defaultAriaLabel = `Size ${label.toUpperCase()}, ${active ? "active" : "inactive"}${disabled ? ", disabled" : ""}`;
 
   return (
@@ -102,6 +111,7 @@ export function BottleCap({
       animate={{ rotate: targetRotation }}
       whileHover={hoverRotation}
       transition={{ duration: 0.2, ease: "easeOut" }}
+      data-cursor-size={label.toUpperCase()}
       className="inline-flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[--blue] focus-visible:ring-offset-2"
       style={{
         padding:    hitPad > 0 ? hitPad : undefined,
@@ -134,10 +144,10 @@ export function BottleCap({
           fill={textFill}
           fontFamily="'JetBrains Mono', monospace"
           fontWeight="500"
-          fontSize={FONT_PX[size]}
+          fontSize={faceFontPx}
           style={{ userSelect: "none" }}
         >
-          {label.toUpperCase()}
+          {face}
         </text>
       </svg>
     </motion.button>

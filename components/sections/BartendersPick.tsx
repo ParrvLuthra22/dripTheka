@@ -41,7 +41,7 @@ export function BartendersPick() {
     <section data-nav-tone="dark" className="bg-[--cream] py-20 md:py-28">
       <div style={{ paddingInline: "var(--pad-x)" }}>
         <div className="mb-12 md:mb-16">
-          <span className="relative inline-block p-1">
+          <span className="relative inline-block px-3 py-2">
             <ThekaLabel k="bartendersPick" color="ink" />
             <ChalkMark variant="circle" color="var(--blue)" className="absolute inset-0 w-full h-full" />
           </span>

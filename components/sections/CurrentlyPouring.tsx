@@ -47,13 +47,16 @@ export function CurrentlyPouring() {
           <Sticker variant="freshly-poured" rotate={-10} size={80}
             className="absolute -right-4 -top-10 max-md:hidden z-10" />
           <div>
-            <span className="relative inline-block p-1 mb-3">
+            {/* Eyebrow — the blue ChalkMark encircles the label (extra px/py so
+                the stroke rings the text rather than cutting through it), with a
+                clear gap below so it never touches the heading. */}
+            <span className="relative inline-block px-3 py-2 mb-6">
               <ThekaLabel k="currentlyPouring" color="ink" />
               <ChalkMark variant="circle" color="var(--blue)" className="absolute inset-0 w-full h-full" />
             </span>
             <h2
               id="pouring-heading"
-              className="font-display italic text-[--ink] leading-none"
+              className="font-display italic text-[--ink] leading-[1.05]"
               style={{ fontSize: "clamp(2rem, 5vw, 4rem)" }}
             >
               The First Round.

@@ -1,26 +1,29 @@
 "use client";
 
-// Custom cursor — desktop only (pointer: fine).
+// Custom cursor — desktop (fine-pointer) only, portaled to <body> so no
+// overflow/clip context can ever hide it.
 //
 // Three visual layers:
 //   dot   (8px)  — follows mouse 1:1 (no lag)
-//   ring  (40px) — lerps behind at factor 0.15
-//   label (pill) — shows action text/icon when over [data-cursor="..."] elements
+//   ring  (40px) — lerps behind at factor 0.15 (1:1 under reduced-motion)
+//   label (pill) — solid opaque cream/ink pill; action text or size letter
 //
 // State priority (highest first):
-//   [data-hover-big] → 64px cream dot (CTAs)
-//   [data-cursor]    → label pill with text (images, cart, drag, link)
-//   [data-hover]     → 24px dot + faded ring
-//   default          → 8px dot + 40px ring
+//   [data-cursor-size] → pill shows the size LETTER (bottle-cap hover)
+//   [data-hover-big]   → 64px cream dot (CTAs)
+//   [data-cursor]      → pill with action text (view / add / drag / link)
+//   [data-hover]       → 24px dot + faded ring
+//   default            → 8px dot + 40px ring
 //
-// All layers use mix-blend-mode: difference so they read on any background.
+// The dot/ring use mix-blend-mode: difference so they read on any background.
+// The LABEL pill is deliberately solid + opaque (no blend) so it stays legible.
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { gsap } from "gsap";
 import { useHangoverStore } from "@/lib/store/hangover";
 
 type CursorVariant = "default" | "hover" | "hover-big" | "label";
-type CursorLabel   = string;
 
 const DOT_R  = 4;
 const RING_R = 20;
@@ -31,9 +34,11 @@ export function Cursor() {
   const ringRef  = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLDivElement>(null);
 
+  const [mounted, setMounted] = useState(false);
+  const [enabled, setEnabled] = useState(false);
   const [visible, setVisible] = useState(false);
   const [variant, setVariant] = useState<CursorVariant>("default");
-  const [label,   setLabel]   = useState<CursorLabel>("");
+  const [label,   setLabel]   = useState<string>("");
 
   const mouse  = useRef({ x: 0, y: 0 });
   const ring   = useRef({ x: 0, y: 0 });
@@ -43,9 +48,26 @@ export function Cursor() {
   const isHungoverRef  = useRef(isHungover);
   useEffect(() => { isHungoverRef.current = isHungover; }, [isHungover]);
 
+  // Mount gate — only enable on fine-pointer (desktop) devices.
   useEffect(() => {
-    const isDesktop = window.matchMedia("(pointer: fine)").matches;
-    if (!isDesktop) return;
+    setMounted(true);
+    if (typeof window === "undefined") return;
+    const fine = window.matchMedia("(hover: hover) and (pointer: fine)");
+    setEnabled(fine.matches);
+    const onChange = () => setEnabled(fine.matches);
+    fine.addEventListener?.("change", onChange);
+    return () => fine.removeEventListener?.("change", onChange);
+  }, []);
+
+  // Hide the OS cursor only while the custom one is active.
+  useEffect(() => {
+    if (!enabled) return;
+    document.body.style.cursor = "none";
+    return () => { document.body.style.cursor = ""; };
+  }, [enabled]);
+
+  useEffect(() => {
+    if (!enabled) return;
 
     const dot = dotRef.current;
     const rng = ringRef.current;
@@ -66,7 +88,14 @@ export function Cursor() {
     const onMouseOver = (e: MouseEvent) => {
       const target = e.target as Element | null;
       if (!target) return;
-      // Priority order
+
+      // Bottle-cap size reveal — highest priority
+      const sizeEl = target.closest("[data-cursor-size]") as HTMLElement | null;
+      if (sizeEl) {
+        setVariant("label");
+        setLabel(sizeEl.dataset.cursorSize || "");
+        return;
+      }
       if (target.closest("[data-hover-big]")) {
         setVariant("hover-big");
         setLabel("");
@@ -74,9 +103,8 @@ export function Cursor() {
       }
       const labelEl = target.closest("[data-cursor]") as HTMLElement | null;
       if (labelEl) {
-        const txt = labelEl.dataset.cursor || "";
         setVariant("label");
-        setLabel(txt);
+        setLabel(labelEl.dataset.cursor || "");
         return;
       }
       if (target.closest("[data-hover]")) {
@@ -105,8 +133,10 @@ export function Cursor() {
         y: mouse.current.y - DOT_R + wobbleY,
       });
 
-      ring.current.x = lerp(ring.current.x, mouse.current.x, 0.15);
-      ring.current.y = lerp(ring.current.y, mouse.current.y, 0.15);
+      // Reduced motion → ring follows 1:1 (no smoothing/lag).
+      const factor = reducedMotion ? 1 : 0.15;
+      ring.current.x = lerp(ring.current.x, mouse.current.x, factor);
+      ring.current.y = lerp(ring.current.y, mouse.current.y, factor);
       gsap.set(rng, {
         x: ring.current.x - RING_R + wobbleX,
         y: ring.current.y - RING_R + wobbleY,
@@ -126,10 +156,11 @@ export function Cursor() {
       document.removeEventListener("mouseleave", onMouseLeave);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [enabled]);
 
   // Variant → visual transitions
   useEffect(() => {
+    if (!enabled) return;
     const dot = dotRef.current;
     const rng = ringRef.current;
     const lbl = labelRef.current;
@@ -178,9 +209,11 @@ export function Cursor() {
         gsap.to(rng, { opacity: 1, scale: 1, duration: 0.35, ease: "power2.out", overwrite: true });
         gsap.to(lbl, { opacity: 0, scale: 0.7, duration: 0.15, overwrite: true });
     }
-  }, [variant]);
+  }, [variant, enabled]);
 
-  return (
+  if (!mounted || !enabled) return null;
+
+  return createPortal(
     <>
       {/* Dot */}
       <div
@@ -212,7 +245,7 @@ export function Cursor() {
         }}
       />
 
-      {/* Label pill — appears on [data-cursor] elements */}
+      {/* Label pill — solid, opaque, always readable (no blend mode) */}
       <div
         ref={labelRef}
         aria-hidden="true"
@@ -220,21 +253,22 @@ export function Cursor() {
         style={{
           opacity: 0,
           transform: "translate(-50%, -50%) scale(0.7)",
-          backgroundColor: "#ffffff",
-          color: "#000000",
-          mixBlendMode: "difference",
-          padding: "8px 16px",
+          backgroundColor: "#E4E2DD",
+          color: "#141518",
+          padding: "7px 14px",
           borderRadius: 999,
-          fontFamily: "var(--font-mono, monospace)",
-          fontSize: 10,
-          fontWeight: 600,
-          letterSpacing: "0.12em",
+          boxShadow: "0 2px 10px rgba(20,21,24,0.35)",
+          fontFamily: "var(--font-mono, 'JetBrains Mono', monospace)",
+          fontSize: 11,
+          fontWeight: 500,
+          letterSpacing: "0.05em",
           textTransform: "uppercase",
           whiteSpace: "nowrap",
         }}
       >
         {label || "·"}
       </div>
-    </>
+    </>,
+    document.body
   );
 }

@@ -45,6 +45,7 @@ import { AudioReactive }      from "@/components/motion/AudioReactive";
 import { HangoverMode }       from "@/components/motion/HangoverMode";
 import { DrunkScroll }        from "@/components/motion/DrunkScroll";
 import { Foam }              from "@/components/motion/Foam";
+import { SurfaceTracker }    from "@/components/motion/SurfaceTracker";
 import { ContrastDevTool }   from "@/components/dev/ContrastDevTool";
 
 export default function SiteLayout({
@@ -68,6 +69,9 @@ export default function SiteLayout({
 
       {/* Global foam bubble renderer — event-driven, max 5 on screen */}
       <Foam />
+
+      {/* Resolves which declared surface sits behind the floating glass */}
+      <SurfaceTracker />
 
       {/* Fixed global chrome */}
       <PintGlass />

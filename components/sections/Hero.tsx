@@ -138,6 +138,7 @@ export function Hero() {
     <section
       ref={containerRef}
       data-nav-tone="light"
+      data-surface="blue"
       className="relative min-h-screen flex flex-col overflow-hidden"
       style={{ backgroundColor: "#004AAD" }}
       aria-label="Hero"

@@ -101,6 +101,7 @@ export function JoinRegulars() {
     <section
       ref={sectionRef}
       data-nav-tone="light"
+      data-surface="blue"
       className="relative py-20 md:py-32 overflow-hidden"
       style={{ backgroundColor: "#004AAD" }}
       aria-labelledby="regulars-heading"

@@ -79,10 +79,10 @@ export function BuildingTeaser() {
         {/* Header */}
         <Reveal className="flex items-start justify-between mb-12">
           <div>
-            <ThekaLabel k="buildingTheka" color="ink" className="mb-3" />
+            <div className="mb-5"><ThekaLabel k="buildingTheka" color="ink" /></div>
             <h2
               id="building-heading"
-              className="font-display italic text-[--ink] leading-none"
+              className="font-display italic text-[--ink] leading-[1.05]"
               style={{ fontSize: "clamp(2rem, 5vw, 4rem)" }}
             >
               From the Founders.

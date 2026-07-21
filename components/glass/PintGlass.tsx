@@ -27,6 +27,7 @@ import { gsap } from "gsap";
 import { useCartStore } from "@/lib/store/cart";
 import { useHangoverStore } from "@/lib/store/hangover";
 import { useFoamStore } from "@/lib/store/foam";
+import { useSurfaceStore } from "@/lib/store/surface";
 import { useSound } from "@/components/sound/SoundProvider";
 import { cn } from "@/lib/utils/cn";
 
@@ -43,7 +44,13 @@ const BOWL_TOP_Y  = 14;  // where liquid starts at full (just below rim inner)
 const BOWL_BOT_Y  = 84;  // where liquid hits the base
 const BOWL_H      = BOWL_BOT_Y - BOWL_TOP_Y; // 70
 const BOWL_STROKE = "var(--ink)";
-const LIQUID_FILL = "var(--blue)";
+
+// Surface-aware liquid/foam colours. On a blue background, cobalt liquid would
+// camouflage — flip it to cream and darken the foam so the two stay distinct.
+const LIQUID_BLUE  = "#004AAD";
+const LIQUID_CREAM = "#E4E2DD";
+const FOAM_CREAM   = "#E4E2DD";
+const FOAM_WARM    = "#D6D0BC"; // darker warm cream — reads against cream liquid
 
 // Foam bubble data (relative to SVG coordinate space)
 const FOAM = [
@@ -66,6 +73,13 @@ export function PintGlass({ className }: PintGlassProps) {
   const { muted, play } = useSound();
   const { isHungover } = useHangoverStore();
   const spawnFoam = useFoamStore((s) => s.spawn);
+  const surface   = useSurfaceStore((s) => s.surface);
+
+  // Blue background → cream liquid + warm foam (never camouflage). Otherwise
+  // cobalt liquid + cream foam. CSS transitions the fill smoothly on boundary.
+  const onBlue      = surface === "blue";
+  const liquidColor = onBlue ? LIQUID_CREAM : LIQUID_BLUE;
+  const foamColor   = onBlue ? FOAM_WARM    : FOAM_CREAM;
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -261,9 +275,9 @@ export function PintGlass({ className }: PintGlassProps) {
           y={BOWL_BOT_Y}
           width="58"
           height="0"
-          fill={LIQUID_FILL}
           filter="url(#neon-glow)"
           clipPath="url(#pint-bowl)"
+          style={{ fill: liquidColor, transition: "fill 250ms ease" }}
         />
 
         {/* ── Foam group (positioned at liquid surface) ───────────────── */}
@@ -279,8 +293,8 @@ export function PintGlass({ className }: PintGlassProps) {
               cy={-b.ry / 2} // placed just above liquid surface; parent group is translated
               rx={b.rx}
               ry={b.ry}
-              fill="var(--cream, #E4E2DD)"
               opacity={0.88 - i * 0.06}
+              style={{ fill: foamColor, transition: "fill 250ms ease" }}
             />
           ))}
         </g>

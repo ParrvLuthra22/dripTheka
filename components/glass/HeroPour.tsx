@@ -127,9 +127,11 @@ function GlassScene({ onReady }: { onReady?: () => void }) {
   const glassPoints  = useMemo(buildGlassProfile,  []);
   const liquidPoints = useMemo(buildLiquidProfile, []);
 
-  // Surface shader uniforms
+  // Surface shader uniforms.
+  // The hero sits on a cobalt (#004AAD) background — a blue liquid would
+  // camouflage, so the poured liquid renders CREAM here (Fix 7).
   const surfaceUniforms = useRef({
-    uColor: { value: new THREE.Color(0x1462c0) },
+    uColor: { value: new THREE.Color(0xE4E2DD) },
     uWave:  { value: 0 },
     uTime:  { value: 0 },
   });
@@ -247,15 +249,16 @@ function GlassScene({ onReady }: { onReady?: () => void }) {
         />
       </mesh>
 
-      {/* ── Liquid body (clipped by horizontal plane) ───────────── */}
+      {/* ── Liquid body (clipped by horizontal plane) ───────────────
+           Cream, not cobalt — the hero background is blue (Fix 7). */}
       <mesh>
         <latheGeometry args={[liquidPoints, 64]} />
         <meshPhysicalMaterial
-          color="#004AAD"
+          color="#E4E2DD"
           roughness={0.06}
           metalness={0.08}
           transparent
-          opacity={0.88}
+          opacity={0.9}
           clippingPlanes={[clipPlane.current]}
           side={THREE.FrontSide}
         />
@@ -282,7 +285,7 @@ function GlassScene({ onReady }: { onReady?: () => void }) {
       <mesh ref={streamMesh} position={[0, 1.3, 0]}>
         <cylinderGeometry args={[0.016, 0.010, 0.9, 8, 1, true]} />
         <meshStandardMaterial
-          color="#1462C0"
+          color="#E4E2DD"
           transparent
           opacity={0}
           side={THREE.DoubleSide}
