@@ -6,12 +6,11 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ThekaLabel } from "@/components/ui/ThekaLabel";
+import { CircledEyebrow } from "@/components/ui/CircledEyebrow";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { Button } from "@/components/ui/Button";
 import { WineGlassMark } from "@/components/glass/WineGlassMark";
 import { TypeOnScroll } from "@/components/motion/TypeOnScroll";
-import { ChalkMark } from "@/components/ui/ChalkMark";
 import { HandText } from "@/components/ui/HandText";
 import { POUR_001, BARTENDERS_PICK } from "@/data/pour-001";
 import { copy } from "@/data/copy";
@@ -41,10 +40,7 @@ export function BartendersPick() {
     <section data-nav-tone="dark" className="bg-[--cream] py-20 md:py-28">
       <div style={{ paddingInline: "var(--pad-x)" }}>
         <div className="mb-12 md:mb-16">
-          <span className="relative inline-block px-3 py-2">
-            <ThekaLabel k="bartendersPick" color="ink" />
-            <ChalkMark variant="circle" color="var(--blue)" className="absolute inset-0 w-full h-full" />
-          </span>
+          <CircledEyebrow k="bartendersPick" color="ink" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">

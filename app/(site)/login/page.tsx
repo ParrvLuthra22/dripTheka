@@ -33,7 +33,7 @@ export default function LoginPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#004AAD" }}>
+      <div data-surface="blue" className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#004AAD" }}>
         <div className="w-6 h-6 border-2 border-[#E4E2DD]/30 border-t-[#E4E2DD] rounded-full animate-spin" />
       </div>
     );
@@ -42,6 +42,7 @@ export default function LoginPage() {
   return (
     <div
       data-nav-tone="light"
+      data-surface="blue"
       className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden"
       style={{ backgroundColor: "#004AAD" }}
     >

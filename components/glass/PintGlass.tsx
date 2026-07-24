@@ -80,6 +80,10 @@ export function PintGlass({ className }: PintGlassProps) {
   const onBlue      = surface === "blue";
   const liquidColor = onBlue ? LIQUID_CREAM : LIQUID_BLUE;
   const foamColor   = onBlue ? FOAM_WARM    : FOAM_CREAM;
+  // Safety net: when the liquid is cobalt it carries a thin cream surface line,
+  // so it stays visible even if it sits over an undeclared blue area. (On a
+  // blue surface the liquid is already cream, so no outline is needed there.)
+  const liquidStroke = onBlue ? "transparent" : "#E4E2DD";
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -277,7 +281,12 @@ export function PintGlass({ className }: PintGlassProps) {
           height="0"
           filter="url(#neon-glow)"
           clipPath="url(#pint-bowl)"
-          style={{ fill: liquidColor, transition: "fill 250ms ease" }}
+          strokeWidth={1.5}
+          style={{
+            fill: liquidColor,
+            stroke: liquidStroke,
+            transition: "fill 250ms ease, stroke 250ms ease",
+          }}
         />
 
         {/* ── Foam group (positioned at liquid surface) ───────────────── */}

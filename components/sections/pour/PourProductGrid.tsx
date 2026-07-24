@@ -38,6 +38,7 @@ function EditorialBreak() {
   return (
     <div className="col-span-1 md:col-span-2 lg:col-span-3 my-2">
       <div
+        data-surface="blue"
         className="relative flex items-center gap-8 md:gap-12 overflow-hidden py-14 md:py-20"
         style={{
           backgroundColor: "#004AAD",

@@ -97,7 +97,7 @@ export default function RegularsPage() {
   }
 
   return (
-    <div data-nav-tone="light" className="min-h-screen flex flex-col" style={{ backgroundColor: "#004AAD" }}>
+    <div data-nav-tone="light" data-surface="blue" className="min-h-screen flex flex-col" style={{ backgroundColor: "#004AAD" }}>
 
       {/* ── Hero ──────────────────────────────────────────────────── */}
       <header className="relative py-20 md:py-28" style={{ paddingInline: "var(--pad-x)" }}>

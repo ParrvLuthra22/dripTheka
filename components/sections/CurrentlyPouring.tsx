@@ -5,12 +5,11 @@
 
 import Link from "next/link";
 import { ProductCard } from "@/components/ui/ProductCard";
-import { ThekaLabel } from "@/components/ui/ThekaLabel";
+import { CircledEyebrow } from "@/components/ui/CircledEyebrow";
 import { Reveal } from "@/components/motion/Reveal";
 import { POUR_001 } from "@/data/pour-001";
 import { Grain } from "@/components/ui/Grain";
 import { Sticker } from "@/components/ui/Sticker";
-import { ChalkMark } from "@/components/ui/ChalkMark";
 
 // Asymmetric editorial grid spans — row1 (7+5), row2 (4+4+4), row3 (12)
 const COL_SPANS = [
@@ -49,13 +48,9 @@ export function CurrentlyPouring() {
           <Sticker variant="freshly-poured" rotate={-10} size={72}
             className="absolute right-0 -top-24 max-md:hidden z-10" />
           <div>
-            {/* Eyebrow — the blue ChalkMark encircles the label (extra px/py so
-                the stroke rings the text rather than cutting through it), with a
-                clear gap below so it never touches the heading. */}
-            <span className="relative inline-block px-3 py-2 mb-6">
-              <ThekaLabel k="currentlyPouring" color="ink" />
-              <ChalkMark variant="circle" color="var(--blue)" className="absolute inset-0 w-full h-full" />
-            </span>
+            {/* Eyebrow — circle rings the label from outside (shared component)
+                so it never cuts the text; mb keeps clear space to the heading. */}
+            <CircledEyebrow k="currentlyPouring" color="ink" className="mb-8" />
             <h2
               id="pouring-heading"
               className="font-display italic text-[--ink] leading-[1.05]"
