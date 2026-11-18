@@ -104,3 +104,21 @@ test("row jump: 05→06 on desktop drops to row 2; neighbours in a row do not", 
   assert.equal(isRowJump(L, 1, 2), false);
   assert.equal(isRowJump(L, 9, 0), true); // wrap-around
 });
+
+test("per-product AR: desktop box uses its own ratio; default array equals a count", () => {
+  const ars = [0.84, 1.0, 0.7, 0.84, 0.84];
+  const L = computeLayout(1440, 900, ars);
+  ars.forEach((ar, i) => close(L.items[i].w / L.items[i].h, ar));
+  const a = computeLayout(1440, 900, 10), b = computeLayout(1440, 900, Array(10).fill(AR));
+  assert.deepEqual(a, b);
+  const m1 = computeLayout(375, 812, 10), m2 = computeLayout(375, 812, Array(10).fill(AR));
+  assert.deepEqual(m1, m2);
+});
+
+test("mobile rows take the tallest fit's height and share a ledge line", () => {
+  const L = computeLayout(375, 812, [0.84, 1.0, 0.7, 0.84]);
+  close(L.items[0].ly, L.items[1].ly);
+  close(L.items[0].ly, 150 + L.items[0].h); // row 0 is as tall as the 0.84 box (taller than 1.0)
+  close(L.items[2].ly, L.items[0].ly + 74 + L.items[2].h); // row 1 tallest is the 0.7 box
+  close(L.worldHeight, L.items[3].ly + 74 + 60);
+});

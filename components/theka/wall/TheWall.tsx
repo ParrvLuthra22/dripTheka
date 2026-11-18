@@ -24,7 +24,7 @@ import { ProductInfo } from "./ProductInfo";
 import { WallHeader } from "./WallHeader";
 import { WallItem } from "./WallItem";
 import {
-  bgScale, cameraTarget, computeLayout, isRowJump, scrollAfterClose, type Layout,
+  AR, bgScale, cameraTarget, computeLayout, isRowJump, scrollAfterClose, type Layout,
 } from "./wallLayout";
 import { createWallStore, type Side } from "./wallStore";
 import s from "./wall.module.css";
@@ -93,14 +93,16 @@ export function TheWall({ products }: { products: WallProduct[] }) {
     let cur = 0;
     let busy = false;
     let dragged = false;
-    let L: Layout = computeLayout(innerWidth, innerHeight, n);
+    // per-product box aspect ratio (wall.ar) — falls back to the default 0.84
+    const ars = products.map((p) => p.wall.ar ?? AR);
+    let L: Layout = computeLayout(innerWidth, innerHeight, ars);
 
     const fitOf = (i: number) => items[i].querySelector<HTMLElement>("[data-fit]")!;
     const shOf = (i: number) => items[i].querySelector<HTMLElement>("[data-sh]")!;
 
     // ── layout: position the wall in px (and snap the camera if zoomed) ────
     const applyLayout = () => {
-      L = computeLayout(innerWidth, innerHeight, n);
+      L = computeLayout(innerWidth, innerHeight, ars);
       world.style.height = `${L.worldHeight}px`;
       hello.style.left = `${L.hello.left}px`;
       hello.style.top = `${L.hello.top}px`;

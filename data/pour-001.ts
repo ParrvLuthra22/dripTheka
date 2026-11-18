@@ -16,6 +16,8 @@ export interface WallImages {
   frontShadow: string;
   back: string;
   backShadow: string;
+  /** Box aspect ratio (w/h). Omit for the default 0.84; hoodies/jackets often need their own. */
+  ar?: number;
 }
 
 export interface Product {

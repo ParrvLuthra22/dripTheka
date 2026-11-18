@@ -2,7 +2,7 @@
 // wall-reference/index.html (layout() / target() / bgT()); no DOM, no GSAP, so it
 // can be unit-tested. TheWall applies the results imperatively.
 
-/** Aspect ratio (w/h) of a product box. */
+/** Default aspect ratio (w/h) of a product box; a product can override it via `wall.ar`. */
 export const AR = 0.84;
 export const MOBILE_MAX = 820;
 
@@ -37,7 +37,14 @@ export interface Camera {
   y: number;
 }
 
-export function computeLayout(vw: number, vh: number, count: number): Layout {
+/**
+ * `products` is either a count (every box uses the default AR) or one aspect
+ * ratio (w/h) per product — hoodies and jackets can be wider than tees.
+ */
+export function computeLayout(vw: number, vh: number, products: number | readonly number[]): Layout {
+  const ars: readonly number[] =
+    typeof products === "number" ? Array.from({ length: products }, () => AR) : products;
+  const count = ars.length;
   const mob = vw <= MOBILE_MAX;
   const items: Box[] = [];
 
@@ -45,13 +52,14 @@ export function computeLayout(vw: number, vh: number, count: number): Layout {
     const cols = 5;
     const mx = vw * 0.075;
     const pitch = (vw - 2 * mx) / cols;
-    const h = Math.min(vh * 0.205, (pitch * 0.62) / AR);
-    const w = h * AR;
     // rows 1 / 2 sit at .545 / .885 of the viewport; further rows keep the same pitch
     const rowY = (r: number) => vh * 0.545 + r * vh * 0.34;
     for (let i = 0; i < count; i++) {
       const c = i % cols, r = Math.floor(i / cols);
       const ly = rowY(r);
+      const ar = ars[i];
+      const h = Math.min(vh * 0.205, (pitch * 0.62) / ar);
+      const w = h * ar;
       items.push({ cx: mx + pitch * (c + 0.5), ly, w, h, cy: ly - h * 0.46 });
     }
     const rows = Math.max(1, Math.ceil(count / cols));
@@ -68,18 +76,25 @@ export function computeLayout(vw: number, vh: number, count: number): Layout {
   const mx = 16;
   const pitch = (vw - 2 * mx) / cols;
   const w = pitch * 0.74;
-  const h = w / AR;
   const top = 150;
-  const gap = h + 74;
-  for (let i = 0; i < count; i++) {
-    const c = i % cols, r = Math.floor(i / cols);
-    const ly = top + h + r * gap;
-    items.push({ cx: mx + pitch * (c + 0.5), ly, w, h, cy: ly - h * 0.46 });
-  }
+  const boxH = (i: number) => w / ars[i];
   const rows = Math.max(1, Math.ceil(count / cols));
+  // Each row is as tall as its tallest fit; fits sit on the row's ledge line.
+  let ly = top;
+  let lastLy = top;
+  for (let r = 0; r < rows; r++) {
+    let rowH = 0;
+    for (let c = 0; c < cols && r * cols + c < count; c++) rowH = Math.max(rowH, boxH(r * cols + c));
+    ly += (r === 0 ? 0 : 74) + rowH;
+    lastLy = ly;
+    for (let c = 0; c < cols && r * cols + c < count; c++) {
+      const i = r * cols + c, h = boxH(i);
+      items.push({ cx: mx + pitch * (c + 0.5), ly, w, h, cy: ly - h * 0.46 });
+    }
+  }
   return {
     items, mob, vw, vh, cols,
-    worldHeight: top + rows * gap + 60,
+    worldHeight: lastLy + 74 + 60,
     scrollable: true,
     hello: { left: 16, top: 74 },
   };
