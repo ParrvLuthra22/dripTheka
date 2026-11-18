@@ -7,7 +7,7 @@ import Link from "next/link";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { CircledEyebrow } from "@/components/ui/CircledEyebrow";
 import { Reveal } from "@/components/motion/Reveal";
-import { POUR_001 } from "@/data/pour-001";
+import { POUR_001, POURING_PRODUCTS } from "@/data/pour-001";
 import { Grain } from "@/components/theka/Grain";
 import { Sticker } from "@/components/ui/Sticker";
 
@@ -66,7 +66,7 @@ export function CurrentlyPouring() {
 
         {/* Asymmetric product grid */}
         <div className="grid grid-cols-12 gap-3 md:gap-4">
-          {POUR_001.products.map((product, index) => (
+          {POURING_PRODUCTS.map((product, index) => (
             <div
               key={product.id}
               className={COL_SPANS[index] ?? "col-span-12 md:col-span-4"}
@@ -83,7 +83,7 @@ export function CurrentlyPouring() {
         {/* Section CTA */}
         <Reveal delay={100} className="mt-12 pt-8 border-t border-(--ink)/10 flex items-center justify-between">
           <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-(--ink)/30">
-            {POUR_001.products.length}&nbsp;pieces&nbsp;·&nbsp;200 of each
+            {POURING_PRODUCTS.length}&nbsp;pieces&nbsp;·&nbsp;200 of each
           </p>
           <Link
             href="/pour/pour-001"

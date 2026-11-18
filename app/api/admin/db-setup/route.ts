@@ -72,10 +72,10 @@ export async function GET() {
         // Also seed reserve_count_cache
         try {
           const { reserveCountCache } = await import("@/lib/db/schema");
-          const { POUR_001 }          = await import("@/data/pour-001");
+          const { POURING_PRODUCTS }  = await import("@/data/pour-001");
           await db
             .insert(reserveCountCache)
-            .values(POUR_001.products.map(p => ({
+            .values(POURING_PRODUCTS.map(p => ({
               productSlug:   p.slug,
               reservedCount: 0,
             })))

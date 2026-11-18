@@ -1,19 +1,19 @@
 "use client";
 
 // AlsoPouring — 3 related products below the fold.
-// Excludes the current product; takes the next 3 from POUR_001.
+// Excludes the current product; takes the next 3 pouring (non-demo) products.
 
 import Link from "next/link";
 import { Reveal } from "@/components/motion/Reveal";
 import { ProductCard } from "@/components/ui/ProductCard";
-import { POUR_001 } from "@/data/pour-001";
+import { POURING_PRODUCTS } from "@/data/pour-001";
 
 interface AlsoPouring {
   currentSlug: string;
 }
 
 export function AlsoPouring({ currentSlug }: AlsoPouring) {
-  const related = POUR_001.products
+  const related = POURING_PRODUCTS
     .filter((p) => p.slug !== currentSlug)
     .slice(0, 3);
 

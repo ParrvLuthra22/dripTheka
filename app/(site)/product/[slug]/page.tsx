@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { POUR_001, getPriceDisplay } from "@/data/pour-001";
+import { POUR_001, POURING_PRODUCTS, getPriceDisplay } from "@/data/pour-001";
 import { ProductHero }   from "@/components/sections/product/ProductHero";
 import { ProductSidebar } from "@/components/sections/product/ProductSidebar";
 import { HowItPours }    from "@/components/sections/product/HowItPours";
@@ -11,7 +11,7 @@ interface Props {
 }
 
 export async function generateStaticParams() {
-  return POUR_001.products.map((p) => ({ slug: p.slug }));
+  return POURING_PRODUCTS.map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

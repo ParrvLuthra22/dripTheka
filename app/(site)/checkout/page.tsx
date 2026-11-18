@@ -204,6 +204,9 @@ export default function CheckoutPage() {
 
       if (!reserveRes.ok) {
         const { error } = await reserveRes.json() as { error: string };
+        if (reserveRes.status === 409 && error === "not_pouring_yet") {
+          throw new Error(copy.forms.errors.notPouringYet);
+        }
         throw new Error(error ?? copy.forms.errors.networkError);
       }
 

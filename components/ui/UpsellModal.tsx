@@ -13,7 +13,7 @@ import { useCartStore } from "@/lib/store/cart";
 import { useKhataStore } from "@/lib/store/khata";
 import { useFoamStore } from "@/lib/store/foam";
 import { useSound } from "@/components/sound/SoundProvider";
-import { POUR_001, isTappedOut, getAvailableSizes } from "@/data/pour-001";
+import { POURING_PRODUCTS, isTappedOut, getAvailableSizes } from "@/data/pour-001";
 import type { Product } from "@/data/pour-001";
 import { copy } from "@/data/copy";
 import { DripCloseIcon } from "@/components/icons/DripCloseIcon";
@@ -182,7 +182,7 @@ export function UpsellModal() {
   const panelRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
 
-  const related = POUR_001.products
+  const related = POURING_PRODUCTS
     .filter((p) => p.slug !== excludeSlug && !isTappedOut(p.sizes))
     .slice(0, 3);
 

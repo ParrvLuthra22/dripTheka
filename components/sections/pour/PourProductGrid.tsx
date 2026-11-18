@@ -11,7 +11,7 @@ import { ProductCard } from "@/components/ui/ProductCard";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Reveal } from "@/components/motion/Reveal";
 import { BottleCap } from "@/components/ui/BottleCap";
-import { POUR_001 } from "@/data/pour-001";
+import { POURING_PRODUCTS } from "@/data/pour-001";
 import type { GarmentType } from "@/data/pour-001";
 import { cn } from "@/lib/utils/cn";
 
@@ -107,7 +107,7 @@ export function PourProductGrid() {
   );
 
   const products = useMemo(() => {
-    let list = [...POUR_001.products];
+    let list = [...POURING_PRODUCTS];
 
     // Filter
     if (activeFilter !== "all") {

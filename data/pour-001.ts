@@ -347,6 +347,14 @@ export const POUR_001: Pour = {
   ],
 };
 
+/**
+ * Demo (`placeholderArt`) tees live on The Wall only. They can go in a bag, but
+ * they are fenced off from reservations, DB seeding and every shop listing until
+ * real designs replace the placeholder art.
+ */
+export const isPouring = (p: Product): boolean => !p.placeholderArt;
+export const POURING_PRODUCTS: Product[] = POUR_001.products.filter(isPouring);
+
 // Opening Night date — drives the countdown in the pour page hero.
 // Change this to a real date when you set the drop.
 export const DROP_DATE = new Date("2026-09-01T18:00:00+05:30");

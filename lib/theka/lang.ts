@@ -269,6 +269,7 @@ export const lang = {
       badPincode:       "pincode has 6 digits. yours doesn't.",
       missingField:     "this bit's empty. we need it.",
       networkError:     "we're not online. neither are you, apparently.",
+      notPouringYet:    "This one isn't pouring yet, coming soon, regular.",
       paymentFailed:    "the tap's jammed. try again.",
       emptyCartCheckout: "can't checkout an empty glass. seek help.",
       genericError:     "something broke. wasn't us. okay maybe it was.",

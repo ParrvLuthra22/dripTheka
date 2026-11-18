@@ -13,7 +13,7 @@ import "dotenv/config"; // loads .env.local in the same directory as package.jso
 
 import { db }                 from "../lib/db/client";
 import { pourProgress, reserveCountCache } from "../lib/db/schema";
-import { POUR_001 }           from "../data/pour-001";
+import { POURING_PRODUCTS }    from "../data/pour-001";
 
 async function seed() {
   console.log("🍺  Drip Theka DB seed starting...\n");
@@ -40,7 +40,7 @@ async function seed() {
   // ── 2. reserve_count_cache ───────────────────────────────────────────────
   console.log("\n  Seeding reserve_count_cache...");
 
-  for (const product of POUR_001.products) {
+  for (const product of POURING_PRODUCTS) {
     const rows = await db
       .insert(reserveCountCache)
       .values({ productSlug: product.slug, reservedCount: 0 })

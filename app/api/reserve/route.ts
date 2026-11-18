@@ -13,7 +13,7 @@
 import { NextResponse }  from "next/server";
 import { z }             from "zod";
 import crypto            from "crypto";
-import { POUR_001 }      from "@/data/pour-001";
+import { POUR_001, isPouring } from "@/data/pour-001";
 import { createRazorpayOrder, getPublicKeyId } from "@/lib/razorpay/client";
 import { generateOrderNumber }                  from "@/lib/db/client";
 import type { ShippingAddress }                 from "@/lib/db/schema";
@@ -70,6 +70,10 @@ export async function POST(request: Request) {
     const product = POUR_001.products.find((p) => p.slug === item.slug);
     if (!product) {
       return NextResponse.json({ error: `Product not found: ${item.slug}` }, { status: 400 });
+    }
+    // Demo tees (placeholderArt) can be bagged but not reserved yet.
+    if (!isPouring(product)) {
+      return NextResponse.json({ error: "not_pouring_yet" }, { status: 409 });
     }
     const lineTotalPaise = product.price * item.qty;
     subtotalPaise += lineTotalPaise;
