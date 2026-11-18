@@ -3,8 +3,10 @@
 //
 // Swap point: callers only pass `width`/`className`, so this can later become
 // a desktop-only R3F <Canvas> glass without touching GlassUnit/ServePour.
-// (Only change from the reference: the gradient id is unique per instance —
-// the prototype reused id="gg" on every glass.)
+// Changes from the reference: the gradient id is unique per instance (the
+// prototype reused id="gg"), and the glass is centred in its wrapper — the
+// prototype left-aligned a fixed-width SVG inside a wider box, so it sat
+// off-centre under the fit.
 
 import { useId } from "react";
 
@@ -17,8 +19,8 @@ interface GobletProps {
 export function Goblet({ width = 62, className }: GobletProps) {
   const gid = `gg-${useId().replace(/:/g, "")}`;
   return (
-    <div className={className} aria-hidden="true">
-      {/* Fixed pixel width, inline — exactly as the reference renders it */}
+    <div className={className} aria-hidden="true" style={{ display: "flex", justifyContent: "center" }}>
+      {/* Fixed pixel width (as the reference), centred by the flex wrapper */}
       <svg viewBox="0 0 120 150" width={width} xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id={gid} x1="0" x2="1">

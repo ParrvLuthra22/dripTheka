@@ -28,6 +28,8 @@ export interface Product {
   description: string;
   careInstructions: string[];
   fabric: string;
+  /** Fabric weight in grams per m². Omit when not applicable (caps, shells). */
+  gsm?: number;
   dropNumber: "001";
   collectionSlug: "pour-001";
   imageAlt: string;
@@ -90,6 +92,7 @@ export const POUR_001: Pour = {
         "Don't bleach it — it's not a hospital gown",
       ],
       fabric: "100% combed ring-spun cotton, 400gsm",
+      gsm: 400,
       dropNumber: "001",
       collectionSlug: "pour-001",
       imageAlt: "Boxy cobalt blue tee with cream wine glass logo on left chest",
@@ -125,6 +128,7 @@ export const POUR_001: Pour = {
         "Low iron on reverse",
       ],
       fabric: "85% cotton / 15% polyester fleece, 560gsm",
+      gsm: 560,
       dropNumber: "001",
       collectionSlug: "pour-001",
       imageAlt: "Ink black oversized hoodie with LAST CALL embroidery on back",
@@ -160,6 +164,7 @@ export const POUR_001: Pour = {
         "Do not iron the stamp directly",
       ],
       fabric: "100% cotton ripstop canvas, 280gsm",
+      gsm: 280,
       dropNumber: "001",
       collectionSlug: "pour-001",
       imageAlt: "Cream cargo pants with POUR 001 stamp on left pocket",
@@ -228,6 +233,7 @@ export const POUR_001: Pour = {
         "Do not wring",
       ],
       fabric: "French terry, 380gsm, 95% cotton / 5% elastane",
+      gsm: 380,
       dropNumber: "001",
       collectionSlug: "pour-001",
       imageAlt: "Cream matching set with wine glass print on shorts back hem",

@@ -51,7 +51,7 @@
   /* ── Z-index scale ────────────────────────────────────────────────────── */
   --z-grain:     70;      /* page grain sits above content, below chrome    */
   --z-nav:       50;
-  --z-shutter:   400;     /* route transition — above age gate            */
+  --z-shutter:   400;     /* route transition — above all page overlays   */
   --z-cursor:    9999;
 
   /* ── Grain ────────────────────────────────────────────────────────────── */

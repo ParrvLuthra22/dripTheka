@@ -12,7 +12,6 @@
 //   Nav                → --z-nav (50)       · SoundToggle / FounderSecret → 60
 //   Grain (page)       → --z-grain (70)     · easter eggs → 100
 //   ToastStack 150 · UpsellModal / LoadingScreen 200 · Hangover / Drunk 250
-//   Bouncer            → 300 (18+ gate)
 //   PourTransition     → --z-shutter (400)  · Cursor → --z-cursor (9999)
 
 import { SmoothScroll }       from "@/components/theka/SmoothScroll";
@@ -27,7 +26,6 @@ import { Cursor }             from "@/components/theka/Cursor";
 import { ToastStack }         from "@/components/ui/ToastStack";
 import { UpsellModal }        from "@/components/ui/UpsellModal";
 import { LoadingScreen }      from "@/components/layout/LoadingScreen";
-import { Bouncer }            from "@/components/layout/Bouncer";
 import { ThekaEgg }           from "@/components/layout/ThekaEgg";
 import { HappyHour }          from "@/components/layout/HappyHour";
 import { FounderSecret }      from "@/components/layout/FounderSecret";
@@ -95,9 +93,6 @@ export default function SiteLayout({
 
       {/* Dev-only contrast checker — tree-shaken in production */}
       {process.env.NODE_ENV === "development" && <ContrastDevTool />}
-
-      {/* 18+ age gate — z-[300], above everything. Legal pages exempt. */}
-      <Bouncer />
 
       {/* Page grain — one fixed overlay, plain opacity, no blend mode */}
       <Grain fixed />

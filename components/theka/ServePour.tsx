@@ -45,9 +45,9 @@ function defaultSize(p: Product): Size | null {
 }
 
 function specsFor(p: Product): string[] {
-  const gsm = p.fabric.match(/(\d+)\s*gsm/i)?.[1];
+  // Weight comes from product data (p.gsm) — never hardcoded.
   return [
-    gsm ? `${gsm} GSM HEAVYWEIGHT` : p.type,
+    p.gsm ? `${p.gsm} GSM HEAVYWEIGHT` : p.type,
     `${p.fit} fit`,
     "PRINTED IN DELHI",
   ];
