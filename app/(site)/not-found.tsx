@@ -7,7 +7,7 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { copy } from "@/data/copy";
-import { Grain } from "@/components/ui/Grain";
+import { Grain } from "@/components/theka/Grain";
 import { Sticker } from "@/components/ui/Sticker";
 import { ChalkMark } from "@/components/ui/ChalkMark";
 import { HandText } from "@/components/ui/HandText";
@@ -113,7 +113,7 @@ export default function NotFound() {
       <motion.h1
         initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="font-tanker uppercase text-[#E4E2DD] text-center"
+        className="font-loud uppercase text-[#E4E2DD] text-center"
         style={{ fontSize: "clamp(3rem, 10vw, 8rem)", lineHeight: 0.82 }}
       >
         {copy.notFound.title}

@@ -112,7 +112,7 @@ export function BottleCap({
       whileHover={hoverRotation}
       transition={{ duration: 0.2, ease: "easeOut" }}
       data-cursor-size={label.toUpperCase()}
-      className="inline-flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[--blue] focus-visible:ring-offset-2"
+      className="inline-flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-(--blue) focus-visible:ring-offset-2"
       style={{
         padding:    hitPad > 0 ? hitPad : undefined,
         cursor:     disabled ? "not-allowed" : "pointer",

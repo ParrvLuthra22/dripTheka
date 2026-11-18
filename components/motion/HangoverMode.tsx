@@ -10,6 +10,7 @@
 // ANY interaction (mousemove, scroll, touch, keydown, focus) immediately
 // cancels hangover and restarts the idle countdown.
 
+import { useHydrated } from "@/lib/theka/hooks";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -30,14 +31,12 @@ interface HangoverModeProps {
 export function HangoverMode({ idleMs = 300_000 }: HangoverModeProps) {
   const { setHungover } = useHangoverStore();
   const [toastVisible, setToastVisible] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useHydrated();
 
   const isHungoverRef  = useRef(false);
   const idleTimer      = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toastTimer     = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastResetAt    = useRef(0);
-
-  useEffect(() => setMounted(true), []);
 
   // All state mutation goes through these helpers so refs + store + DOM stay in sync.
   function enterHangover() {

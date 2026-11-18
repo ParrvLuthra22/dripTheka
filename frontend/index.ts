@@ -14,7 +14,6 @@ export { LiquidButton }   from "@/components/ui/LiquidButton";
 export { Eyebrow }        from "@/components/ui/Eyebrow";
 export { Marquee }        from "@/components/ui/Marquee";
 export { ProductCard }    from "@/components/ui/ProductCard";
-export { Cursor }         from "@/components/ui/Cursor";
 
 // ── Glass / Brand ─────────────────────────────────────────────────────────
 export { WineGlassMark }   from "@/components/glass/WineGlassMark";
@@ -26,7 +25,6 @@ export { TappedOutStamp }  from "@/components/glass/TappedOutStamp";
 // ── Motion ────────────────────────────────────────────────────────────────
 export { Reveal }          from "@/components/motion/Reveal";
 export { SplitReveal }     from "@/components/motion/SplitReveal";
-export { SmoothScroll }    from "@/components/motion/SmoothScroll";
 export { ScrambleText }    from "@/components/motion/ScrambleText";
 export { TypeOnScroll }    from "@/components/motion/TypeOnScroll";
 export { CountUp }         from "@/components/motion/CountUp";
@@ -34,8 +32,15 @@ export { Foam }            from "@/components/motion/Foam";
 export { ScrollProgressDrip } from "@/components/motion/ScrollProgressDrip";
 export { AudioReactive }   from "@/components/motion/AudioReactive";
 
-// ── Transitions ───────────────────────────────────────────────────────────
-export { PourTransition }  from "@/components/transitions/PourTransition";
+// ── Theka shell ───────────────────────────────────────────────────────────
+export { Nav }             from "@/components/theka/Nav";
+export { Footer }          from "@/components/theka/Footer";
+export { Grain }           from "@/components/theka/Grain";
+export { Cursor }          from "@/components/theka/Cursor";
+export { useMagnetic }     from "@/components/theka/useMagnetic";
+export { SmoothScroll, useLenis, resetScroll } from "@/components/theka/SmoothScroll";
+export { PourTransition, usePour } from "@/components/theka/PourTransition";
+export { lang }            from "@/lib/theka/lang";
 
 // ── Sections (homepage + shared) ─────────────────────────────────────────
 export { Hero }            from "@/components/sections/Hero";
@@ -44,8 +49,6 @@ export { CurrentlyPouring } from "@/components/sections/CurrentlyPouring";
 export { StoryTeaser }     from "@/components/sections/StoryTeaser";
 export { BuildingTeaser }  from "@/components/sections/BuildingTeaser";
 export { JoinRegulars }    from "@/components/sections/JoinRegulars";
-export { Nav }             from "@/components/sections/Nav";
-export { Footer }          from "@/components/sections/Footer";
 
 // ── Sound ─────────────────────────────────────────────────────────────────
 export { SoundProvider, useSound } from "@/components/sound/SoundProvider";

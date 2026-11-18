@@ -76,20 +76,20 @@ export function SoundToggle() {
         <div
           role="dialog"
           aria-label="Sound mix"
-          className="absolute bottom-full mb-3 left-0 w-52 bg-[--cream] border border-[--ink]/12 shadow-[0_4px_20px_rgba(20,21,24,0.08)]"
+          className="absolute bottom-full mb-3 left-0 w-52 bg-(--cream) border border-(--ink)/12 shadow-[0_4px_20px_rgba(20,21,24,0.08)]"
           style={{ padding: "14px 16px" }}
         >
-          <p className="font-mono text-[8px] uppercase tracking-[0.18em] text-[--ink]/30 mb-4">
+          <p className="font-mono text-[8px] uppercase tracking-[0.18em] text-(--ink)/30 mb-4">
             Sound Mix
           </p>
 
           {/* Ambient slider */}
           <label
-            className="font-mono text-[8px] uppercase tracking-[0.12em] text-[--ink]/50 flex items-center justify-between mb-1.5"
+            className="font-mono text-[8px] uppercase tracking-[0.12em] text-(--ink)/50 flex items-center justify-between mb-1.5"
             htmlFor="slider-ambient"
           >
             Ambient
-            <span className="text-[--ink]/30">{Math.round(volumes.ambient * 100)}</span>
+            <span className="text-(--ink)/30">{Math.round(volumes.ambient * 100)}</span>
           </label>
           <input
             id="slider-ambient"
@@ -98,16 +98,16 @@ export function SoundToggle() {
             value={volumes.ambient}
             onChange={(e) => setAmbientVolume(parseFloat(e.target.value))}
             aria-label="Ambient volume"
-            className="w-full h-[2px] appearance-none bg-[--ink]/15 accent-[--blue] cursor-pointer"
+            className="w-full h-[2px] appearance-none bg-(--ink)/15 accent-(--blue) cursor-pointer"
           />
 
           {/* FX slider */}
           <label
-            className="font-mono text-[8px] uppercase tracking-[0.12em] text-[--ink]/50 flex items-center justify-between mt-3.5 mb-1.5"
+            className="font-mono text-[8px] uppercase tracking-[0.12em] text-(--ink)/50 flex items-center justify-between mt-3.5 mb-1.5"
             htmlFor="slider-fx"
           >
             Effects
-            <span className="text-[--ink]/30">{Math.round(volumes.fx * 100)}</span>
+            <span className="text-(--ink)/30">{Math.round(volumes.fx * 100)}</span>
           </label>
           <input
             id="slider-fx"
@@ -116,13 +116,13 @@ export function SoundToggle() {
             value={volumes.fx}
             onChange={(e) => setFxVolume(parseFloat(e.target.value))}
             aria-label="Effects volume"
-            className="w-full h-[2px] appearance-none bg-[--ink]/15 accent-[--blue] cursor-pointer"
+            className="w-full h-[2px] appearance-none bg-(--ink)/15 accent-(--blue) cursor-pointer"
           />
 
           {/* Test button */}
           <button
             onClick={() => play("clink")}
-            className="mt-4 w-full font-mono text-[8px] uppercase tracking-[0.14em] text-[--ink]/40 border border-[--ink]/15 py-2 hover:border-[--ink]/40 hover:text-[--ink]/70 transition-colors duration-150"
+            className="mt-4 w-full font-mono text-[8px] uppercase tracking-[0.14em] text-(--ink)/40 border border-(--ink)/15 py-2 hover:border-(--ink)/40 hover:text-(--ink)/70 transition-colors duration-150"
           >
             Test ·&thinsp;Clink
           </button>
@@ -130,7 +130,7 @@ export function SoundToggle() {
           {/* Small arrow pointing down to toggle */}
           <span
             aria-hidden="true"
-            className="absolute bottom-[-5px] left-4 w-2.5 h-2.5 bg-[--cream] border-r border-b border-[--ink]/12 rotate-45"
+            className="absolute bottom-[-5px] left-4 w-2.5 h-2.5 bg-(--cream) border-r border-b border-(--ink)/12 rotate-45"
           />
         </div>
       )}

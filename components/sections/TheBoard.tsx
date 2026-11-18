@@ -55,15 +55,15 @@ export function TheBoard() {
     <section
       data-section="the-board"
       data-nav-tone="dark"
-      className="bg-[--cream] py-20 md:py-28 border-t border-[--ink]/8"
+      className="bg-(--cream) py-20 md:py-28 border-t border-(--ink)/8"
       aria-labelledby="board-heading"
     >
       <div style={{ paddingInline: "var(--pad-x)" }}>
-        <Reveal className="mb-12 border-b border-[--ink]/10 pb-8">
+        <Reveal className="mb-12 border-b border-(--ink)/10 pb-8">
           <div className="mb-5"><ThekaLabel k="theBoard" color="ink" /></div>
           <h2
             id="board-heading"
-            className="font-display italic text-[--ink] leading-[1.05]"
+            className="font-display italic text-(--ink) leading-[1.05]"
             style={{ fontSize: "clamp(2rem, 5vw, 4rem)" }}
           >
             What&apos;s on tap.

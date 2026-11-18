@@ -1,37 +1,29 @@
-// (site) layout — wraps every public-facing page.
+// (site) layout — the Theka shell. Every room (page) inherits this.
 //
-// Provider order (innermost first):
-//   SoundProvider  → global Howler + sound state
-//   SmoothScroll   → Lenis + GSAP ScrollTrigger shared ticker
-//   PourTransition → cream overlay on route changes
-//   Nav            → fixed top, cobalt, with morph target
-//   main           → page content
-//   Footer         → ink background + video header
+// Shell (components/theka/):
+//   SmoothScroll   → Lenis + GSAP ticker; native scroll under reduced motion
+//   PourTransition → cobalt shutter wipe between routes (fade if reduced)
+//   Nav / Footer   → cobalt top bar, ink sign-off; strings from lib/theka/lang
+//   Grain          → fixed SVG noise over the page (no blend mode)
+//   Cursor         → dot + lerped ring + label; CSS-gated to fine pointers
 //
-// Fixed/global overlays (z-index order, lowest → highest):
-//   MorphingLogo       → z-45  — hero → nav scroll-driven logo morph
-//   ScrollProgressDrip → z-30  — right-edge cobalt fill line + droplet
-//   Cursor             → z-9999 — custom dot + ring + label, desktop only
-//   SoundToggle        → z-60  — bottom-left ambient toggle
-//   PintGlass          → z-40  — cart indicator, desktop only
-//   ThekaEgg           → z-100 — keyboard easter egg (type "theka")
-//   HappyHour          → z-100 — Konami easter egg
-//   FounderSecret      → z-60  — scroll-to-bottom secret
-//   ToastStack         → z-150 — cart/khata confirmation slips, bottom-right
-//   UpsellModal        → z-200 — "anything else?" after Add to Cart
-//   HangoverMode       → z-250 — idle toast (body.is-hungover class)
-//   DrunkScroll        → z-250 — fast-scroll toast (body.is-wobbly class)
-//   LoadingScreen      → z-200 — brand intro, once per session
-//   Bouncer            → z-300 — 18+ age gate (above everything)
+// Fixed/global overlays (z-index, lowest → highest):
+//   ScrollProgressDrip → 30   · PintGlass → 40 · MorphingLogo → 45
+//   Nav                → --z-nav (50)       · SoundToggle / FounderSecret → 60
+//   Grain (page)       → --z-grain (70)     · easter eggs → 100
+//   ToastStack 150 · UpsellModal / LoadingScreen 200 · Hangover / Drunk 250
+//   Bouncer            → 300 (18+ gate)
+//   PourTransition     → --z-shutter (400)  · Cursor → --z-cursor (9999)
 
-import { SmoothScroll }       from "@/components/motion/SmoothScroll";
+import { SmoothScroll }       from "@/components/theka/SmoothScroll";
 import { SoundProvider }      from "@/components/sound/SoundProvider";
 import { SoundToggle }        from "@/components/sound/SoundToggle";
-import { Nav }                from "@/components/sections/Nav";
-import { Footer }             from "@/components/sections/Footer";
+import { Nav }                from "@/components/theka/Nav";
+import { Footer }             from "@/components/theka/Footer";
+import { Grain }              from "@/components/theka/Grain";
 import { PintGlass }          from "@/components/glass/PintGlass";
-import { PourTransition }     from "@/components/transitions/PourTransition";
-import { Cursor }             from "@/components/ui/Cursor";
+import { PourTransition }     from "@/components/theka/PourTransition";
+import { Cursor }             from "@/components/theka/Cursor";
 import { ToastStack }         from "@/components/ui/ToastStack";
 import { UpsellModal }        from "@/components/ui/UpsellModal";
 import { LoadingScreen }      from "@/components/layout/LoadingScreen";
@@ -107,18 +99,8 @@ export default function SiteLayout({
       {/* 18+ age gate — z-[300], above everything. Legal pages exempt. */}
       <Bouncer />
 
-      {/* Grain filter definition — rendered once, referenced by all <Grain> instances */}
-      <svg
-        aria-hidden="true"
-        focusable="false"
-        style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }}
-      >
-        <defs>
-          <filter id="dt-grain" x="0%" y="0%" width="100%" height="100%" colorInterpolationFilters="linearRGB">
-            <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch" />
-          </filter>
-        </defs>
-      </svg>
+      {/* Page grain — one fixed overlay, plain opacity, no blend mode */}
+      <Grain fixed />
     </SoundProvider>
   );
 }

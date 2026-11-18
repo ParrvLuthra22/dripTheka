@@ -21,19 +21,19 @@ export function AlsoPouring({ currentSlug }: AlsoPouring) {
 
   return (
     <section
-      className="bg-[--cream] py-20 md:py-28 border-t border-[--ink]/8"
+      className="bg-(--cream) py-20 md:py-28 border-t border-(--ink)/8"
       aria-label="Also pouring"
     >
       <div style={{ paddingInline: "var(--pad-x)" }}>
         {/* Header */}
         <Reveal className="flex items-center justify-between mb-10">
-          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[--ink]/30">
+          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-(--ink)/30">
             Also Pouring
           </p>
           <Link
             href="/pour/pour-001"
             data-hover
-            className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--blue] hover:text-[--ink] transition-colors"
+            className="font-mono text-[9px] uppercase tracking-[0.14em] text-(--blue) hover:text-(--ink) transition-colors"
           >
             See all →
           </Link>

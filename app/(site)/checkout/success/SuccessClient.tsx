@@ -11,7 +11,7 @@ import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { HeroPourFallback } from "@/components/glass/HeroPour";
 import { Receipt, type ReceiptItem } from "@/components/sections/checkout/Receipt";
-import { Grain } from "@/components/ui/Grain";
+import { Grain } from "@/components/theka/Grain";
 import { useSound } from "@/components/sound/SoundProvider";
 import { formatPrice } from "@/lib/utils/format";
 
@@ -59,10 +59,13 @@ export function SuccessClient({ orderNumber, deposit, total, dropStr }: SuccessC
   }, [muted, play]);
 
   // ── Fetch order data for the receipt ──────────────────────────────────
+  const isDevOrder =
+    !orderNumber || orderNumber.startsWith("DT-DEV") || orderNumber.startsWith("dev-");
+
   useEffect(() => {
-    if (!orderNumber || orderNumber.startsWith("DT-DEV") || orderNumber.startsWith("dev-")) {
-      // Dev order — show with placeholder items
-      setOrderData({
+    if (isDevOrder) {
+      // Dev order — show with placeholder items (set async, like a fetch)
+      const id = requestAnimationFrame(() => setOrderData({
         customerName: "Guest",
         createdAt:    new Date().toISOString(),
         items: [{
@@ -72,8 +75,8 @@ export function SuccessClient({ orderNumber, deposit, total, dropStr }: SuccessC
           lineTotalPaise: total,
         }],
         subtotalPaise: total,
-      });
-      return;
+      }));
+      return () => cancelAnimationFrame(id);
     }
 
     fetch(`/api/reserve/receipt/${orderNumber}`)
@@ -91,7 +94,7 @@ export function SuccessClient({ orderNumber, deposit, total, dropStr }: SuccessC
         });
       })
       .catch(() => setFetchFailed(true));
-  }, [orderNumber, total]);
+  }, [orderNumber, total, isDevOrder]);
 
   // ── Items for receipt (fallback uses total) ───────────────────────────
   const receiptItems: ReceiptItem[] = orderData?.items ?? (total > 0
@@ -191,15 +194,15 @@ export function SuccessClient({ orderNumber, deposit, total, dropStr }: SuccessC
             className="text-center mb-6"
           >
             <h1
-              className="font-display italic text-[--ink]"
+              className="font-display italic text-(--ink)"
               style={{ fontSize: "clamp(1.75rem, 5vw, 3.5rem)" }}
             >
               Stool reserved.
             </h1>
             {fetchFailed && (
-              <p className="font-mono text-[9px] text-[--ink]/40 uppercase tracking-widest mt-2">
+              <p className="font-mono text-[9px] text-(--ink)/40 uppercase tracking-widest mt-2">
                 We couldn&apos;t load your receipt — but your order went through.{" "}
-                <a href="mailto:hi@driptheka.com" className="underline hover:text-[--blue]">
+                <a href="mailto:hi@driptheka.com" className="underline hover:text-(--blue)">
                   Contact us
                 </a>{" "}
                 if you have questions.

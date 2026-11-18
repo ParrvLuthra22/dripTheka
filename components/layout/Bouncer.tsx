@@ -13,6 +13,7 @@
 // Cookie: dt_bouncer_passed=1, max-age 30 days, sameSite=lax
 // Exempt: /legal/*, /not-found (accessible without gate, for compliance)
 
+import { useHydrated } from "@/lib/theka/hooks";
 import {
   useState, useEffect, useRef, useCallback,
   type KeyboardEvent as ReactKeyboardEvent,
@@ -21,7 +22,7 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { WineGlassMark } from "@/components/glass/WineGlassMark";
 import { useSound }      from "@/components/sound/SoundProvider";
-import { Grain }         from "@/components/ui/Grain";
+import { Grain }         from "@/components/theka/Grain";
 
 // ── Cookie helpers ────────────────────────────────────────────────────────
 
@@ -71,30 +72,30 @@ export function Bouncer() {
   const { play, muted } = useSound();
   const prefersReduced = useReducedMotion();
 
-  const [phase, setPhase]   = useState<Phase>("checking");
   const primaryRef           = useRef<HTMLButtonElement>(null);
   const secondaryRef         = useRef<HTMLButtonElement>(null);
 
-  // ── Determine initial phase (client-side only to avoid hydration mismatch) ──
+  // ── Phase (derived; client-only to avoid hydration mismatch) ─────────────
+  // The exemption is decided by the LANDING path only — later navigation
+  // within the session doesn't re-check (same as before).
+  const hydrated               = useHydrated();
+  const [landingPath]          = useState(pathname);
+  const [dismissed, setDismissed] = useState(false);
+  const phase: Phase =
+    !hydrated ? "checking"
+    : dismissed || isExempt(landingPath) || hasBouncer() ? "hidden"
+    : "show";
+
+  // Side effects of showing the gate (no state writes here)
+  const shown = phase === "show";
   useEffect(() => {
-    if (isExempt(pathname)) {
-      setPhase("hidden");
-      return;
-    }
-
-    if (hasBouncer()) {
-      setPhase("hidden");
-    } else {
-      setPhase("show");
-      document.body.style.overflow = "hidden";
-      track("bouncer_shown");
-
-      // Focus primary after entrance animation
-      const t = setTimeout(() => primaryRef.current?.focus(), 500);
-      return () => clearTimeout(t);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only on mount — pathname changes within same session don't recheck
+    if (!shown) return;
+    document.body.style.overflow = "hidden";
+    track("bouncer_shown");
+    // Focus primary after entrance animation
+    const t = setTimeout(() => primaryRef.current?.focus(), 500);
+    return () => clearTimeout(t);
+  }, [shown]);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -102,7 +103,7 @@ export function Bouncer() {
     setBouncer();
     track("bouncer_passed");
     if (!muted) play("clink");
-    setPhase("hidden");
+    setDismissed(true);
     document.body.style.overflow = "";
   }, [muted, play]);
 
@@ -174,10 +175,10 @@ export function Bouncer() {
             className="relative z-10 flex flex-col items-center text-center gap-6 px-6 max-w-[960px]"
             style={{ paddingInline: "var(--pad-x, 1.5rem)" }}
           >
-            {/* Headline — Tanker, per-char stagger with inline props */}
+            {/* Headline — Rozha One, per-char stagger with inline props */}
             <h1
               id="bouncer-title"
-              className="font-tanker text-[#E4E2DD] uppercase leading-none"
+              className="font-loud text-[#E4E2DD] uppercase leading-none"
               style={{ fontSize: "clamp(4rem, 12vw, 10rem)" }}
             >
               {HEADLINE_CHARS.map((ch, i) => (

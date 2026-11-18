@@ -3,6 +3,7 @@
 // ToastStack — small brand-styled confirmation slips, bottom-right.
 // Fed by useToastStore.push(message, tone). Self-dismissing, stackable.
 
+import { useHydrated } from "@/lib/theka/hooks";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -27,7 +28,7 @@ function ToastItem({ id, message, tone }: Toast) {
       onClick={() => dismiss(id)}
       className={cn(
         "font-mono text-[10px] uppercase tracking-[0.12em] px-4 py-3 border-2 border-black shadow-[3px_3px_0_0_#141518] cursor-default select-none max-w-[260px] pointer-events-auto",
-        tone === "blue" ? "bg-[--blue] text-[--cream]" : "bg-[--cream] text-[--ink]"
+        tone === "blue" ? "bg-(--blue) text-(--cream)" : "bg-(--cream) text-(--ink)"
       )}
     >
       {message}
@@ -37,8 +38,7 @@ function ToastItem({ id, message, tone }: Toast) {
 
 export function ToastStack() {
   const toasts = useToastStore((s) => s.toasts);
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useHydrated();
   if (!mounted) return null;
 
   return createPortal(

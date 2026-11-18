@@ -1,6 +1,6 @@
 "use client";
 
-// HandText — Caveat font wrapper for chalk/handwriting annotations.
+// HandText — hand-annotation wrapper (Fraunces italic via --font-hand) for chalk/handwriting annotations.
 // Sizes: sm (14px), md (20px), lg (28px).
 // Rotation is clamped to ±5 degrees.
 // Add max-sm:hidden on the wrapper span for margin notes that should hide on mobile.
@@ -40,7 +40,7 @@ export function HandText({
     <span
       className={cn("inline-block whitespace-nowrap", className)}
       style={{
-        fontFamily:  "var(--font-caveat, 'Caveat', cursive)",
+        fontFamily:  "var(--font-hand)",
         fontSize:    SIZE_MAP[size],
         fontWeight:  weight,
         color,

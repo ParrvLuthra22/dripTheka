@@ -49,12 +49,12 @@ export function ScrollProgressDrip() {
       className="fixed right-2 top-0 bottom-0 w-[2px] z-30 pointer-events-none"
     >
       {/* Track */}
-      <div className="absolute inset-0 bg-[--ink]/8" />
+      <div className="absolute inset-0 bg-(--ink)/8" />
 
       {/* Fill */}
       <div
         ref={fillRef}
-        className="absolute top-0 left-0 right-0 bg-[--blue]"
+        className="absolute top-0 left-0 right-0 bg-(--blue)"
         style={{
           height: "0%",
           transition: "height 80ms linear",

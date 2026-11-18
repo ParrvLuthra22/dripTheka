@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/Button";
 import { ScrambleText } from "@/components/motion/ScrambleText";
 import { TextSticker } from "@/components/ui/TextSticker";
 import { Sticker } from "@/components/ui/Sticker";
-import { Grain } from "@/components/ui/Grain";
+import { Grain } from "@/components/theka/Grain";
 import { ChalkMark } from "@/components/ui/ChalkMark";
 import { HandText } from "@/components/ui/HandText";
 import { useFoamStore } from "@/lib/store/foam";
@@ -195,7 +195,7 @@ export function Hero() {
                   stagger={60}
                   speed={40}
                   onComplete={onScrambleComplete}
-                  className="font-tanker text-[#E4E2DD] whitespace-nowrap uppercase"
+                  className="font-loud text-[#E4E2DD] whitespace-nowrap uppercase"
                   style={{
                     fontSize:      "clamp(2.5rem, 8vw, 6.5rem)",
                     letterSpacing: "-0.01em",
@@ -266,11 +266,11 @@ export function Hero() {
 
       {/* ── Sticker layer — slapped-on streetwear chaos (desktop only) ──── */}
       <div className="absolute inset-0 z-10 pointer-events-none hidden lg:block" aria-hidden="true">
-        <TextSticker variant="stamp" tone="neon" rotate={-12}
+        <TextSticker variant="stamp" tone="blue" rotate={-12}
           className="absolute left-[5vw] top-[26%]">
           est<br />mmxxvi<br />delhi
         </TextSticker>
-        <TextSticker variant="slap" tone="neon" rotate={7}
+        <TextSticker variant="slap" tone="blue" rotate={7}
           className="absolute right-[6vw] top-[30%]">
           no restocks
         </TextSticker>

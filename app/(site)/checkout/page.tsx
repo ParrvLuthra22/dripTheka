@@ -10,7 +10,7 @@ import { z } from "zod";
 import { useCartStore } from "@/lib/store/cart";
 import { formatPrice } from "@/lib/utils/format";
 import { ProductIllustration } from "@/components/sections/ProductIllustration";
-import { Grain } from "@/components/ui/Grain";
+import { Grain } from "@/components/theka/Grain";
 import Link from "next/link";
 import { copy } from "@/data/copy";
 import { pickRandom } from "@/lib/utils/copy";
@@ -76,7 +76,7 @@ function Field({
     <div className="space-y-1.5">
       <label
         htmlFor={name}
-        className="block font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink]/45"
+        className="block font-mono text-[9px] uppercase tracking-[0.14em] text-(--ink)/45"
       >
         {label}
       </label>
@@ -98,8 +98,8 @@ function Field({
 }
 
 const INPUT_BASE =
-  "w-full bg-transparent border border-[--ink]/20 focus:border-[--ink] " +
-  "font-sans text-sm text-[--ink] placeholder-[--ink]/25 " +
+  "w-full bg-transparent border border-(--ink)/20 focus:border-(--ink) " +
+  "font-sans text-sm text-(--ink) placeholder-(--ink)/25 " +
   "px-3 py-2.5 outline-none transition-colors duration-200";
 
 // ── 3D tilt on hover — "Your Glass" panel (gentle, large surface) ──────────
@@ -135,11 +135,11 @@ export default function CheckoutPage() {
   // If cart empty — redirect to cart
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-[--cream] flex items-center justify-center">
+      <div className="min-h-screen bg-(--cream) flex items-center justify-center">
         <div className="text-center space-y-4">
-          <p className="font-display italic text-3xl text-[--ink]/30">{copy.cart.empty}</p>
+          <p className="font-display italic text-3xl text-(--ink)/30">{copy.cart.empty}</p>
           <Link href="/cart"
-            className="font-mono text-[10px] uppercase tracking-widest border border-[--blue] text-[--blue] px-5 py-2 hover:bg-[--blue] hover:text-[--cream] transition-all">
+            className="font-mono text-[10px] uppercase tracking-widest border border-(--blue) text-(--blue) px-5 py-2 hover:bg-(--blue) hover:text-(--cream) transition-all">
             {copy.cta.backToHome}
           </Link>
         </div>
@@ -277,7 +277,7 @@ export default function CheckoutPage() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div data-nav-tone="dark" className="relative bg-[--cream] min-h-screen py-12 md:py-20" style={{ paddingInline: "var(--pad-x)" }}>
+    <div data-nav-tone="dark" className="relative bg-(--cream) min-h-screen py-12 md:py-20" style={{ paddingInline: "var(--pad-x)" }}>
       <Grain opacity={0.04} />
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-12 lg:gap-20">
 
@@ -288,10 +288,10 @@ export default function CheckoutPage() {
             animate={SECTION_VARIANTS.animate}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
-            <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink]/30 mb-2">
+            <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-(--ink)/30 mb-2">
               Checkout
             </p>
-            <h1 className="font-display italic text-[--ink]"
+            <h1 className="font-display italic text-(--ink)"
               style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)" }}>
               Pour it out.
             </h1>
@@ -305,7 +305,7 @@ export default function CheckoutPage() {
             transition={{ duration: 0.5, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
             className="space-y-5"
           >
-            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[--ink] border-b border-[--ink]/10 pb-2">
+            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-(--ink) border-b border-(--ink)/10 pb-2">
               01 · Contact
             </p>
             <Field label="Email *" name="email" error={errors.email}>
@@ -328,7 +328,7 @@ export default function CheckoutPage() {
             transition={{ duration: 0.5, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
             className="space-y-5"
           >
-            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[--ink] border-b border-[--ink]/10 pb-2">
+            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-(--ink) border-b border-(--ink)/10 pb-2">
               02 · Shipping
             </p>
 
@@ -421,7 +421,7 @@ export default function CheckoutPage() {
               : `Pay ${formatPrice(totalDeposit())} now → Razorpay`}
           </button>
 
-          <p className="font-mono text-[9px] text-[--ink]/25 text-center uppercase tracking-[0.1em]">
+          <p className="font-mono text-[9px] text-(--ink)/25 text-center uppercase tracking-[0.1em]">
             Secured by Razorpay · India&apos;s most trusted payment gateway
           </p>
         </form>
@@ -436,14 +436,14 @@ export default function CheckoutPage() {
           <div
             onMouseMove={onPanelMove}
             onMouseLeave={onPanelLeave}
-            className="bg-[--ink] p-6 space-y-5"
+            className="bg-(--ink) p-6 space-y-5"
             style={{
               transformStyle: "preserve-3d",
               transition: "transform 0.4s cubic-bezier(.2,.9,.3,1)",
               willChange: "transform",
             }}
           >
-            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[--cream]/30">
+            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-(--cream)/30">
               Your Glass
             </p>
 
@@ -454,7 +454,7 @@ export default function CheckoutPage() {
                 const accent  = item.product.colors[1] ?? "#E4E2DD";
                 return (
                   <div key={`${item.product.id}-${item.size}`}
-                    className="flex items-center gap-3 pb-4 border-b border-[--cream]/8">
+                    className="flex items-center gap-3 pb-4 border-b border-(--cream)/8">
                     <div className="w-10 h-12 shrink-0 overflow-hidden"
                       style={{ backgroundColor: primary }}>
                       <ProductIllustration
@@ -464,18 +464,18 @@ export default function CheckoutPage() {
                         className="w-full h-full" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-display italic text-[--cream] text-sm truncate">
+                      <p className="font-display italic text-(--cream) text-sm truncate">
                         {item.product.name}
                       </p>
-                      <p className="font-mono text-[8px] uppercase tracking-widest text-[--cream]/35 mt-0.5">
+                      <p className="font-mono text-[8px] uppercase tracking-widest text-(--cream)/35 mt-0.5">
                         {item.size} · qty {item.quantity}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="font-mono text-xs text-[--cream] tabular-nums">
+                      <p className="font-mono text-xs text-(--cream) tabular-nums">
                         {formatPrice(item.product.price * item.quantity)}
                       </p>
-                      <p className="font-mono text-[8px] text-[--blue] tabular-nums">
+                      <p className="font-mono text-[8px] text-(--blue) tabular-nums">
                         {formatPrice(item.depositAmount * item.quantity)} now
                       </p>
                     </div>
@@ -487,32 +487,32 @@ export default function CheckoutPage() {
             {/* Totals */}
             <div className="space-y-2 pt-1">
               <div className="flex justify-between">
-                <span className="font-mono text-[9px] uppercase tracking-widest text-[--cream]/40">
+                <span className="font-mono text-[9px] uppercase tracking-widest text-(--cream)/40">
                   Full order
                 </span>
-                <span className="font-mono text-xs text-[--cream]/60 tabular-nums">
+                <span className="font-mono text-xs text-(--cream)/60 tabular-nums">
                   {formatPrice(totalFull())}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="font-mono text-[9px] uppercase tracking-widest text-[--blue]">
+                <span className="font-mono text-[9px] uppercase tracking-widest text-(--blue)">
                   Deposit (30%)
                 </span>
-                <span className="font-mono text-sm font-bold text-[--blue] tabular-nums">
+                <span className="font-mono text-sm font-bold text-(--blue) tabular-nums">
                   {formatPrice(totalDeposit())}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="font-mono text-[9px] uppercase tracking-widest text-[--cream]/25">
+                <span className="font-mono text-[9px] uppercase tracking-widest text-(--cream)/25">
                   Balance due
                 </span>
-                <span className="font-mono text-xs text-[--cream]/30 tabular-nums">
+                <span className="font-mono text-xs text-(--cream)/30 tabular-nums">
                   {formatPrice(totalFull() - totalDeposit())}
                 </span>
               </div>
             </div>
 
-            <p className="font-mono text-[8px] uppercase tracking-[0.1em] text-[--cream]/20 leading-relaxed">
+            <p className="font-mono text-[8px] uppercase tracking-[0.1em] text-(--cream)/20 leading-relaxed">
               Remaining balance collected on Opening Night · No charges now beyond the deposit
             </p>
           </div>

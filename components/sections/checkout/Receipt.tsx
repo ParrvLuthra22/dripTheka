@@ -12,6 +12,7 @@ import {
 } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
 import { formatPrice } from "@/lib/utils/format";
 import { DROP_DATE } from "@/data/pour-001";
 import { copy } from "@/data/copy";
@@ -319,7 +320,7 @@ export function Receipt({
             {/* ── Header ──────────────────────────────────────────── */}
             <div className="text-center space-y-1 mb-2">
               <div
-                className="font-tanker uppercase tracking-tight"
+                className="font-loud uppercase tracking-tight"
                 style={{ fontSize: "clamp(1.8rem, 6vw, 2.5rem)", color: INK, lineHeight: 0.9 }}
               >
                 DRIP THEKA
@@ -493,31 +494,31 @@ export function Receipt({
         <button
           onClick={handleShare}
           data-hover
-          className="font-mono text-[9px] uppercase tracking-[0.14em] border border-[--ink]/40 text-[--ink] px-4 py-2.5 hover:border-[--blue] hover:text-[--blue] transition-all duration-200 flex items-center gap-2"
+          className="font-mono text-[9px] uppercase tracking-[0.14em] border border-(--ink)/40 text-(--ink) px-4 py-2.5 hover:border-(--blue) hover:text-(--blue) transition-all duration-200 flex items-center gap-2"
         >
           <span aria-hidden="true">📸</span> Share to Story
         </button>
         <button
           onClick={handleDownload}
           data-hover
-          className="font-mono text-[9px] uppercase tracking-[0.14em] border border-[--ink]/40 text-[--ink] px-4 py-2.5 hover:border-[--blue] hover:text-[--blue] transition-all duration-200 flex items-center gap-2"
+          className="font-mono text-[9px] uppercase tracking-[0.14em] border border-(--ink)/40 text-(--ink) px-4 py-2.5 hover:border-(--blue) hover:text-(--blue) transition-all duration-200 flex items-center gap-2"
         >
           <span aria-hidden="true">📥</span> Download
         </button>
-        <a
+        <Link
           href="/"
           data-hover
-          className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink]/50 hover:text-[--ink] transition-colors px-4 py-2.5"
+          className="font-mono text-[9px] uppercase tracking-[0.14em] text-(--ink)/50 hover:text-(--ink) transition-colors px-4 py-2.5"
         >
           {copy.cta.backToHome}
-        </a>
+        </Link>
       </motion.div>
 
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 2.6, duration: 0.4 }}
-        className="font-mono text-[8px] uppercase tracking-[0.12em] text-[--ink]/30 text-center mt-3 max-w-[360px]"
+        className="font-mono text-[8px] uppercase tracking-[0.12em] text-(--ink)/30 text-center mt-3 max-w-[360px]"
       >
         we&apos;ll email you a copy too · check spam in case
       </motion.p>

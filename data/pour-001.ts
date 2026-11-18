@@ -15,6 +15,8 @@ export interface Product {
   id: string;
   slug: string;
   name: string;
+  /** Devanagari / Hinglish subtitle shown under the name on The Bar. */
+  hindi: string;
   tagline: string;
   type: GarmentType;
   fit: FitType;
@@ -29,6 +31,10 @@ export interface Product {
   dropNumber: "001";
   collectionSlug: "pour-001";
   imageAlt: string;
+  /** Front-of-garment image (public path). Served in the glass on The Bar. */
+  frontImage: string;
+  /** Back-of-garment image (public path). Shown via the FRONT/BACK toggle. */
+  backImage: string;
   isLimited: boolean;
   totalUnits: number;
 }
@@ -59,6 +65,7 @@ export const POUR_001: Pour = {
       id: "dt-001-001",
       slug: "first-round-tee",
       name: "First Round Tee",
+      hindi: "पहला राउंड",
       tagline: "The one you'll wear until it falls apart.",
       type: "tee",
       fit: "boxy",
@@ -86,6 +93,8 @@ export const POUR_001: Pour = {
       dropNumber: "001",
       collectionSlug: "pour-001",
       imageAlt: "Boxy cobalt blue tee with cream wine glass logo on left chest",
+      frontImage: "/bar/first-round-tee-front.png",
+      backImage:  "/bar/first-round-tee-back.png",
       isLimited: true,
       totalUnits: 200,
     },
@@ -93,6 +102,7 @@ export const POUR_001: Pour = {
       id: "dt-001-002",
       slug: "last-call-hoodie",
       name: "Last Call Hoodie",
+      hindi: "आख़िरी बुलावा",
       tagline: "For when the party moves to your rooftop.",
       type: "hoodie",
       fit: "oversized",
@@ -118,6 +128,8 @@ export const POUR_001: Pour = {
       dropNumber: "001",
       collectionSlug: "pour-001",
       imageAlt: "Ink black oversized hoodie with LAST CALL embroidery on back",
+      frontImage: "/bar/last-call-hoodie-front.png",
+      backImage:  "/bar/last-call-hoodie-back.png",
       isLimited: true,
       totalUnits: 200,
     },
@@ -125,6 +137,7 @@ export const POUR_001: Pour = {
       id: "dt-001-003",
       slug: "regular-cargo",
       name: "The Regular Cargo",
+      hindi: "रोज़ वाला",
       tagline: "Pockets for your problems. Fit for the front row.",
       type: "cargo",
       fit: "regular",
@@ -150,6 +163,8 @@ export const POUR_001: Pour = {
       dropNumber: "001",
       collectionSlug: "pour-001",
       imageAlt: "Cream cargo pants with POUR 001 stamp on left pocket",
+      frontImage: "/bar/regular-cargo-front.png",
+      backImage:  "/bar/regular-cargo-back.png",
       isLimited: true,
       totalUnits: 200,
     },
@@ -157,6 +172,7 @@ export const POUR_001: Pour = {
       id: "dt-001-004",
       slug: "opening-night-jacket",
       name: "Opening Night Jacket",
+      hindi: "पहली रात",
       tagline: "The reason you came.",
       type: "jacket",
       fit: "regular",
@@ -181,6 +197,8 @@ export const POUR_001: Pour = {
       dropNumber: "001",
       collectionSlug: "pour-001",
       imageAlt: "Cobalt waxed cotton jacket with cream quilted liner",
+      frontImage: "/bar/opening-night-jacket-front.png",
+      backImage:  "/bar/opening-night-jacket-back.png",
       isLimited: true,
       totalUnits: 100,
     },
@@ -188,6 +206,7 @@ export const POUR_001: Pour = {
       id: "dt-001-005",
       slug: "tapped-out-set",
       name: "Tapped Out Set",
+      hindi: "खतम",
       tagline: "Matching sets for people who have their life together (mostly).",
       type: "set",
       fit: "boxy",
@@ -212,6 +231,8 @@ export const POUR_001: Pour = {
       dropNumber: "001",
       collectionSlug: "pour-001",
       imageAlt: "Cream matching set with wine glass print on shorts back hem",
+      frontImage: "/bar/tapped-out-set-front.png",
+      backImage:  "/bar/tapped-out-set-back.png",
       isLimited: true,
       totalUnits: 150,
     },
@@ -219,6 +240,7 @@ export const POUR_001: Pour = {
       id: "dt-001-006",
       slug: "wrong-theka-cap",
       name: "Wrong Theka Cap",
+      hindi: "ग़लत ठेका",
       tagline: "You found it. That's enough.",
       type: "tee", // using tee as closest type for accessories in V1
       fit: "regular",
@@ -242,6 +264,8 @@ export const POUR_001: Pour = {
       dropNumber: "001",
       collectionSlug: "pour-001",
       imageAlt: "Ink structured 6-panel cap with WRONG THEKA embroidery",
+      frontImage: "/bar/wrong-theka-cap-front.png",
+      backImage:  "/bar/wrong-theka-cap-back.png",
       isLimited: true,
       totalUnits: 300,
     },

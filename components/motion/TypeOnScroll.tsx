@@ -41,43 +41,60 @@ export function TypeOnScroll({
 }: TypeOnScrollProps) {
   const ref = useRef<HTMLElement>(null);
   const [revealed, setRevealed] = useState(0); // count of characters revealed so far
+  const [started,  setStarted]  = useState(false);
   const [done,     setDone]     = useState(false);
-  const triggered = useRef(false);
 
-  // Flatten segments into a list of "tokens" where each token is either
-  // a single char to reveal, or a complete ReactNode chunk (counted as `chars` chars).
-  const tokens = useRef<Array<{ kind: "char"; ch: string } | { kind: "node"; node: ReactNode }>>([]);
-  if (tokens.current.length === 0) {
+  // Flatten segments into "tokens": a single char to reveal, or a complete
+  // ReactNode chunk (weighted as `chars` chars via empty padding tokens).
+  // Computed once — content is static for the life of the component.
+  type Token = { kind: "char"; ch: string } | { kind: "node"; node: ReactNode };
+  const [tokens] = useState<Token[]>(() => {
+    const out: Token[] = [];
     if (segments) {
       for (const seg of segments) {
         if (typeof seg === "string") {
-          for (const ch of seg) tokens.current.push({ kind: "char", ch });
+          for (const ch of seg) out.push({ kind: "char", ch });
         } else {
-          // Atomic node — treat as a single "reveal" with weight `chars`
           for (let i = 0; i < (seg.chars ?? 1); i++) {
-            tokens.current.push(i === 0
-              ? { kind: "node", node: seg.node }
-              : { kind: "char", ch: "" } // padding so the node fits the total char count
-            );
+            out.push(i === 0 ? { kind: "node", node: seg.node } : { kind: "char", ch: "" });
           }
         }
       }
     } else if (text) {
-      for (const ch of text) tokens.current.push({ kind: "char", ch });
+      for (const ch of text) out.push({ kind: "char", ch });
     }
-  }
+    return out;
+  });
 
-  const totalChars = tokens.current.length;
+  const totalChars = tokens.length;
 
-  // IntersectionObserver — trigger typewriter
+  // IntersectionObserver → typewriter (reduced motion reveals everything at once)
   useEffect(() => {
     const el = ref.current;
-    if (!el || triggered.current) return;
+    if (!el) return;
+    let intervalId = 0;
+
+    const startTyping = () => {
+      setStarted(true);
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        setRevealed(totalChars);
+        setDone(true);
+        return;
+      }
+      let n = 0;
+      intervalId = window.setInterval(() => {
+        n += 1;
+        setRevealed(n);
+        if (n >= totalChars) {
+          window.clearInterval(intervalId);
+          setDone(true);
+        }
+      }, speed);
+    };
 
     const obs = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && !triggered.current) {
-          triggered.current = true;
+        if (entry.isIntersecting) {
           obs.disconnect();
           startTyping();
         }
@@ -86,29 +103,11 @@ export function TypeOnScroll({
     );
 
     obs.observe(el);
-    return () => obs.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [threshold]);
-
-  // Reduced motion → reveal everything immediately
-  function startTyping() {
-    if (typeof window !== "undefined" &&
-        window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setRevealed(totalChars);
-      setDone(true);
-      return;
-    }
-
-    let n = 0;
-    const id = window.setInterval(() => {
-      n += 1;
-      setRevealed(n);
-      if (n >= totalChars) {
-        window.clearInterval(id);
-        setDone(true);
-      }
-    }, speed);
-  }
+    return () => {
+      obs.disconnect();
+      window.clearInterval(intervalId);
+    };
+  }, [threshold, speed, totalChars]);
 
   // Render: walk tokens, including only the first N
   const renderedNodes: ReactNode[] = [];
@@ -122,7 +121,7 @@ export function TypeOnScroll({
     }
   };
 
-  for (const tok of tokens.current) {
+  for (const tok of tokens) {
     if (count >= revealed) break;
     if (tok.kind === "char") {
       charBuffer += tok.ch;
@@ -135,7 +134,7 @@ export function TypeOnScroll({
   flush();
 
   // Cursor (blinking)
-  const showCursor = !done && triggered.current;
+  const showCursor = started && !done;
 
   // Conditionally choose the wrapper element type
   const Tag = as as "p" | "h2" | "h3" | "blockquote" | "div";

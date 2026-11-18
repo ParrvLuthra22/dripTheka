@@ -51,7 +51,7 @@ function EditorialBreak() {
           <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#E4E2DD]/40 mb-2">
             Pour
           </span>
-          <span className="font-tanker uppercase text-[#E4E2DD]/85" style={{ fontSize: "clamp(6rem, 9vw, 11rem)", lineHeight: 0.82 }}>
+          <span className="font-loud uppercase text-[#E4E2DD]/85" style={{ fontSize: "clamp(6rem, 9vw, 11rem)", lineHeight: 0.82 }}>
             001
           </span>
         </div>
@@ -134,12 +134,12 @@ export function PourProductGrid() {
   return (
     <section
       data-nav-tone="dark"
-      className="bg-[--cream] py-16 md:py-24"
+      className="bg-(--cream) py-16 md:py-24"
       style={{ paddingInline: "var(--pad-x)" }}
       aria-label="Product grid"
     >
       {/* ── Filter + Sort controls ─────────────────────────────── */}
-      <Reveal className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-10 pb-6 border-b border-[--ink]/10">
+      <Reveal className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-10 pb-6 border-b border-(--ink)/10">
         {/* Filter BottleCaps */}
         <div
           ref={filterGroupRef}
@@ -171,7 +171,7 @@ export function PourProductGrid() {
         <div className="flex items-center gap-2">
           <label
             htmlFor="pour-sort"
-            className="font-mono text-[9px] uppercase tracking-[0.12em] text-[--ink]/40"
+            className="font-mono text-[9px] uppercase tracking-[0.12em] text-(--ink)/40"
           >
             Sort
           </label>
@@ -179,7 +179,7 @@ export function PourProductGrid() {
             id="pour-sort"
             value={activeSort}
             onChange={(e) => setActiveSort(e.target.value as SortKey)}
-            className="font-mono text-[9px] uppercase tracking-[0.12em] text-[--ink] bg-transparent border border-[--ink]/20 px-2 py-1.5 focus:outline-none focus:border-[--blue] transition-colors"
+            className="font-mono text-[9px] uppercase tracking-[0.12em] text-(--ink) bg-transparent border border-(--ink)/20 px-2 py-1.5 focus:outline-none focus:border-(--blue) transition-colors"
           >
             {SORTS.map(({ key, label }) => (
               <option key={key} value={key}>{label}</option>
@@ -199,8 +199,8 @@ export function PourProductGrid() {
         >
           {products.length === 0 ? (
             <div className="py-24 text-center">
-              <p className="font-display italic text-3xl text-[--ink]/30">Nothing here yet.</p>
-              <p className="font-mono text-xs text-[--ink]/20 mt-2 uppercase tracking-widest">
+              <p className="font-display italic text-3xl text-(--ink)/30">Nothing here yet.</p>
+              <p className="font-mono text-xs text-(--ink)/20 mt-2 uppercase tracking-widest">
                 More types coming in Pour #002
               </p>
             </div>
@@ -236,20 +236,20 @@ export function PourProductGrid() {
       </AnimatePresence>
 
       {/* ── Footer CTA ────────────────────────────────────────── */}
-      <Reveal delay={160} className="mt-16 pt-8 border-t border-[--ink]/10 text-center">
+      <Reveal delay={160} className="mt-16 pt-8 border-t border-(--ink)/10 text-center">
         <p
-          className="font-display italic text-[--ink]/60 mb-6"
+          className="font-display italic text-(--ink)/60 mb-6"
           style={{ fontSize: "clamp(1.1rem, 2vw, 1.5rem)" }}
         >
           Didn&apos;t find your fit?
         </p>
-        <p className="font-sans text-sm text-[--ink]/40 mb-6 max-w-[400px] mx-auto leading-relaxed">
+        <p className="font-sans text-sm text-(--ink)/40 mb-6 max-w-[400px] mx-auto leading-relaxed">
           Join the Regulars and help shape Pour #002 — you tell us what to make next.
         </p>
         <Link
           href="/regulars"
           data-hover
-          className="inline-block font-mono text-[10px] uppercase tracking-[0.14em] border border-[--blue] text-[--blue] px-6 py-3 hover:bg-[--blue] hover:text-[--cream] transition-all duration-200"
+          className="inline-block font-mono text-[10px] uppercase tracking-[0.14em] border border-(--blue) text-(--blue) px-6 py-3 hover:bg-(--blue) hover:text-(--cream) transition-all duration-200"
         >
           Join the Regulars →
         </Link>

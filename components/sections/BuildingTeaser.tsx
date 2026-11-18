@@ -42,7 +42,7 @@ function JournalCard({ post, index }: { post: (typeof BUILDING_POSTS)[number]; i
 
       {/* Title */}
       <h3
-        className="font-display italic text-[--ink] leading-tight mb-4"
+        className="font-display italic text-(--ink) leading-tight mb-4"
         style={{ fontSize: "clamp(1.5rem, 2vw, 2rem)" }}
       >
         {post.title}
@@ -54,7 +54,7 @@ function JournalCard({ post, index }: { post: (typeof BUILDING_POSTS)[number]; i
       </p>
 
       {/* Arrow */}
-      <div className="absolute bottom-6 right-6 font-mono text-xs font-bold text-[--blue] uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+      <div className="absolute bottom-6 right-6 font-mono text-xs font-bold text-(--blue) uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity duration-200">
         READ →
       </div>
     </Link>
@@ -69,7 +69,7 @@ export function BuildingTeaser() {
     <section
       ref={sectionRef}
       data-nav-tone="dark"
-      className="bg-[--cream] overflow-x-hidden relative isolate"
+      className="bg-(--cream) overflow-x-hidden relative isolate"
       aria-labelledby="building-heading"
     >
       <div
@@ -82,14 +82,14 @@ export function BuildingTeaser() {
             <div className="mb-5"><ThekaLabel k="buildingTheka" color="ink" /></div>
             <h2
               id="building-heading"
-              className="font-display italic text-[--ink] leading-[1.05]"
+              className="font-display italic text-(--ink) leading-[1.05]"
               style={{ fontSize: "clamp(2rem, 5vw, 4rem)" }}
             >
               From the Founders.
             </h2>
           </div>
           {/* "dispatches" is a count, not a Theka proper noun — keep as Eyebrow inline */}
-          <p className="hidden md:flex items-center gap-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-[--ink]/50">
+          <p className="hidden md:flex items-center gap-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-(--ink)/50">
             <span className="block w-px h-5 bg-current opacity-40 shrink-0" aria-hidden="true" />
             {BUILDING_POSTS.length} dispatches
           </p>
@@ -123,7 +123,7 @@ export function BuildingTeaser() {
           <Link
             href="/building"
             data-hover
-            className="font-mono text-[10px] uppercase tracking-[0.14em] text-[--blue] hover:text-[--ink] transition-colors duration-200"
+            className="font-mono text-[10px] uppercase tracking-[0.14em] text-(--blue) hover:text-(--ink) transition-colors duration-200"
           >
             Read the journal&nbsp;→
           </Link>

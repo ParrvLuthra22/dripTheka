@@ -1,7 +1,8 @@
 "use client";
 
-// Nav — fixed top, full-width.
-// Cobalt #004AAD background, cream type, always.
+// Nav — fixed top, full-width. Part of the Theka shell.
+// Cobalt background, cream type, always (data-surface="blue" so the cursor
+// and floating glass flip to cream over it). All strings from lang.nav.
 //
 // CENTER: empty placeholder div with data-morph-anchor="nav" — this is
 // where MorphingLogo settles when the user scrolls past the hero. There is
@@ -24,26 +25,15 @@ import { useCartStore }  from "@/lib/store/cart";
 import { useKhataStore } from "@/lib/store/khata";
 import { CountUp }       from "@/components/motion/CountUp";
 import { UserMenu }      from "@/components/auth/UserMenu";
+import { lang }          from "@/lib/theka/lang";
+import { useMagnetic }   from "./useMagnetic";
+import { usePour }       from "./PourTransition";
+import { useHydrated }   from "@/lib/theka/hooks";
 
 // ── Links ────────────────────────────────────────────────────────────────
 
-const LEFT_LINKS = [
-  { label: "Pours",     href: "/pour/pour-001" },
-  { label: "Story",     href: "/story" },
-  { label: "Building",  href: "/building" },
-  { label: "Regulars",  href: "/regulars" },
-  { label: "Khata",     href: "/khata" },
-] as const;
-
-const MOBILE_LINKS = [
-  { label: "Pours",    href: "/pour/pour-001" },
-  { label: "Story",    href: "/story" },
-  { label: "Building", href: "/building" },
-  { label: "Regulars", href: "/regulars" },
-  { label: "Khata",    href: "/khata" },
-  { label: "Cart",     href: "/cart" },
-  { label: "Account",  href: "/account" },
-] as const;
+const LEFT_LINKS   = lang.nav.links;
+const MOBILE_LINKS = [...lang.nav.links, ...lang.nav.mobileExtra];
 
 // ── NavLink with hairline-draw hover underline ────────────────────────────
 
@@ -107,7 +97,7 @@ function SoundIndicator({ muted, onClick }: { muted: boolean; onClick: () => voi
           />
         ))}
       </span>
-      <span>Sound&nbsp;·&nbsp;{muted ? "Off" : "On"}</span>
+      <span>{muted ? lang.nav.soundOff : lang.nav.soundOn}</span>
       <style>{`
         @keyframes wave-bar {
           from { transform: scaleY(0.4); }
@@ -145,7 +135,7 @@ function ReservationCounter() {
       href="/pour/pour-001"
       data-hover
       className="hidden min-[1100px]:flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.14em] hover:opacity-70 transition-opacity"
-      aria-label={`${data.reserved} of ${data.total} reserved`}
+      aria-label={lang.nav.reservedAria(data.reserved, data.total)}
     >
       <span
         aria-hidden="true"
@@ -158,7 +148,7 @@ function ReservationCounter() {
         format={(n) => `${String(Math.round(n)).padStart(3, "0")}/${String(data.total).padStart(3, "0")}`}
         className="tabular-nums"
       />
-      <span className="opacity-60">Reserved</span>
+      <span className="opacity-60">{lang.nav.reserved}</span>
       <style>{`
         @keyframes reservation-pulse {
           0%, 100% { opacity: 1;   transform: scale(1); }
@@ -178,7 +168,7 @@ function PourIndicator({ count }: { count: number }) {
       href="/cart"
       data-hover
       data-cart-target
-      aria-label={`Cart, ${count} item${count !== 1 ? "s" : ""}`}
+      aria-label={lang.nav.cartAria(count)}
       className="hidden min-[900px]:flex items-center gap-2 hover:opacity-80 transition-opacity"
     >
       <svg width="18" height="22" viewBox="0 0 72 96" fill="none" aria-hidden="true">
@@ -217,13 +207,15 @@ function PourIndicator({ count }: { count: number }) {
 // ── WALK IN CTA — scrolls to Currently Pouring on homepage ───────────────
 
 function WalkInCTA({ onClick }: { onClick: () => void }) {
+  const ref = useMagnetic<HTMLButtonElement>();
   return (
     <button
+      ref={ref}
       onClick={onClick}
       data-hover-big
-      className="hidden min-[900px]:flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.14em] border border-[#E4E2DD]/40 text-[#E4E2DD] px-3 py-1.5 hover:bg-[#E4E2DD] hover:text-[#004AAD] transition-all duration-200"
+      className="hidden min-[900px]:flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.14em] border border-cream/40 text-cream px-3 py-1.5 hover:bg-cream hover:text-blue transition-colors duration-200"
     >
-      Walk In&nbsp;→
+      {lang.nav.walkIn}
     </button>
   );
 }
@@ -233,20 +225,25 @@ function WalkInCTA({ onClick }: { onClick: () => void }) {
 export function Nav() {
   const pathname  = usePathname();
   const navRef    = useRef<HTMLElement>(null);
+  const { pourTo } = usePour();
   const { muted, toggle: toggleSound } = useSoundStore();
   const { totalItems } = useCartStore();
   const count = totalItems();
   const khataCount = useKhataStore((s) => s.slugs.length);
 
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useHydrated();
 
   const lastY    = useRef(0);
   const isHidden = useRef(false);
   const [scrolled, setScrolled] = useState(false);
 
+  // Close the menu whenever the route changes (adjust-state-during-render).
   const [menuOpen, setMenuOpen] = useState(false);
-  useEffect(() => { setMenuOpen(false); }, [pathname]);
+  const [menuPath, setMenuPath] = useState(pathname);
+  if (menuPath !== pathname) {
+    setMenuPath(pathname);
+    setMenuOpen(false);
+  }
 
   useEffect(() => {
     const onScroll = () => {
@@ -290,23 +287,25 @@ export function Nav() {
       const target = document.querySelector('[data-section="currently-pouring"]');
       target?.scrollIntoView({ behavior: "smooth", block: "start" });
     } else {
-      // Navigate to home, then scroll target catches via hash
-      window.location.href = "/#currently-pouring";
+      // Pour to home; the hash lands on Currently Pouring.
+      pourTo("/#currently-pouring");
     }
-  }, [pathname]);
+  }, [pathname, pourTo]);
 
   return (
     <>
       <header
         ref={navRef}
+        data-surface="blue"
         style={{
           height: "var(--header-h)",
-          color:  "#E4E2DD",
-          backgroundColor: "#004AAD",
-          borderBottom: scrolled ? "1px solid rgba(228,226,221,0.1)" : "1px solid transparent",
+          zIndex: "var(--z-nav)",
+          borderBottom: scrolled
+            ? "1px solid color-mix(in srgb, var(--cream) 10%, transparent)"
+            : "1px solid transparent",
           transition: "border-color 0.3s ease",
         }}
-        className="fixed inset-x-0 top-0 z-50 pointer-events-none will-change-transform"
+        className="fixed inset-x-0 top-0 bg-blue text-cream pointer-events-none will-change-transform"
         role="banner"
       >
         <div className="pointer-events-auto h-full">
@@ -321,22 +320,22 @@ export function Nav() {
               <Link
                 href="/"
                 data-hover
-                aria-label="Drip Theka — home"
-                className="min-[900px]:hidden font-tanker uppercase text-[#E4E2DD] text-lg leading-none tracking-tight"
+                aria-label={lang.brand.homeLabel}
+                className="min-[900px]:hidden font-loud uppercase text-cream text-lg leading-none"
               >
-                Drip&nbsp;Theka
+                {lang.brand.name}
               </Link>
 
               <nav
                 className="hidden min-[900px]:flex items-center gap-7"
-                aria-label="Primary navigation"
+                aria-label={lang.nav.ariaPrimary}
               >
                 {LEFT_LINKS.map(({ label, href }) => (
                   <NavLink key={href} href={href}>
                     <span className="inline-flex items-center gap-1.5">
                       {label}
                       {href === "/khata" && mounted && khataCount > 0 && (
-                        <span className="inline-flex items-center justify-center min-w-[14px] h-[14px] px-[3px] rounded-full bg-[--blue] text-[--cream] text-[8px] font-bold leading-none tabular-nums">
+                        <span className="inline-flex items-center justify-center min-w-[14px] h-[14px] px-[3px] rounded-full bg-cream text-blue text-[8px] font-bold leading-none tabular-nums">
                           {khataCount}
                         </span>
                       )}
@@ -374,7 +373,7 @@ export function Nav() {
               {/* Hamburger — mobile only */}
               <button
                 onClick={() => setMenuOpen((v) => !v)}
-                aria-label={menuOpen ? "Close menu" : "Open menu"}
+                aria-label={menuOpen ? lang.nav.closeMenu : lang.nav.openMenu}
                 aria-expanded={menuOpen}
                 data-hover
                 className="min-[900px]:hidden flex flex-col justify-center gap-[5px] w-7 h-7"
@@ -406,9 +405,9 @@ export function Nav() {
             animate={{ y: 0 }}
             exit={{ y: "-100%" }}
             transition={{ duration: 0.6, ease: [0.76, 0, 0.24, 1] }}
-            className="fixed inset-0 z-40 flex flex-col justify-between min-[900px]:hidden overflow-hidden"
+            data-surface="blue"
+            className="fixed inset-0 z-40 flex flex-col justify-between min-[900px]:hidden overflow-hidden bg-blue text-cream"
             style={{
-              backgroundColor: "#004AAD",
               paddingInline:   "var(--pad-x)",
               paddingTop:      "calc(var(--header-h) + 1.5rem)",
               paddingBottom:   "2.5rem",
@@ -416,16 +415,16 @@ export function Nav() {
           >
             {/* Top eyebrow */}
             <div className="flex items-center justify-between">
-              <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#E4E2DD]/40">
-                The Menu
+              <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-cream/40">
+                {lang.nav.menuEyebrow}
               </p>
-              <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#E4E2DD]/40">
-                Pour&nbsp;#001
+              <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-cream/40">
+                {lang.nav.menuTag}
               </p>
             </div>
 
             {/* Big italic links */}
-            <nav aria-label="Mobile navigation" className="flex-1 flex flex-col justify-center py-8">
+            <nav aria-label={lang.nav.ariaMobile} className="flex-1 flex flex-col justify-center py-8">
               <ul className="flex flex-col gap-1">
                 {MOBILE_LINKS.map(({ label, href }, i) => (
                   <motion.li
@@ -446,18 +445,18 @@ export function Nav() {
                     >
                       <span
                         aria-hidden="true"
-                        className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#E4E2DD]/30 group-hover:text-[#E4E2DD] transition-colors"
+                        className="font-mono text-[10px] uppercase tracking-[0.16em] text-cream/30 group-hover:text-cream transition-colors"
                       >
                         {String(i + 1).padStart(2, "0")}
                       </span>
                       <span
-                        className="font-tanker uppercase text-[#E4E2DD] group-hover:translate-x-2 transition-transform duration-300"
+                        className="font-loud uppercase text-cream group-hover:translate-x-2 transition-transform duration-300"
                         style={{ fontSize: "clamp(2.75rem, 14vw, 7rem)" }}
                       >
                         {label}.
                       </span>
                       {href === "/khata" && mounted && khataCount > 0 && (
-                        <span className="font-mono text-xs px-2.5 py-1 rounded-full bg-[--cream] text-[--ink] self-center tabular-nums">
+                        <span className="font-mono text-xs px-2.5 py-1 rounded-full bg-cream text-ink self-center tabular-nums">
                           {khataCount}
                         </span>
                       )}
@@ -471,13 +470,13 @@ export function Nav() {
             <div className="flex items-end justify-between gap-4">
               <button
                 onClick={toggleSound}
-                className="flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-[#E4E2DD]/40 hover:text-[#E4E2DD] transition-colors"
+                className="flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-cream/40 hover:text-cream transition-colors"
               >
                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-current" style={{ opacity: muted ? 0.3 : 1 }} />
-                Sound&nbsp;·&nbsp;{mounted && !muted ? "On" : "Off"}
+                {mounted && !muted ? lang.nav.soundOn : lang.nav.soundOff}
               </button>
-              <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#E4E2DD]/20 text-right">
-                {count > 0 ? `${count} in glass` : "Empty glass"}
+              <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-cream/20 text-right">
+                {count > 0 ? lang.nav.inGlass(count) : lang.nav.glassEmpty}
               </p>
             </div>
           </motion.div>

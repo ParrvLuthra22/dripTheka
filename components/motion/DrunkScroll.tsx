@@ -11,6 +11,7 @@
 //
 // Entirely disabled when prefers-reduced-motion is active (vestibular safety).
 
+import { useHydrated } from "@/lib/theka/hooks";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -26,9 +27,7 @@ const SESSION_KEY        = "dt_drunk_scroll_used";
 export function DrunkScroll() {
   const { play, muted } = useSound();
   const [toastVisible, setToastVisible] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => setMounted(true), []);
+  const mounted = useHydrated();
 
   useEffect(() => {
     if (typeof window === "undefined") return;

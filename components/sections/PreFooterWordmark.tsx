@@ -20,7 +20,7 @@ export function PreFooterWordmark() {
     <section
       ref={ref}
       data-nav-tone="dark"
-      className="bg-[--cream] overflow-hidden"
+      className="bg-(--cream) overflow-hidden"
       aria-hidden="true"
     >
       <motion.p
@@ -29,7 +29,7 @@ export function PreFooterWordmark() {
           fontSize:             "clamp(3rem, 15vw, 14rem)",
           WebkitTextStroke:     "1.5px rgba(20,21,24,0.35)",
           color:                "transparent",
-          fontFamily:           "var(--font-tanker, Impact, sans-serif)",
+          fontFamily:           "var(--font-loud, Impact, sans-serif)",
           fontWeight:           400,
           lineHeight:           0.82,
           letterSpacing:        "-0.01em",

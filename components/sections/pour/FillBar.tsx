@@ -143,7 +143,7 @@ export function FillBar() {
     <section
       ref={sectionRef}
       data-nav-tone="dark"
-      className="bg-[--cream] py-16 md:py-20"
+      className="bg-(--cream) py-16 md:py-20"
       style={{ paddingInline: "var(--pad-x)" }}
       aria-label="Reservation fill level"
     >
@@ -151,14 +151,14 @@ export function FillBar() {
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-2.5">
           <span
-            className="block w-2 h-2 rounded-full bg-[--blue] animate-pulse"
+            className="block w-2 h-2 rounded-full bg-(--blue) animate-pulse"
             aria-hidden="true"
           />
-          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[--ink]">
+          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-(--ink)">
             Reservations&nbsp;·&nbsp;Live
           </p>
         </div>
-        <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-[--ink]/30">
+        <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-(--ink)/30">
           {pctStr}% reserved
         </p>
       </div>
@@ -239,18 +239,18 @@ export function FillBar() {
       {/* ── Count ticker ─────────────────────────────────────────── */}
       <div className="mt-6 flex items-baseline gap-3 flex-wrap">
         <span
-          className="font-mono tabular-nums text-[--ink]"
+          className="font-mono tabular-nums text-(--ink)"
           style={{ fontSize: "clamp(1.5rem, 4vw, 3rem)" }}
         >
           <span ref={countRef}>0000</span>
         </span>
         <span
-          className="font-mono text-[--ink]/40"
+          className="font-mono text-(--ink)/40"
           style={{ fontSize: "clamp(1.5rem, 4vw, 3rem)" }}
         >
           / {String(data.total).padStart(4, "0")}
         </span>
-        <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink]/30 self-center ml-2">
+        <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-(--ink)/30 self-center ml-2">
           Reserved
         </span>
         <HandText size="sm" rotate={-3} color="var(--ink)" className="opacity-35 self-center ml-3 max-sm:hidden">
@@ -260,7 +260,7 @@ export function FillBar() {
 
       {/* ── Caption ──────────────────────────────────────────────── */}
       <p
-        className="font-display italic text-[--ink]/50 mt-3"
+        className="font-display italic text-(--ink)/50 mt-3"
         style={{ fontSize: "clamp(1rem, 2vw, 1.4rem)" }}
       >
         When the glass is full, the doors open.

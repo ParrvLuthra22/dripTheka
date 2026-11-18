@@ -1,0 +1,105 @@
+/* ─── Drip Theka — Design Tokens ──────────────────────────────────────────────
+   Single source for every colour, font, ease, duration, layout and z-index
+   value in the shell. Imported by globals.css immediately after Tailwind so the
+   `@theme inline` block below generates utilities that READ these variables:
+
+     bg-cream · text-ink · border-blue/20     → colours
+     font-display · font-loud · font-sans · font-mono · font-hand → type
+     ease-out-expo · ease-pour · ease-shutter → transition-timing
+     max-w-site · px-pad-x · h-header-h        → layout
+
+   Contrast rules live in /docs/COLOR_RULES.md — read before pairing colours.
+   The banned easter-egg green is NOT a token (see COLOR_RULES.md).
+
+   Arbitrary-value access from components: Tailwind v4 syntax is
+   `text-(--cream)` / `bg-(--blue)/40` — NOT the v3 `text-[--cream]` form,
+   which silently compiles to nothing.                                        */
+
+:root {
+  /* ── Brand colours ─────────────────────────────────────────────────────── */
+  --cream:       #E4E2DD;   /* default page bg                               */
+  --cream-warm:  #EFEAD8;   /* warm accent bg                                */
+  --blue:        #004AAD;   /* cobalt — CTAs, cobalt sections (themeable)    */
+  --blue-deep:   #002F70;   /* deep cobalt — active / pressed                */
+  --ink:         #141518;   /* body text, dark sections                      */
+  --ink-soft:    #2A2B2F;   /* softer dark                                   */
+
+  /* The Bar (home) palette — from the approved bar-reference.html.
+     --ink-bar is the bar's deeper ink; the bar root remaps --ink to it locally
+     so the rest of the site keeps #141518.                                  */
+  --blue2:       #2f6bd6;   /* bright cobalt — eyebrows on the dark bar only  */
+  --ink-bar:     #0a0b0d;
+  --amber:       #F4A52C;   /* reserved accent (bar lighting) — unused in UI  */
+
+  /* Immutable cobalt — never overridden by easter-egg themes. The route
+     shutter uses this so the transition is ALWAYS pure #004AAD.            */
+  --cobalt:      #004AAD;
+
+  /* ── Layout ───────────────────────────────────────────────────────────── */
+  --container:   1440px;
+  --pad-x:       clamp(20px, 4vw, 72px);
+  --header-h:    84px;
+
+  /* ── Motion ───────────────────────────────────────────────────────────── */
+  /* Eases live in `@theme static` below (always emitted on :root, and
+     Tailwind generates ease-* utilities from them).                       */
+  --dur-fast:    180ms;
+  --dur-base:    320ms;
+  --dur-slow:    700ms;
+  --dur-shutter: 520ms;   /* one leg of the pour shutter (cover OR uncover) */
+
+  /* ── Z-index scale ────────────────────────────────────────────────────── */
+  --z-grain:     70;      /* page grain sits above content, below chrome    */
+  --z-nav:       50;
+  --z-shutter:   400;     /* route transition — above age gate            */
+  --z-cursor:    9999;
+
+  /* ── Grain ────────────────────────────────────────────────────────────── */
+  --grain-opacity: 0.06;
+
+  /* Audio-reactive (driven by AudioReactive.tsx) */
+  --audio-level: 0;
+}
+
+/* ─── Tailwind v4 theme — reads the variables above ──────────────────────── */
+
+@theme inline {
+  /* Colours */
+  --color-cream:      var(--cream);
+  --color-cream-warm: var(--cream-warm);
+  --color-blue:       var(--blue);
+  --color-blue-deep:  var(--blue-deep);
+  --color-cobalt:     var(--cobalt);
+  --color-ink:        var(--ink);
+  --color-ink-soft:   var(--ink-soft);
+  --color-blue2:      var(--blue2);
+  --color-ink-bar:    var(--ink-bar);
+  --color-amber:      var(--amber);
+
+  /* Fonts — next/font injects --font-fraunces / --font-jetbrains /
+     --font-rozha / --font-mukta on <html> (see app/layout.tsx).
+
+     font-display → Fraunces (italic is the brand expression) — editorial
+     font-loud    → Rozha One — loud display: wordmarks, menu, 404, marquee
+     font-sans    → Mukta — body, forms, descriptions (Latin + Devanagari)
+     font-mono    → JetBrains Mono — labels, prices, tags, UI chrome
+     font-hand    → Fraunces italic, wonky — chalk / margin annotations    */
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --font-loud:    var(--font-rozha), var(--font-fraunces), Georgia, serif;
+  --font-sans:    var(--font-mukta), system-ui, sans-serif;
+  --font-mono:    var(--font-jetbrains), ui-monospace, "Courier New", monospace;
+  --font-hand:    var(--font-fraunces), Georgia, serif;
+
+  /* Layout */
+  --spacing-pad-x:    var(--pad-x);
+  --spacing-header-h: var(--header-h);
+  --container-site:   var(--container);
+}
+
+/* ─── Easing — emitted on :root unconditionally, usable as var(--ease-*) ──── */
+
+@theme static {
+  --ease-out-expo: cubic-bezier(.16, 1, .3, 1);
+  --ease-pour:     cubic-bezier(.6, .05, .2, 1);
+  --ease-shutter:  cubic-bezier(.76, 0, .24, 1);
+}

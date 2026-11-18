@@ -24,7 +24,6 @@ export function FounderSecret() {
     if (sessionStorage.getItem(SESSION_KEY)) return;
 
     triggered.current = false;
-    setRevealed(false);
 
     const onScroll = () => {
       if (triggered.current) return;

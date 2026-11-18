@@ -88,7 +88,7 @@ export function ProductHero({ product }: ProductHeroProps) {
         <div key={i}>
           {/* FRONT / BACK tabs — only on the hero panel */}
           {i === 0 && (
-            <div className="flex border-b border-[--ink]/10">
+            <div className="flex border-b border-(--ink)/10">
               {(["front", "back"] as const).map((v) => (
                 <button
                   key={v}
@@ -100,10 +100,10 @@ export function ProductHero({ product }: ProductHeroProps) {
                   }}
                   className={cn(
                     "font-mono text-[9px] uppercase tracking-[0.14em] px-5 py-2.5 transition-colors duration-150",
-                    v !== "front" && "border-l border-[--ink]/10",
+                    v !== "front" && "border-l border-(--ink)/10",
                     heroView === v
-                      ? "bg-[--ink] text-[--cream]"
-                      : "text-[--ink]/40 hover:text-[--ink]/70 bg-transparent"
+                      ? "bg-(--ink) text-(--cream)"
+                      : "text-(--ink)/40 hover:text-(--ink)/70 bg-transparent"
                   )}
                 >
                   {v}
@@ -189,7 +189,7 @@ export function ProductHero({ product }: ProductHeroProps) {
 
             {/* Slapped sticker — only on the first (hero) panel */}
             {i === 0 && (
-              <TextSticker variant="slap" tone="neon" rotate={-10}
+              <TextSticker variant="slap" tone="blue" rotate={-10}
                 className="absolute bottom-5 right-5 z-10">
                 pour&nbsp;#{String(product.dropNumber).padStart(3, "0")}
               </TextSticker>
@@ -198,9 +198,9 @@ export function ProductHero({ product }: ProductHeroProps) {
 
           {/* Editorial caption — italic Fraunces, between each image */}
           {i < VIEWS.length - 1 && (
-            <div className="px-6 md:px-10 py-8 border-b border-[--ink]/8">
+            <div className="px-6 md:px-10 py-8 border-b border-(--ink)/8">
               <p
-                className="font-display italic text-[--ink]/60 leading-snug"
+                className="font-display italic text-(--ink)/60 leading-snug"
                 style={{ fontSize: "clamp(0.95rem, 1.8vw, 1.3rem)" }}
               >
                 {CAPTIONS[i]}
@@ -213,7 +213,7 @@ export function ProductHero({ product }: ProductHeroProps) {
       {/* Final caption after last image */}
       <div className="px-6 md:px-10 py-8">
         <p
-          className="font-display italic text-[--ink]/40 leading-snug"
+          className="font-display italic text-(--ink)/40 leading-snug"
           style={{ fontSize: "clamp(0.9rem, 1.6vw, 1.2rem)" }}
         >
           {CAPTIONS[VIEWS.length - 1]}

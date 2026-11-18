@@ -37,7 +37,7 @@ export function BartendersPick() {
   const { pickedBy, quote, date } = BARTENDERS_PICK;
 
   return (
-    <section data-nav-tone="dark" className="bg-[--cream] py-20 md:py-28">
+    <section data-nav-tone="dark" className="bg-(--cream) py-20 md:py-28">
       <div style={{ paddingInline: "var(--pad-x)" }}>
         <div className="mb-12 md:mb-16">
           <CircledEyebrow k="bartendersPick" color="ink" />
@@ -65,7 +65,7 @@ export function BartendersPick() {
               </div>
             </motion.div>
 
-            <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-[--ink]/50">
+            <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-(--ink)/50">
               {pickedBy} · {FOUNDER_ROLES[pickedBy]}
             </p>
 
@@ -73,14 +73,14 @@ export function BartendersPick() {
               text={quote}
               speed={60}
               as="blockquote"
-              className="bp-quote font-display italic text-[--ink] leading-snug"
+              className="bp-quote font-display italic text-(--ink) leading-snug"
               style={{ fontSize: "clamp(1.1rem, 2vw, 1.5rem)", maxWidth: 380 }}
             />
             <HandText size="sm" rotate={-4} color="var(--ink)" className="opacity-40 max-sm:hidden mt-1">
-              this one's good, trust
+              this one&apos;s good, trust
             </HandText>
 
-            <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink]/30">
+            <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-(--ink)/30">
               picked {relativeDate(date)} · vol. 04
             </p>
 

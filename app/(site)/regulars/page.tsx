@@ -103,10 +103,10 @@ export default function RegularsPage() {
       <header className="relative py-20 md:py-28" style={{ paddingInline: "var(--pad-x)" }}>
         {/* Sticker chaos — desktop only */}
         <div className="absolute inset-0 pointer-events-none hidden lg:block" aria-hidden="true">
-          <TextSticker variant="slap" tone="neon" rotate={9} className="absolute right-[8vw] top-[30%]">
+          <TextSticker variant="slap" tone="blue" rotate={9} className="absolute right-[8vw] top-[30%]">
             certified regular
           </TextSticker>
-          <TextSticker variant="stamp" tone="neon" rotate={-10} className="absolute right-[18vw] top-[58%]">
+          <TextSticker variant="stamp" tone="blue" rotate={-10} className="absolute right-[18vw] top-[58%]">
             members<br />only
           </TextSticker>
         </div>

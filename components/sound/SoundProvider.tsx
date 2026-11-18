@@ -71,7 +71,9 @@ export function SoundProvider({ children }: { children: ReactNode }) {
   const hasInteracted  = useRef(false);
   // Snapshot for reading volumes inside muted-change effect without stale closure
   const volSnap = useRef({ master: volumeMaster, fx: volumes.fx, ambient: volumes.ambient });
-  volSnap.current = { master: volumeMaster, fx: volumes.fx, ambient: volumes.ambient };
+  useEffect(() => {
+    volSnap.current = { master: volumeMaster, fx: volumes.fx, ambient: volumes.ambient };
+  }, [volumeMaster, volumes.fx, volumes.ambient]);
 
   // ── Prefers-reduced-motion first-load gate ──────────────────────────────
   useEffect(() => {

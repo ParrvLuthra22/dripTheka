@@ -26,6 +26,7 @@
 //
 // The logo is also a link home — clicking it navigates to "/".
 
+import { useHydrated } from "@/lib/theka/hooks";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
@@ -63,34 +64,23 @@ export function MorphingLogo() {
   const pathname     = usePathname();
   const router       = useRouter();
   const wrapperRef   = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
+  const hydrated = useHydrated();
+  const [heroReady, setHeroReady] = useState(false);
 
-  // Decide initial visibility:
-  // • Homepage + first visit: hidden, wait for hero-ready
-  // • Homepage + replay session: visible immediately (hero played already)
+  // Visibility (derived, client-only):
   // • Other pages: visible immediately (no hero on these routes)
+  // • Homepage + hero already played this session: visible immediately
+  // • Homepage + first visit: hidden until Hero broadcasts READY_EVENT
+  const isHome   = pathname === "/";
+  const heroSeen = hydrated && !!sessionStorage.getItem("dt-hero-played");
+  const visible  = hydrated && (!isHome || heroSeen || heroReady);
+
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const isHome    = pathname === "/";
-    const heroSeen  = !!sessionStorage.getItem("dt-hero-played");
-
-    if (!isHome) {
-      setVisible(true);
-      return;
-    }
-    if (heroSeen) {
-      // Even on home, if scramble has already played this session, show now
-      setVisible(true);
-      return;
-    }
-
-    // Otherwise wait for Hero to broadcast ready
-    setVisible(false);
-    const onReady = () => setVisible(true);
+    if (!isHome || heroSeen) return;
+    const onReady = () => setHeroReady(true);
     window.addEventListener(READY_EVENT, onReady);
     return () => window.removeEventListener(READY_EVENT, onReady);
-  }, [pathname]);
+  }, [isHome, heroSeen]);
 
   // Position interpolation loop
   useEffect(() => {

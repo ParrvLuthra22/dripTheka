@@ -45,7 +45,7 @@ const CAP_POINTS =
   "39.6,88.6 26.5,90.7 21.7,78.3 9.3,73.5 11.4,60.4 3,50 " +
   "11.4,39.6 9.3,26.5 21.7,21.7 26.5,9.3 39.6,11.4";
 
-const TANKER = "var(--font-tanker, Impact, 'Arial Black', sans-serif)";
+const LOUD = "var(--font-loud, Impact, 'Arial Black', sans-serif)";
 const MONO   = "var(--font-jetbrains, 'JetBrains Mono', monospace)";
 const SERIF  = "var(--font-fraunces, Georgia, serif)";
 
@@ -62,7 +62,7 @@ function BottleCapSvg({ size, uid: _ }: VariantRenderProps) {
       <text
         x="50" y="60"
         textAnchor="middle"
-        style={{ fontFamily: TANKER, fontSize: labelSize, fill: "#E4E2DD" }}
+        style={{ fontFamily: LOUD, fontSize: labelSize, fill: "#E4E2DD" }}
       >
         DT
       </text>
@@ -87,7 +87,7 @@ function MadeInDelhiSvg({ size, uid }: VariantRenderProps) {
       <text
         x="50" y="58"
         textAnchor="middle"
-        style={{ fontFamily: TANKER, fontSize: "20px", fill: "#141518" }}
+        style={{ fontFamily: LOUD, fontSize: "20px", fill: "#141518" }}
       >
         ✦
       </text>
@@ -150,11 +150,11 @@ function renderVariant(variant: StickerVariant, size: number, uid: string) {
           className="flex flex-col items-center justify-center bg-[#E4E2DD] border-2 border-[#141518] shadow-[3px_3px_0_0_#141518] px-3 py-2"
           style={{ minWidth: Math.round(size * 1.4) }}
         >
-          <span style={{ fontFamily: TANKER, fontSize: Math.round(size * 0.36), color: "#141518", lineHeight: 1, textTransform: "uppercase" }}>
+          <span style={{ fontFamily: LOUD, fontSize: Math.round(size * 0.36), color: "#141518", lineHeight: 1, textTransform: "uppercase" }}>
             DRIP
           </span>
           <div style={{ width: "100%", height: 1, background: "rgba(20,21,24,0.18)", margin: "3px 0" }} />
-          <span style={{ fontFamily: TANKER, fontSize: Math.round(size * 0.36), color: "#141518", lineHeight: 1, textTransform: "uppercase" }}>
+          <span style={{ fontFamily: LOUD, fontSize: Math.round(size * 0.36), color: "#141518", lineHeight: 1, textTransform: "uppercase" }}>
             THEKA
           </span>
         </div>
@@ -169,7 +169,7 @@ function renderVariant(variant: StickerVariant, size: number, uid: string) {
           className="flex items-center justify-center border-2 border-[#141518] shadow-[3px_3px_0_0_#141518] px-4 py-2"
           style={{ background: "#7C1F1A" }}
         >
-          <span style={{ fontFamily: TANKER, fontSize: Math.round(size * 0.26), color: "#E4E2DD", textTransform: "uppercase", letterSpacing: "0.02em", lineHeight: 1 }}>
+          <span style={{ fontFamily: LOUD, fontSize: Math.round(size * 0.26), color: "#E4E2DD", textTransform: "uppercase", letterSpacing: "0.02em", lineHeight: 1 }}>
             REGULARS ONLY
           </span>
         </div>
@@ -184,7 +184,7 @@ function renderVariant(variant: StickerVariant, size: number, uid: string) {
           className="flex flex-col items-center justify-center border-2 border-[#004AAD] shadow-[3px_3px_0_0_#004AAD]"
           style={{ width: size, height: size, background: "#141518" }}
         >
-          <span style={{ fontFamily: TANKER, fontSize: Math.round(size * 0.44), color: "#E4E2DD", lineHeight: 1, textTransform: "uppercase" }}>
+          <span style={{ fontFamily: LOUD, fontSize: Math.round(size * 0.44), color: "#E4E2DD", lineHeight: 1, textTransform: "uppercase" }}>
             21+
           </span>
           <span style={{ fontFamily: MONO, fontSize: Math.round(size * 0.085), color: "rgba(228,226,221,0.35)", textTransform: "uppercase", letterSpacing: "0.08em", lineHeight: 1, marginTop: 4 }}>

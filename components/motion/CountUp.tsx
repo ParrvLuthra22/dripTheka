@@ -40,17 +40,12 @@ export function CountUp({
   useEffect(() => {
     const from = prev.current;
     const to   = value;
-    if (from === to) {
-      setDisplay(to);
-      return;
-    }
-
-    // Respect reduced motion — snap to final value
-    if (typeof window !== "undefined" &&
+    // Equal value, or reduced motion → snap to the final value next frame.
+    if (from === to ||
         window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setDisplay(to);
       prev.current = to;
-      return;
+      rafId.current = requestAnimationFrame(() => setDisplay(to));
+      return () => cancelAnimationFrame(rafId.current);
     }
 
     startTime.current = null;

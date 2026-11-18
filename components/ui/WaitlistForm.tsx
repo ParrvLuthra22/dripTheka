@@ -42,7 +42,7 @@ export function WaitlistForm({ slug, productName }: WaitlistFormProps) {
 
   if (status === "done") {
     return (
-      <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-[--blue] text-center">
+      <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-(--blue) text-center">
         {copy.forms.success.waitlist}
       </p>
     );
@@ -53,7 +53,7 @@ export function WaitlistForm({ slug, productName }: WaitlistFormProps) {
       <button
         onClick={() => setOpen(true)}
         data-hover
-        className="w-full font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink]/70 border border-dashed border-[--ink]/40 py-2.5 hover:border-solid hover:border-[--blue] hover:text-[--blue] transition-colors text-center"
+        className="w-full font-mono text-[9px] uppercase tracking-[0.14em] text-(--ink)/70 border border-dashed border-(--ink)/40 py-2.5 hover:border-solid hover:border-(--blue) hover:text-(--blue) transition-colors text-center"
       >
         {copy.cta.joinWaitlist}
       </button>
@@ -70,13 +70,13 @@ export function WaitlistForm({ slug, productName }: WaitlistFormProps) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder={copy.forms.placeholders.email}
-          className="flex-1 min-w-0 border border-[--ink]/20 bg-transparent px-3 py-2.5 font-mono text-[11px] text-[--ink] placeholder:text-[--ink]/30 focus:outline-none focus:border-[--blue] transition-colors"
+          className="flex-1 min-w-0 border border-(--ink)/20 bg-transparent px-3 py-2.5 font-mono text-[11px] text-(--ink) placeholder:text-(--ink)/30 focus:outline-none focus:border-(--blue) transition-colors"
         />
         <button
           type="submit"
           disabled={status === "loading"}
           data-hover
-          className="shrink-0 font-mono text-[9px] uppercase tracking-[0.14em] px-4 py-2.5 bg-[--ink] text-[--cream] hover:bg-[--blue] transition-colors disabled:opacity-50"
+          className="shrink-0 font-mono text-[9px] uppercase tracking-[0.14em] px-4 py-2.5 bg-(--ink) text-(--cream) hover:bg-(--blue) transition-colors disabled:opacity-50"
         >
           {status === "loading" ? "…" : copy.cta.submitGeneric}
         </button>

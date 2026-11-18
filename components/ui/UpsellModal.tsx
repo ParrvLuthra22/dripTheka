@@ -18,7 +18,7 @@ import type { Product } from "@/data/pour-001";
 import { copy } from "@/data/copy";
 import { DripCloseIcon } from "@/components/icons/DripCloseIcon";
 import { DripHeartIcon } from "@/components/icons/DripHeartIcon";
-import { Grain } from "@/components/ui/Grain";
+import { Grain } from "@/components/theka/Grain";
 import { Sticker } from "@/components/ui/Sticker";
 import { ChalkMark } from "@/components/ui/ChalkMark";
 import { HandText } from "@/components/ui/HandText";
@@ -56,7 +56,7 @@ function UpsellCard({ product, onAdd }: UpsellCardProps) {
     <div className="flex flex-col">
       {/* ── Card face ──────────────────────────────────────────────── */}
       <motion.div
-        className="relative border border-[--ink]"
+        className="relative border border-(--ink)"
         style={{ aspectRatio: "3/4" }}
         onHoverStart={() => setHovered(true)}
         onHoverEnd={() => setHovered(false)}
@@ -114,7 +114,7 @@ function UpsellCard({ product, onAdd }: UpsellCardProps) {
               ? `Remove ${product.name} from khata`
               : `Save ${product.name} for next round`
           }
-          className="absolute bottom-2 right-2 z-[2] p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--blue] focus-visible:ring-offset-1"
+          className="absolute bottom-2 right-2 z-[2] p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--blue) focus-visible:ring-offset-1"
           onClick={() => khataToggle(product.slug)}
         >
           <DripHeartIcon filled={saved} size={16} />
@@ -140,7 +140,7 @@ function UpsellCard({ product, onAdd }: UpsellCardProps) {
       </motion.div>
 
       {/* Name — mt-8 clears the BottleCap (32px below card face) */}
-      <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-[--ink]/60 mt-8 mb-2 px-0.5 truncate">
+      <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-(--ink)/60 mt-8 mb-2 px-0.5 truncate">
         {product.name}
       </p>
 
@@ -152,9 +152,9 @@ function UpsellCard({ product, onAdd }: UpsellCardProps) {
         onClick={() => onAdd(product, btnRef.current)}
         className={cn(
           "w-full font-mono text-[10px] uppercase tracking-[0.16em] py-3",
-          "bg-[--blue] text-[--cream] border border-[--ink]",
-          "hover:bg-[--ink] transition-colors duration-150",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--blue]",
+          "bg-(--blue) text-(--cream) border border-(--ink)",
+          "hover:bg-(--ink) transition-colors duration-150",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--blue)",
           "disabled:opacity-40 disabled:cursor-not-allowed"
         )}
       >
@@ -269,7 +269,7 @@ export function UpsellModal() {
         >
           {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-[--ink]/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-(--ink)/60 backdrop-blur-sm"
             onClick={hide}
             aria-hidden="true"
           />
@@ -299,7 +299,7 @@ export function UpsellModal() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="upsell-title"
-              className="relative bg-[--cream] border border-[rgba(20,21,24,0.12)] rounded max-h-[90vh] overflow-y-auto p-7 md:p-14"
+              className="relative bg-(--cream) border border-[rgba(20,21,24,0.12)] rounded max-h-[90vh] overflow-y-auto p-7 md:p-14"
               style={{ boxShadow: "0 32px 64px -16px rgba(20,21,24,0.45)" }}
             >
               <Grain opacity={0.04} />
@@ -311,7 +311,7 @@ export function UpsellModal() {
                 onClick={hide}
                 aria-label="Close modal, keep what's in your glass"
                 data-hover
-                className="absolute top-4 right-4 z-10 w-9 h-9 flex items-center justify-center text-[--ink]/40 hover:text-[--ink] hover:rotate-90 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--blue]"
+                className="absolute top-4 right-4 z-10 w-9 h-9 flex items-center justify-center text-(--ink)/40 hover:text-(--ink) hover:rotate-90 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--blue)"
               >
                 <DripCloseIcon size={24} />
               </button>
@@ -322,7 +322,7 @@ export function UpsellModal() {
                 <h2
                   ref={titleRef}
                   id="upsell-title"
-                  className="font-display italic font-semibold text-[--ink] leading-tight mb-3"
+                  className="font-display italic font-semibold text-(--ink) leading-tight mb-3"
                   style={{ fontSize: "clamp(2.25rem, 5vw, 4rem)" }}
                 >
                   One more before you{" "}
@@ -335,7 +335,7 @@ export function UpsellModal() {
                     />
                   </span>
                 </h2>
-                <p className="font-sans text-sm text-[--ink]/50 mb-3">
+                <p className="font-sans text-sm text-(--ink)/50 mb-3">
                   {copy.upsell.subtitle}
                 </p>
                 <HandText size="sm" rotate={-4} color="var(--ink)" className="opacity-40">
@@ -359,7 +359,7 @@ export function UpsellModal() {
                   type="button"
                   onClick={hide}
                   data-hover
-                  className="flex-1 font-mono text-[10px] uppercase tracking-[0.16em] py-3.5 border border-[--ink] text-[--ink] hover:bg-[--ink] hover:text-[--cream] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--blue]"
+                  className="flex-1 font-mono text-[10px] uppercase tracking-[0.16em] py-3.5 border border-(--ink) text-(--ink) hover:bg-(--ink) hover:text-(--cream) transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--blue)"
                 >
                   ← keep browsing
                 </button>
@@ -367,7 +367,7 @@ export function UpsellModal() {
                   type="button"
                   onClick={() => { hide(); router.push("/checkout"); }}
                   data-hover-big
-                  className="flex-1 font-mono text-[10px] uppercase tracking-[0.16em] py-3.5 bg-[--blue] text-[--cream] border border-[--ink] hover:bg-[--ink] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[--blue]"
+                  className="flex-1 font-mono text-[10px] uppercase tracking-[0.16em] py-3.5 bg-(--blue) text-(--cream) border border-(--ink) hover:bg-(--ink) transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-(--blue)"
                 >
                   SETTLE THE BILL →
                 </button>

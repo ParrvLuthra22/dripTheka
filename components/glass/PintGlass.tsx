@@ -14,6 +14,7 @@
 //   - Click: navigate to /cart (layoutId="cart-glass" for Framer morph)
 //   - Sound: plays only when global sound toggle is ON
 
+import { useHydrated } from "@/lib/theka/hooks";
 import {
   useRef,
   useEffect,
@@ -85,8 +86,7 @@ export function PintGlass({ className }: PintGlassProps) {
   // blue surface the liquid is already cream, so no outline is needed there.)
   const liquidStroke = onBlue ? "transparent" : "#E4E2DD";
 
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useHydrated();
 
   const count    = mounted ? totalItems() : 0;
   const prevCount = useRef(count);
@@ -231,7 +231,7 @@ export function PintGlass({ className }: PintGlassProps) {
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 4 }}
-            className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink] whitespace-nowrap pointer-events-none"
+            className="font-mono text-[9px] uppercase tracking-[0.14em] text-(--ink) whitespace-nowrap pointer-events-none"
           >
             What&apos;s In Your Glass · {count}
           </motion.p>
@@ -263,7 +263,7 @@ export function PintGlass({ className }: PintGlassProps) {
               "Z",
             ].join(" ")} />
           </clipPath>
-          <filter id="neon-glow" x="-50%" y="-50%" width="200%" height="200%">
+          <filter id="pint-glow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
             <feMerge>
               <feMergeNode in="coloredBlur"/>
@@ -279,7 +279,7 @@ export function PintGlass({ className }: PintGlassProps) {
           y={BOWL_BOT_Y}
           width="58"
           height="0"
-          filter="url(#neon-glow)"
+          filter="url(#pint-glow)"
           clipPath="url(#pint-bowl)"
           strokeWidth={1.5}
           style={{
@@ -369,8 +369,7 @@ interface PintGlassNavProps {
 export function PintGlassNav({ className }: PintGlassNavProps) {
   const router = useRouter();
   const { totalItems } = useCartStore();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useHydrated();
   const count = mounted ? totalItems() : 0;
   const iconRef = useRef<SVGSVGElement>(null);
   const prevCount = useRef(count);
@@ -432,7 +431,7 @@ export function PintGlassNav({ className }: PintGlassNavProps) {
 
       {/* Badge */}
       {count > 0 && (
-        <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center w-4 h-4 rounded-full bg-[--blue] text-[--cream] font-mono text-[8px] leading-none">
+        <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center w-4 h-4 rounded-full bg-(--blue) text-(--cream) font-mono text-[8px] leading-none">
           {count > 9 ? "9+" : count}
         </span>
       )}

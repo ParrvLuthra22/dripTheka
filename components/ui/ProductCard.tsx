@@ -245,7 +245,7 @@ export function ProductCard({
                 "transition-transform duration-300 group-hover:rotate-[-2deg]",
                 tappedOut
                   ? "bg-[#3D0000] text-[#FF7070]"
-                  : "bg-[--ink]/80 text-[--cream]"
+                  : "bg-(--ink)/80 text-(--cream)"
               )}
             />
           </div>
@@ -263,7 +263,7 @@ export function ProductCard({
             data-hover
             aria-pressed={inKhata}
             aria-label={inKhata ? `Remove ${product.name} from your khata` : `Save ${product.name} to your khata`}
-            className="absolute bottom-3 right-3 z-10 w-9 h-9 rounded-full bg-[--cream]/90 backdrop-blur-sm flex items-center justify-center border border-[--ink]/10 shadow-sm hover:scale-110 active:scale-95 transition-transform duration-200"
+            className="absolute bottom-3 right-3 z-10 w-9 h-9 rounded-full bg-(--cream)/90 backdrop-blur-sm flex items-center justify-center border border-(--ink)/10 shadow-sm hover:scale-110 active:scale-95 transition-transform duration-200"
           >
             <AnimatePresence mode="wait" initial={false}>
               <DripHeartIcon filled={inKhata} size={16} />
@@ -273,7 +273,7 @@ export function ProductCard({
 
         {/* ── Metadata ──────────────────────────────────────────── */}
         <div className="pt-2.5 space-y-1">
-          <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-[--ink]/35">
+          <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-(--ink)/35">
             {String(productNum).padStart(2, "0")}&nbsp;/&nbsp;
             {product.type}s&nbsp;·&nbsp;
             {isTappedOut(product.sizes)
@@ -283,11 +283,11 @@ export function ProductCard({
 
           <p
             className={cn(
-              "font-display italic text-[--ink] leading-tight",
+              "font-display italic text-(--ink) leading-tight",
               "relative inline-block",
               !tappedOut && [
                 "after:absolute after:bottom-0 after:left-0",
-                "after:h-px after:w-full after:bg-[--ink]",
+                "after:h-px after:w-full after:bg-(--ink)",
                 "after:scale-x-0 after:origin-left",
                 "after:transition-transform after:duration-300",
                 "group-hover:after:scale-x-100",
@@ -299,7 +299,7 @@ export function ProductCard({
             {product.name}
           </p>
 
-          <p className="font-mono text-[9px] text-[--ink]/28 tracking-[0.06em] mt-1">
+          <p className="font-mono text-[9px] text-(--ink)/28 tracking-[0.06em] mt-1">
             available in {availableSizes.length} sizes&nbsp;·&nbsp;in {slugHash(product.slug)} glasses
           </p>
 
@@ -315,8 +315,8 @@ export function ProductCard({
                     exit={{ opacity: 0, y: 8, scale: 0.96 }}
                     transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
                     onClick={(e) => e.stopPropagation()}
-                    // Solid cream bg (the -[--var] Tailwind bracket form is inert
-                    // in this build, so bg-[--cream] rendered transparent and the
+                    // Solid cream bg (the -(--var) Tailwind bracket form is inert
+                    // in this build, so bg-(--cream) rendered transparent and the
                     // ink caps vanished into the dark image behind the popover).
                     style={{ backgroundColor: "#E4E2DD" }}
                     className="absolute bottom-full right-0 mb-2 z-20 flex flex-wrap justify-end gap-2 border-2 border-black p-3 shadow-[2px_2px_0_0_#141518] max-w-[240px]"

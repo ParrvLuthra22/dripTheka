@@ -8,7 +8,7 @@ import { ProductCard } from "@/components/ui/ProductCard";
 import { CircledEyebrow } from "@/components/ui/CircledEyebrow";
 import { Reveal } from "@/components/motion/Reveal";
 import { POUR_001 } from "@/data/pour-001";
-import { Grain } from "@/components/ui/Grain";
+import { Grain } from "@/components/theka/Grain";
 import { Sticker } from "@/components/ui/Sticker";
 
 // Asymmetric editorial grid spans — row1 (7+5), row2 (4+4+4), row3 (12)
@@ -36,13 +36,13 @@ export function CurrentlyPouring() {
       id="currently-pouring"
       data-section="currently-pouring"
       data-nav-tone="dark"
-      className="relative bg-[--cream] py-20 md:py-28"
+      className="relative bg-(--cream) py-20 md:py-28"
       aria-labelledby="pouring-heading"
     >
       <Grain opacity={0.04} />
       <div style={{ paddingInline: "var(--pad-x)" }}>
         {/* Section header */}
-        <Reveal className="relative flex items-start justify-between mb-12 border-b border-[--ink]/10 pb-8">
+        <Reveal className="relative flex items-start justify-between mb-12 border-b border-(--ink)/10 pb-8">
           {/* Corner stamp — pushed up into the section's top padding so it never
               overlaps the editorial note in the top-right of the header row. */}
           <Sticker variant="freshly-poured" rotate={-10} size={72}
@@ -53,13 +53,13 @@ export function CurrentlyPouring() {
             <CircledEyebrow k="currentlyPouring" color="ink" className="mb-8" />
             <h2
               id="pouring-heading"
-              className="font-display italic text-[--ink] leading-[1.05]"
+              className="font-display italic text-(--ink) leading-[1.05]"
               style={{ fontSize: "clamp(2rem, 5vw, 4rem)" }}
             >
               The First Round.
             </h2>
           </div>
-          <p className="hidden md:block font-mono text-[9px] uppercase tracking-[0.12em] text-[--ink]/30 text-right max-w-[180px] leading-relaxed">
+          <p className="hidden md:block font-mono text-[9px] uppercase tracking-[0.12em] text-(--ink)/30 text-right max-w-[180px] leading-relaxed">
             {POUR_001.editorialNote}
           </p>
         </Reveal>
@@ -81,14 +81,14 @@ export function CurrentlyPouring() {
         </div>
 
         {/* Section CTA */}
-        <Reveal delay={100} className="mt-12 pt-8 border-t border-[--ink]/10 flex items-center justify-between">
-          <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink]/30">
+        <Reveal delay={100} className="mt-12 pt-8 border-t border-(--ink)/10 flex items-center justify-between">
+          <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-(--ink)/30">
             {POUR_001.products.length}&nbsp;pieces&nbsp;·&nbsp;200 of each
           </p>
           <Link
             href="/pour/pour-001"
             data-hover
-            className="font-mono text-[10px] uppercase tracking-[0.14em] text-[--blue] hover:text-[--ink] transition-colors duration-200 flex items-center gap-2"
+            className="font-mono text-[10px] uppercase tracking-[0.14em] text-(--blue) hover:text-(--ink) transition-colors duration-200 flex items-center gap-2"
           >
             See the full pour&nbsp;→
           </Link>

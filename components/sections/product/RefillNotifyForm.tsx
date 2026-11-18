@@ -34,11 +34,11 @@ export function RefillNotifyForm({ productId, productName }: RefillNotifyFormPro
 
   if (status === "done") {
     return (
-      <div className="border border-[--ink]/15 p-4">
-        <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--blue] mb-1">
+      <div className="border border-(--ink)/15 p-4">
+        <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-(--blue) mb-1">
           You&apos;re on the list.
         </p>
-        <p className="font-sans text-sm text-[--ink]/50">
+        <p className="font-sans text-sm text-(--ink)/50">
           {copy.forms.success.refillNotify} Don&apos;t hold your breath — but hey, stranger things have happened.
         </p>
       </div>
@@ -47,7 +47,7 @@ export function RefillNotifyForm({ productId, productName }: RefillNotifyFormPro
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink]/40">
+      <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-(--ink)/40">
         {copy.cta.refillNotify}
       </p>
       <div className="flex gap-2">
@@ -57,13 +57,13 @@ export function RefillNotifyForm({ productId, productName }: RefillNotifyFormPro
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder={copy.forms.placeholders.email}
-          className="flex-1 bg-transparent border-b border-[--ink]/20 focus:border-[--ink] font-sans text-sm text-[--ink] placeholder-[--ink]/25 py-2 outline-none transition-colors"
+          className="flex-1 bg-transparent border-b border-(--ink)/20 focus:border-(--ink) font-sans text-sm text-(--ink) placeholder-(--ink)/25 py-2 outline-none transition-colors"
         />
         <button
           type="submit"
           disabled={status === "loading"}
           data-hover
-          className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--cream] bg-[--ink] px-4 py-2 hover:bg-[--blue] transition-colors disabled:opacity-40"
+          className="font-mono text-[9px] uppercase tracking-[0.14em] text-(--cream) bg-(--ink) px-4 py-2 hover:bg-(--blue) transition-colors disabled:opacity-40"
         >
           {status === "loading" ? "…" : copy.cta.submitGeneric}
         </button>

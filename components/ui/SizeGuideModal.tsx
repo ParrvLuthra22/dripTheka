@@ -81,7 +81,7 @@ export function SizeGuideModal({ open, onClose, product }: SizeGuideModalProps) 
         >
           {/* Backdrop */}
           <motion.div
-            className="absolute inset-0 bg-[--ink]/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-(--ink)/60 backdrop-blur-sm"
             onClick={onClose}
             aria-hidden="true"
           />
@@ -95,7 +95,7 @@ export function SizeGuideModal({ open, onClose, product }: SizeGuideModalProps) 
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.97 }}
             transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-            className="relative bg-[--cream] border-2 border-black shadow-[6px_6px_0_0_#141518] w-full max-w-md max-h-[85vh] overflow-y-auto p-6 md:p-8"
+            className="relative bg-(--cream) border-2 border-black shadow-[6px_6px_0_0_#141518] w-full max-w-md max-h-[85vh] overflow-y-auto p-6 md:p-8"
           >
             {/* Close */}
             <button
@@ -103,28 +103,28 @@ export function SizeGuideModal({ open, onClose, product }: SizeGuideModalProps) 
               onClick={onClose}
               aria-label="Close size guide"
               data-hover
-              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[--ink]/50 hover:text-[--ink] hover:rotate-90 transition-all duration-300"
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-(--ink)/50 hover:text-(--ink) hover:rotate-90 transition-all duration-300"
             >
               <DripCloseIcon size={16} />
             </button>
 
             {/* Header */}
-            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[--ink]/30 mb-2">
+            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-(--ink)/30 mb-2">
               Size Guide · {product.name}
             </p>
             <h2
               id="size-guide-title"
-              className="font-display italic text-[--ink] leading-tight mb-6"
+              className="font-display italic text-(--ink) leading-tight mb-6"
               style={{ fontSize: "clamp(1.4rem, 3vw, 2rem)" }}
             >
               Find your pour.
             </h2>
 
             {/* Table */}
-            <div className="border border-[--ink]/15 overflow-hidden">
+            <div className="border border-(--ink)/15 overflow-hidden">
               <table className="w-full font-mono text-[10px] uppercase tracking-[0.08em]">
                 <thead>
-                  <tr className="bg-[--ink] text-[--cream]">
+                  <tr className="bg-(--ink) text-(--cream)">
                     <th className="text-left px-3 py-2.5">Size</th>
                     {kind === "tops" && (
                       <>
@@ -145,9 +145,9 @@ export function SizeGuideModal({ open, onClose, product }: SizeGuideModalProps) 
                     )}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[--ink]/8">
+                <tbody className="divide-y divide-(--ink)/8">
                   {sizes.map((size) => (
-                    <tr key={size} className="text-[--ink]">
+                    <tr key={size} className="text-(--ink)">
                       <td className="px-3 py-2.5 font-bold">{size}</td>
                       {kind === "tops" && (
                         <>
@@ -173,7 +173,7 @@ export function SizeGuideModal({ open, onClose, product }: SizeGuideModalProps) 
             </div>
 
             {/* Note */}
-            <p className="font-sans text-xs text-[--ink]/45 leading-relaxed mt-5">
+            <p className="font-sans text-xs text-(--ink)/45 leading-relaxed mt-5">
               {kind === "headwear"
                 ? "Measured around the head, just above the ears. Adjustable strap covers the rest."
                 : "Flat measurements, garment laid on a table — not your body. When in doubt, size up. We won't judge. Much."}

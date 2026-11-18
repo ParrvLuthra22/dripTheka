@@ -13,7 +13,7 @@
 //   2.8s  Wordmark fades in (served from parent — not this component)
 
 import { useRef, useEffect, useMemo } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, useFrame } from "@react-three/fiber";
 import { Environment, OrthographicCamera } from "@react-three/drei";
 import * as THREE from "three";
 import { gsap } from "gsap";
@@ -108,14 +108,6 @@ const FILL_START_Y  = -1.20; // below everything (empty)
 
 // ── The 3D glass scene ────────────────────────────────────────────────────
 function GlassScene({ onReady }: { onReady?: () => void }) {
-  const { gl } = useThree();
-
-  // Enable renderer clipping planes
-  useEffect(() => {
-    gl.localClippingEnabled = true;
-    gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  }, [gl]);
-
   const glassGroup  = useRef<THREE.Group>(null);
   const streamMesh  = useRef<THREE.Mesh>(null);
   const surfaceMesh = useRef<THREE.Mesh>(null);
@@ -124,8 +116,8 @@ function GlassScene({ onReady }: { onReady?: () => void }) {
   const waveRef   = useRef(0);
   const timeRef   = useRef(0);
 
-  const glassPoints  = useMemo(buildGlassProfile,  []);
-  const liquidPoints = useMemo(buildLiquidProfile, []);
+  const glassPoints  = useMemo(() => buildGlassProfile(),  []);
+  const liquidPoints = useMemo(() => buildLiquidProfile(), []);
 
   // Surface shader uniforms.
   // The hero sits on a cobalt (#004AAD) background — a blue liquid would
@@ -254,12 +246,13 @@ function GlassScene({ onReady }: { onReady?: () => void }) {
       <mesh>
         <latheGeometry args={[liquidPoints, 64]} />
         <meshPhysicalMaterial
+          // Wire the shared clip plane at commit time (refs aren't read in render)
+          ref={(m: THREE.MeshPhysicalMaterial | null) => { if (m) m.clippingPlanes = [clipPlane.current]; }}
           color="#E4E2DD"
           roughness={0.06}
           metalness={0.08}
           transparent
           opacity={0.9}
-          clippingPlanes={[clipPlane.current]}
           side={THREE.FrontSide}
         />
       </mesh>
@@ -274,7 +267,7 @@ function GlassScene({ onReady }: { onReady?: () => void }) {
         <shaderMaterial
           vertexShader={SURFACE_VERT}
           fragmentShader={SURFACE_FRAG}
-          uniforms={surfaceUniforms.current}
+          ref={(m: THREE.ShaderMaterial | null) => { if (m) m.uniforms = surfaceUniforms.current; }}
           transparent
           depthWrite={false}
           side={THREE.DoubleSide}
@@ -327,7 +320,7 @@ function HeroPourFallback() {
         <WineGlassMark
           size="lg"
           liquid={75}
-          className="pour-fallback text-[--ink]"
+          className="pour-fallback text-(--ink)"
         />
       </div>
     </div>
@@ -353,6 +346,11 @@ export function HeroPour({ className, onReady }: HeroPourProps) {
       style={{ width: "100%", height: "100%" }}
     >
       <Canvas
+        onCreated={({ gl }) => {
+          // Enable renderer clipping planes (liquid fill is a clip plane)
+          gl.localClippingEnabled = true;
+          gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        }}
         gl={{
           antialias:    true,
           alpha:        true,

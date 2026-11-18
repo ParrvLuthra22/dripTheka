@@ -63,7 +63,7 @@ export async function GET(request: Request) {
               DRIP THEKA
             </div>
             <div style={{ fontSize: 11, color: "#14151880", marginTop: 6, fontStyle: "italic" }}>
-              "serving fits, not drinks"
+              {"\u201Cserving fits, not drinks\u201D"}
             </div>
           </div>
 

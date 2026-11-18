@@ -163,7 +163,7 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
       );
       radios?.[next]?.focus();
     },
-    [product.sizes, selectedSize]
+    [product.sizes, selectedSize, setSelectedSize]
   );
 
   // ── Add to cart ────────────────────────────────────────────────────────────
@@ -194,8 +194,8 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
       <div
         className={cn(
           "flex flex-col gap-6 px-6 md:px-8 py-8",
-          "md:sticky md:top-[--header-h] md:max-h-[calc(100vh-var(--header-h))] md:overflow-y-auto",
-          "md:border-l md:border-[--ink]/8",
+          "md:sticky md:top-(--header-h) md:max-h-[calc(100vh-var(--header-h))] md:overflow-y-auto",
+          "md:border-l md:border-(--ink)/8",
         )}
       >
         {/* ── 1. Eyebrow row ──────────────────────────────────────── */}
@@ -209,12 +209,12 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
               "px-2.5 py-1 text-[8px]",
               tappedOut
                 ? "bg-[#3D0000] text-[#FF7070]"
-                : "bg-[--ink] text-[--cream]"
+                : "bg-(--ink) text-(--cream)"
             )}
           />
           <div className="flex items-center gap-2">
             <ThekaLabel k="pour001" color="ink" hairline={false} showHi={false} as="span" />
-            <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-[--ink]/25">
+            <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-(--ink)/25">
               VOL.&nbsp;{volNum}&nbsp;·&nbsp;DROP&nbsp;001
             </span>
           </div>
@@ -223,12 +223,12 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
         {/* ── 2. Product name with ChalkMark underline ────────────── */}
         <div className="space-y-1">
           <h1
-            className="font-display italic font-semibold text-[--ink] leading-tight"
+            className="font-display italic font-semibold text-(--ink) leading-tight"
             style={{ fontSize: "clamp(1.75rem, 3.5vw, 2.75rem)" }}
           >
             <NameWithUnderline name={product.name} type={product.type} />
           </h1>
-          <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-[--ink]/30">
+          <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-(--ink)/30">
             {product.type} · {product.fit} fit
           </p>
         </div>
@@ -242,16 +242,16 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
             </div>
           </div>
           {!tappedOut && (
-            <p className="font-mono text-[9px] text-[--blue] tracking-[0.1em]">
+            <p className="font-mono text-[9px] text-(--blue) tracking-[0.1em]">
               {formatDeposit(product.price)} deposit · 70% on Opening Night
             </p>
           )}
         </div>
 
         {/* ── 4. Description ──────────────────────────────────────── */}
-        <div className="border-t border-[--ink]/8 pt-5 space-y-3">
+        <div className="border-t border-(--ink)/8 pt-5 space-y-3">
           <p
-            className="font-display italic text-[--ink]/80 leading-relaxed"
+            className="font-display italic text-(--ink)/80 leading-relaxed"
             style={{ fontSize: "clamp(0.9rem, 1.5vw, 1.1rem)", lineHeight: 1.45 }}
           >
             {product.tagline}
@@ -259,8 +259,8 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
           <ul className="space-y-1.5">
             {details.map((detail) => (
               <li key={detail} className="flex items-center gap-2">
-                <span className="block w-1 h-1 rounded-full bg-[--blue] shrink-0" aria-hidden="true" />
-                <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-[--ink]/45">
+                <span className="block w-1 h-1 rounded-full bg-(--blue) shrink-0" aria-hidden="true" />
+                <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-(--ink)/45">
                   {detail}
                 </span>
               </li>
@@ -271,13 +271,13 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
         {!tappedOut && (
           <>
             {/* ── 5. Size selector ──────────────────────────────────── */}
-            <div className="space-y-3 border-t border-[--ink]/8 pt-5">
+            <div className="space-y-3 border-t border-(--ink)/8 pt-5">
               <div className="flex items-center justify-between">
                 <ThekaLabel k="sizeSelector" color="ink" hairline={false} showHi />
                 <button
                   onClick={() => setSizeGuideOpen(true)}
                   data-hover
-                  className="font-mono text-[9px] uppercase tracking-[0.12em] text-[--blue] hover:text-[--ink] transition-colors underline decoration-dotted"
+                  className="font-mono text-[9px] uppercase tracking-[0.12em] text-(--blue) hover:text-(--ink) transition-colors underline decoration-dotted"
                   aria-label="Open size guide"
                 >
                   Size Guide
@@ -315,7 +315,7 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
               </div>
 
               {!selectedSize && (
-                <p className="font-mono text-[9px] text-[--ink]/30 uppercase tracking-widest">
+                <p className="font-mono text-[9px] text-(--ink)/30 uppercase tracking-widest">
                   Select a size to continue
                 </p>
               )}
@@ -344,11 +344,11 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
 
             {/* ── 7. Quantity stepper ───────────────────────────────── */}
             <div className="space-y-2">
-              <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink]/40">
+              <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-(--ink)/40">
                 Quantity
               </p>
               <div
-                className="flex items-center border border-[--ink]/20 w-fit"
+                className="flex items-center border border-(--ink)/20 w-fit"
                 role="group"
                 aria-label="Quantity"
               >
@@ -356,12 +356,12 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
                   onClick={() => setQty((q) => Math.max(1, q - 1))}
                   aria-label="Decrease quantity"
                   disabled={qty <= 1}
-                  className="w-10 h-10 flex items-center justify-center font-mono text-base text-[--ink] hover:bg-[--ink]/5 transition-colors disabled:opacity-30"
+                  className="w-10 h-10 flex items-center justify-center font-mono text-base text-(--ink) hover:bg-(--ink)/5 transition-colors disabled:opacity-30"
                 >
                   −
                 </button>
                 <span
-                  className="w-10 h-10 flex items-center justify-center font-mono text-sm text-[--ink] tabular-nums border-x border-[--ink]/20"
+                  className="w-10 h-10 flex items-center justify-center font-mono text-sm text-(--ink) tabular-nums border-x border-(--ink)/20"
                   aria-live="polite"
                 >
                   {qty}
@@ -369,7 +369,7 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
                 <button
                   onClick={() => setQty((q) => Math.min(10, q + 1))}
                   aria-label="Increase quantity"
-                  className="w-10 h-10 flex items-center justify-center font-mono text-base text-[--ink] hover:bg-[--ink]/5 transition-colors"
+                  className="w-10 h-10 flex items-center justify-center font-mono text-base text-(--ink) hover:bg-(--ink)/5 transition-colors"
                 >
                   +
                 </button>
@@ -386,11 +386,11 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
                 data-hover-big
                 className={cn(
                   "relative w-full py-[18px] font-mono text-xs uppercase tracking-[0.18em]",
-                  "bg-[--blue] border border-[--ink] overflow-hidden",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--blue] focus-visible:ring-offset-2",
+                  "bg-(--blue) border border-(--ink) overflow-hidden",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--blue) focus-visible:ring-offset-2",
                   !selectedSize
-                    ? "text-[--cream]/40 cursor-not-allowed"
-                    : "text-[--cream]"
+                    ? "text-(--cream)/40 cursor-not-allowed"
+                    : "text-(--cream)"
                 )}
               >
                 {/* Cream liquid fill — rises on adding, stays on poured */}
@@ -423,7 +423,7 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
               </button>
 
               {/* ── 9. Deposit reassurance ────────────────────────────── */}
-              <p className="font-mono text-[9px] text-[--ink]/30 text-center uppercase tracking-[0.12em] leading-relaxed">
+              <p className="font-mono text-[9px] text-(--ink)/30 text-center uppercase tracking-[0.12em] leading-relaxed">
                 30% deposit today&nbsp;·&nbsp;70% on Opening Night&nbsp;·&nbsp;doors khulne wale hain
               </p>
 
@@ -434,10 +434,10 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
 
         {/* ── 10. Tapped Out state ──────────────────────────────────── */}
         {tappedOut && (
-          <div className="space-y-5 border-t border-[--ink]/8 pt-5">
+          <div className="space-y-5 border-t border-(--ink)/8 pt-5">
             <button
               disabled
-              className="w-full py-4 font-mono text-[10px] uppercase tracking-[0.16em] bg-[--ink]/8 text-[--ink]/25 cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-4 font-mono text-[10px] uppercase tracking-[0.16em] bg-(--ink)/8 text-(--ink)/25 cursor-not-allowed flex items-center justify-center gap-2"
             >
               TAPPED OUT · khatam
             </button>
@@ -446,13 +446,13 @@ export function ProductSidebar({ product }: ProductSidebarProps) {
         )}
 
         {/* ── Pour number stamp ─────────────────────────────────────── */}
-        <div className="pt-4 border-t border-[--ink]/8 flex items-center gap-2">
-          <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-[--ink]/20">
+        <div className="pt-4 border-t border-(--ink)/8 flex items-center gap-2">
+          <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-(--ink)/20">
             #{String(POUR_001.products.findIndex((p) => p.id === product.id) + 1).padStart(2, "0")}
             &nbsp;of&nbsp;{product.totalUnits}
           </span>
-          <span className="block flex-1 h-px bg-[--ink]/8" />
-          <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-[--ink]/20">
+          <span className="block flex-1 h-px bg-(--ink)/8" />
+          <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-(--ink)/20">
             Limited
           </span>
         </div>

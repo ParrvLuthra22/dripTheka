@@ -10,50 +10,34 @@
 //   • Wipes out with a smooth top-to-bottom sweep transition (1s), then unmounts
 //   • Respects prefers-reduced-motion (renders nothing)
 
+import { useHydrated, useMediaQuery } from "@/lib/theka/hooks";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 const SAFETY_TIMEOUT_MS = 8000;
 
 export function LoadingScreen() {
-  // Default OFF — we only flip ON in useEffect once we know we're mounted
-  // client-side.
-  const [visible, setVisible] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const timeoutRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    // SSR safety + reduced-motion respect
-    if (typeof window === "undefined") return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      return;
-    }
-
-    // Show it on initial mount (hard reload)
-    setVisible(true);
-    document.documentElement.style.overflow = "hidden";
-
-    // Safety net: if the video never ends (slow network / decode error),
-    // bail after 8s
-    timeoutRef.current = window.setTimeout(() => dismiss(), SAFETY_TIMEOUT_MS);
-
-    return () => {
-      document.documentElement.style.overflow = "";
-      if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
-    };
-  }, []);
+  // Client-only and never under reduced motion; OFF during SSR/hydration.
+  const hydrated  = useHydrated();
+  const reduced   = useMediaQuery("(prefers-reduced-motion: reduce)");
+  const [dismissed, setDismissed] = useState(false);
+  const visible   = hydrated && !reduced && !dismissed;
+  const videoRef  = useRef<HTMLVideoElement>(null);
 
   // Common dismissal — start wipe-out
-  const dismiss = () => {
-    if (typeof window !== "undefined") {
+  const dismiss = () => setDismissed(true);
+
+  // While visible: lock scroll + safety net if the video never ends
+  // (slow network / decode error) — bail after 8s.
+  useEffect(() => {
+    if (!visible) return;
+    document.documentElement.style.overflow = "hidden";
+    const t = window.setTimeout(() => setDismissed(true), SAFETY_TIMEOUT_MS);
+    return () => {
       document.documentElement.style.overflow = "";
-    }
-    if (timeoutRef.current) {
-      window.clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-    setVisible(false);
-  };
+      window.clearTimeout(t);
+    };
+  }, [visible]);
 
   return (
     <AnimatePresence>
@@ -66,7 +50,7 @@ export function LoadingScreen() {
             duration: 1.1,
             ease: [0.76, 0, 0.24, 1],
           }}
-          className="fixed inset-0 z-[200] bg-[--ink] flex items-center justify-center overflow-hidden"
+          className="fixed inset-0 z-[200] bg-(--ink) flex items-center justify-center overflow-hidden"
         >
           {/* Fullscreen video */}
           <video
@@ -94,13 +78,13 @@ export function LoadingScreen() {
           <button
             onClick={dismiss}
             aria-label="Skip intro"
-            className="absolute bottom-6 right-6 z-10 font-mono text-[10px] uppercase tracking-[0.16em] text-[--cream]/80 hover:text-[--cream] border border-[--cream]/30 hover:border-[--cream] px-4 py-2 transition-colors duration-200 cursor-pointer backdrop-blur-sm"
+            className="absolute bottom-6 right-6 z-10 font-mono text-[10px] uppercase tracking-[0.16em] text-(--cream)/80 hover:text-(--cream) border border-(--cream)/30 hover:border-(--cream) px-4 py-2 transition-colors duration-200 cursor-pointer backdrop-blur-sm"
           >
             Skip&nbsp;→
           </button>
 
           {/* Brand caption — bottom-left */}
-          <p className="absolute bottom-7 left-6 font-mono text-[10px] uppercase tracking-[0.18em] text-[--cream]/60 select-none">
+          <p className="absolute bottom-7 left-6 font-mono text-[10px] uppercase tracking-[0.18em] text-(--cream)/60 select-none">
             Pouring&nbsp;·&nbsp;Drip Theka
           </p>
         </motion.div>

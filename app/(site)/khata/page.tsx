@@ -9,7 +9,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useKhataStore } from "@/lib/store/khata";
 import { ProductCard } from "@/components/ui/ProductCard";
-import { Grain } from "@/components/ui/Grain";
+import { Grain } from "@/components/theka/Grain";
 import { POUR_001 } from "@/data/pour-001";
 import type { Product } from "@/data/pour-001";
 import { copy } from "@/data/copy";
@@ -26,7 +26,7 @@ export default function KhataPage() {
   const empty = products.length === 0;
 
   return (
-    <div data-nav-tone="dark" className="relative bg-[--cream] min-h-screen">
+    <div data-nav-tone="dark" className="relative bg-(--cream) min-h-screen">
       <Grain opacity={0.04} />
       <div style={{ paddingInline: "var(--pad-x)" }} className="py-16 md:py-24 max-w-[1400px] mx-auto">
 
@@ -35,14 +35,14 @@ export default function KhataPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-          className="flex items-end justify-between gap-6 pb-10 mb-10 border-b border-[--ink]/10 flex-wrap"
+          className="flex items-end justify-between gap-6 pb-10 mb-10 border-b border-(--ink)/10 flex-wrap"
         >
           <div>
-            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[--ink]/30 mb-2">
+            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-(--ink)/30 mb-2">
               Your running tab
             </p>
             <h1
-              className="font-display italic text-[--ink] leading-tight"
+              className="font-display italic text-(--ink) leading-tight"
               style={{ fontSize: "clamp(2rem, 6vw, 4rem)" }}
             >
               The Khata.
@@ -51,7 +51,7 @@ export default function KhataPage() {
 
           {!empty && (
             <div className="flex items-center gap-4">
-              <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink]/40 tabular-nums">
+              <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-(--ink)/40 tabular-nums">
                 {products.length} saved
               </p>
               <AnimatePresence mode="wait" initial={false}>
@@ -64,7 +64,7 @@ export default function KhataPage() {
                     onClick={() => { clear(); setConfirmClear(false); }}
                     onBlur={() => setConfirmClear(false)}
                     data-hover
-                    className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--cream] bg-[--ink] px-3 py-1.5 hover:bg-red-600 transition-colors"
+                    className="font-mono text-[9px] uppercase tracking-[0.14em] text-(--cream) bg-(--ink) px-3 py-1.5 hover:bg-red-600 transition-colors"
                   >
                     Sure? Wipe it →
                   </motion.button>
@@ -76,7 +76,7 @@ export default function KhataPage() {
                     exit={{ opacity: 0, x: -8 }}
                     onClick={() => setConfirmClear(true)}
                     data-hover
-                    className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink]/60 underline decoration-dotted underline-offset-2 hover:text-red-500 hover:decoration-solid transition-colors"
+                    className="font-mono text-[9px] uppercase tracking-[0.14em] text-(--ink)/60 underline decoration-dotted underline-offset-2 hover:text-red-500 hover:decoration-solid transition-colors"
                   >
                     Clear khata
                   </motion.button>
@@ -95,18 +95,18 @@ export default function KhataPage() {
             className="py-24 text-center"
           >
             <p
-              className="font-display italic text-[--ink]/30"
+              className="font-display italic text-(--ink)/30"
               style={{ fontSize: "clamp(1.25rem, 3vw, 2rem)" }}
             >
               Tab&apos;s empty. Suspiciously responsible of you.
             </p>
-            <p className="font-mono text-[9px] uppercase tracking-widest text-[--ink]/20 mt-3">
+            <p className="font-mono text-[9px] uppercase tracking-widest text-(--ink)/20 mt-3">
               Tap the heart on anything you&apos;re not ready to commit to.
             </p>
             <Link
               href="/pour/pour-001"
               data-hover-big
-              className="inline-block mt-8 font-mono text-[10px] uppercase tracking-[0.14em] border border-[--blue] text-[--blue] px-6 py-3 hover:bg-[--blue] hover:text-[--cream] transition-all duration-200"
+              className="inline-block mt-8 font-mono text-[10px] uppercase tracking-[0.14em] border border-(--blue) text-(--blue) px-6 py-3 hover:bg-(--blue) hover:text-(--cream) transition-all duration-200"
             >
               {copy.cta.viewAll}
             </Link>

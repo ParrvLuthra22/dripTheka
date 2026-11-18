@@ -128,10 +128,10 @@ export default function CartPage() {
   };
 
   return (
-    <div data-nav-tone="dark" className="bg-[--cream] min-h-screen">
+    <div data-nav-tone="dark" className="bg-(--cream) min-h-screen">
 
       {/* ── Hero pint glass — layoutId="cart-glass" morphs from floating ── */}
-      <div className="flex flex-col items-center justify-center py-10 bg-[--cream] border-b border-[--ink]/8">
+      <div className="flex flex-col items-center justify-center py-10 bg-(--cream) border-b border-(--ink)/8">
         <motion.div
           layoutId="cart-glass"
           // Framer interpolates size/position from wherever the floating pint was
@@ -146,7 +146,7 @@ export default function CartPage() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-          className="font-display italic text-[--ink] text-center mt-6"
+          className="font-display italic text-(--ink) text-center mt-6"
           style={{ fontSize: "clamp(1.75rem, 4vw, 3rem)" }}
         >
           {getCartMessage(count)}
@@ -159,11 +159,11 @@ export default function CartPage() {
             transition={{ delay: 0.5, duration: 0.45 }}
             className="mt-4 text-center space-y-3"
           >
-            <p className="font-sans text-[--ink]/50">The bar&apos;s still open.</p>
+            <p className="font-sans text-(--ink)/50">The bar&apos;s still open.</p>
             <Link
               href="/pour/pour-001"
               data-hover
-              className="inline-block font-mono text-[10px] uppercase tracking-[0.14em] border border-[--blue] text-[--blue] px-5 py-2.5 hover:bg-[--blue] hover:text-[--cream] transition-all duration-200"
+              className="inline-block font-mono text-[10px] uppercase tracking-[0.14em] border border-(--blue) text-(--blue) px-5 py-2.5 hover:bg-(--blue) hover:text-(--cream) transition-all duration-200"
             >
               {copy.cta.viewAll}
             </Link>
@@ -178,7 +178,7 @@ export default function CartPage() {
           style={{ paddingInline: "var(--pad-x)" }}
         >
           {/* LEFT — cart items */}
-          <div className="py-10 pr-0 md:pr-10 space-y-0 divide-y divide-[--ink]/8">
+          <div className="py-10 pr-0 md:pr-10 space-y-0 divide-y divide-(--ink)/8">
             <AnimatePresence initial={false}>
               {items.map((item) => {
                 const primary = item.product.colors[0];
@@ -216,27 +216,27 @@ export default function CartPage() {
                       {/* Info */}
                       <div className="flex-1 min-w-0 flex flex-col justify-between">
                         <div>
-                          <p className="font-display italic text-[--ink] leading-tight truncate">
+                          <p className="font-display italic text-(--ink) leading-tight truncate">
                             {item.product.name}
                           </p>
-                          <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-[--ink]/40 mt-0.5">
+                          <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-(--ink)/40 mt-0.5">
                             {item.size}&nbsp;·&nbsp;{item.colorName}
                           </p>
                         </div>
 
                         {/* Qty stepper */}
                         <div className="flex items-center gap-3 mt-3">
-                          <div className="flex items-center border border-[--ink]/15">
+                          <div className="flex items-center border border-(--ink)/15">
                             <button
                               onClick={() =>
                                 updateQuantity(item.product.id, item.size, item.quantity - 1)
                               }
                               aria-label="Decrease quantity"
-                              className="w-8 h-8 flex items-center justify-center font-mono text-sm text-[--ink] hover:bg-[--ink]/5 transition-colors"
+                              className="w-8 h-8 flex items-center justify-center font-mono text-sm text-(--ink) hover:bg-(--ink)/5 transition-colors"
                             >
                               −
                             </button>
-                            <span className="w-8 h-8 flex items-center justify-center font-mono text-xs text-[--ink] border-x border-[--ink]/15 tabular-nums">
+                            <span className="w-8 h-8 flex items-center justify-center font-mono text-xs text-(--ink) border-x border-(--ink)/15 tabular-nums">
                               {item.quantity}
                             </span>
                             <button
@@ -244,7 +244,7 @@ export default function CartPage() {
                                 updateQuantity(item.product.id, item.size, item.quantity + 1)
                               }
                               aria-label="Increase quantity"
-                              className="w-8 h-8 flex items-center justify-center font-mono text-sm text-[--ink] hover:bg-[--ink]/5 transition-colors"
+                              className="w-8 h-8 flex items-center justify-center font-mono text-sm text-(--ink) hover:bg-(--ink)/5 transition-colors"
                             >
                               +
                             </button>
@@ -253,7 +253,7 @@ export default function CartPage() {
                           <button
                             onClick={() => handleRemove(item)}
                             data-hover
-                            className="font-mono text-[9px] uppercase tracking-[0.12em] text-[--ink]/60 underline decoration-dotted underline-offset-2 hover:text-red-500 hover:decoration-solid transition-colors"
+                            className="font-mono text-[9px] uppercase tracking-[0.12em] text-(--ink)/60 underline decoration-dotted underline-offset-2 hover:text-red-500 hover:decoration-solid transition-colors"
                           >
                             Remove
                           </button>
@@ -263,7 +263,7 @@ export default function CartPage() {
                       {/* Line price */}
                       <div className="text-right shrink-0 flex flex-col items-end gap-1.5">
                         <PriceTag price={item.product.price * item.quantity} size="sm" />
-                        <p className="font-mono text-[9px] text-[--blue] tabular-nums">
+                        <p className="font-mono text-[9px] text-(--blue) tabular-nums">
                           {formatPrice(item.depositAmount * item.quantity)} now
                         </p>
                       </div>
@@ -275,59 +275,59 @@ export default function CartPage() {
           </div>
 
           {/* RIGHT — order summary (sticky on desktop) */}
-          <div className="py-10 md:border-l md:border-[--ink]/8 md:pl-10">
+          <div className="py-10 md:border-l md:border-(--ink)/8 md:pl-10">
             <div className="relative md:sticky md:top-[calc(var(--header-h)+2rem)] space-y-5">
               {/* Slapped-on sticker */}
-              <TextSticker variant="slap" tone="neon" rotate={8}
+              <TextSticker variant="slap" tone="blue" rotate={8}
                 className="absolute -top-5 right-0 z-10 hidden md:inline-flex">
                 limited · loud
               </TextSticker>
 
-              <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[--ink]/40">
+              <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-(--ink)/40">
                 Order Summary
               </p>
 
               {/* Line items — values count up on mount + when cart changes */}
-              <div className="space-y-2.5 border-b border-[--ink]/8 pb-5">
+              <div className="space-y-2.5 border-b border-(--ink)/8 pb-5">
                 <div className="flex justify-between">
-                  <span className="font-sans text-sm text-[--ink]/60">Subtotal</span>
+                  <span className="font-sans text-sm text-(--ink)/60">Subtotal</span>
                   <CountUp
                     value={totalFull()}
                     duration={650}
                     format={formatPrice}
-                    className="font-mono text-sm text-[--ink] tabular-nums"
+                    className="font-mono text-sm text-(--ink) tabular-nums"
                   />
                 </div>
                 <div className="flex justify-between">
-                  <span className="font-sans text-sm text-[--blue]">Deposit due now&nbsp;(30%)</span>
+                  <span className="font-sans text-sm text-(--blue)">Deposit due now&nbsp;(30%)</span>
                   <CountUp
                     value={totalDeposit()}
                     duration={650}
                     format={formatPrice}
-                    className="font-mono text-sm font-bold text-[--blue] tabular-nums"
+                    className="font-mono text-sm font-bold text-(--blue) tabular-nums"
                   />
                 </div>
                 <div className="flex justify-between">
-                  <span className="font-sans text-sm text-[--ink]/50">
+                  <span className="font-sans text-sm text-(--ink)/50">
                     Balance on Opening Night
                   </span>
                   <CountUp
                     value={totalFull() - totalDeposit()}
                     duration={650}
                     format={formatPrice}
-                    className="font-mono text-sm text-[--ink]/50 tabular-nums"
+                    className="font-mono text-sm text-(--ink)/50 tabular-nums"
                   />
                 </div>
                 <div className="flex justify-between">
-                  <span className="font-sans text-sm text-[--ink]/40">Shipping</span>
-                  <span className="font-mono text-[10px] text-[--ink]/30 uppercase tracking-widest self-center">
+                  <span className="font-sans text-sm text-(--ink)/40">Shipping</span>
+                  <span className="font-mono text-[10px] text-(--ink)/30 uppercase tracking-widest self-center">
                     After the drop
                   </span>
                 </div>
               </div>
 
               {/* Opening Night date */}
-              <p className="font-mono text-[9px] text-[--ink]/30 uppercase tracking-[0.12em] leading-relaxed">
+              <p className="font-mono text-[9px] text-(--ink)/30 uppercase tracking-[0.12em] leading-relaxed">
                 Opening Night est. {fmtDate(DROP_DATE)}
               </p>
 
@@ -340,7 +340,7 @@ export default function CartPage() {
                 {copy.cta.checkout}
               </Link>
 
-              <p className="font-mono text-[9px] text-[--ink]/25 text-center uppercase tracking-[0.1em] leading-relaxed">
+              <p className="font-mono text-[9px] text-(--ink)/25 text-center uppercase tracking-[0.1em] leading-relaxed">
                 30% deposit charged today
                 <br />
                 70% on Opening Night

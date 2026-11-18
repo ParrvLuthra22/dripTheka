@@ -39,9 +39,9 @@ interface ThekaLabelProps {
 // ── Style maps ─────────────────────────────────────────────────────────────
 
 const colorMap = {
-  blue:  "text-[--blue]",
-  ink:   "text-[--ink]/50",
-  cream: "text-[--cream]/60",
+  blue:  "text-(--blue)",
+  ink:   "text-(--ink)/50",
+  cream: "text-(--cream)/60",
 } as const;
 
 // ── Component ──────────────────────────────────────────────────────────────

@@ -7,6 +7,7 @@
 // prefers-reduced-motion: instant swap, no cross-fade.
 // If `back` is null: static front, no interaction attached.
 
+import { useMediaQuery } from "@/lib/theka/hooks";
 import { useState, useEffect, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils/cn";
@@ -22,16 +23,10 @@ export function GarmentFlip({ front, back, alt, className }: GarmentFlipProps) {
   const shouldReduceMotion = useReducedMotion();
   const dur = shouldReduceMotion ? 0 : 0.28;
 
-  const [isHoverDevice, setIsHoverDevice] = useState(false);
+  const isHoverDevice = useMediaQuery("(hover: hover) and (pointer: fine)");
   const [showBack,      setShowBack]      = useState(false);
   const [isHovered,     setIsHovered]     = useState(false);
   const [isFocused,     setIsFocused]     = useState(false);
-
-  useEffect(() => {
-    setIsHoverDevice(
-      window.matchMedia("(hover: hover) and (pointer: fine)").matches
-    );
-  }, []);
 
   // Static — no interaction
   if (!back) {
@@ -107,7 +102,7 @@ export function GarmentFlip({ front, back, alt, className }: GarmentFlipProps) {
           animate={{ opacity: 0.5 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15 }}
-          className="absolute bottom-2 left-2 z-20 font-mono text-[9px] uppercase tracking-[0.12em] text-[--cream] pointer-events-none select-none"
+          className="absolute bottom-2 left-2 z-20 font-mono text-[9px] uppercase tracking-[0.12em] text-(--cream) pointer-events-none select-none"
         >
           {showBack ? "back" : "front"}
         </motion.span>
@@ -127,10 +122,10 @@ export function GarmentFlip({ front, back, alt, className }: GarmentFlipProps) {
             "absolute bottom-2 right-2 z-20",
             "flex items-center gap-1",
             "font-mono text-[9px] uppercase tracking-[0.1em]",
-            "bg-[--cream] text-[--ink] border border-[--ink]/20",
+            "bg-(--cream) text-(--ink) border border-(--ink)/20",
             "px-2 py-1 shadow-sm",
             "transition-opacity duration-150",
-            "hover:border-[--ink]/40 active:scale-95"
+            "hover:border-(--ink)/40 active:scale-95"
           )}
         >
           ↻ {showBack ? "see front" : "see back"}

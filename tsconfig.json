@@ -27,7 +27,7 @@
       "@sections/*":      ["./components/sections/*"],
       "@motion/*":        ["./components/motion/*"],
       "@sound/*":         ["./components/sound/*"],
-      "@transitions/*":   ["./components/transitions/*"],
+      "@theka/*":         ["./components/theka/*"],
       "@db/*":            ["./lib/db/*"],
       "@store/*":         ["./lib/store/*"],
       "@utils/*":         ["./lib/utils/*"],

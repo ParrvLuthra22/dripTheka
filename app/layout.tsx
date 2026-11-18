@@ -2,18 +2,19 @@ import type { Metadata, Viewport } from "next";
 import {
   Fraunces,
   JetBrains_Mono,
-  Geist,
-  Caveat,
+  Rozha_One,
+  Mukta,
 } from "next/font/google";
 import "../styles/globals.css";
-import "../styles/shadcn-overrides.css";
+import "../styles/forms.css";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 
-/* ─── Fonts ──────────────────────────────────────────────────────────────── */
+/* ─── Fonts ──────────────────────────────────────────────────────────────────
+   Exactly four families. Each exposes a CSS variable on <html>; the Tailwind
+   theme in styles/tokens.css maps them to font-display / font-mono /
+   font-loud / font-sans.                                                     */
 
-// Fraunces — editorial serif with optical size, soft, and wonk axes.
-// Used for: section headlines, product names, pull quotes, body editorial.
-// Italic is the brand expression — Fraunces italic feels designed, not accidental.
+// Fraunces — editorial serif (opsz/SOFT/WONK axes). Italic is the brand voice.
 const fraunces = Fraunces({
   subsets:  ["latin"],
   variable: "--font-fraunces",
@@ -24,32 +25,30 @@ const fraunces = Fraunces({
   preload:  true,
 });
 
-// Tanker is self-hosted — see /public/fonts/tanker/README.md
-// CSS @font-face in globals.css loads it; fallback is Impact + Arial Black.
-// No next/font for Tanker since it's not on Google Fonts.
-
+// JetBrains Mono — labels, prices, tags, nav, all UI chrome.
 const jetbrains = JetBrains_Mono({
   subsets:  ["latin"],
   variable: "--font-jetbrains",
   display:  "swap",
-  preload:  false,
+  preload:  true,
 });
 
-const geist = Geist({
-  subsets:  ["latin"],
-  variable: "--font-geist",
+// Rozha One — loud Devanagari-born display face. Wordmarks, menu, 404.
+const rozha = Rozha_One({
+  subsets:  ["latin", "devanagari"],
+  weight:   "400",
+  variable: "--font-rozha",
   display:  "swap",
   preload:  true,
 });
 
-// Caveat — handwritten annotation font.
-// Used for chalk marks, margin notes, and scribbled labels.
-const caveat = Caveat({
-  subsets:  ["latin"],
-  variable: "--font-caveat",
-  weight:   ["400", "600"],
+// Mukta — body copy. Latin + Devanagari so Hinglish/Hindi glosses never fall back.
+const mukta = Mukta({
+  subsets:  ["latin", "devanagari"],
+  weight:   ["300", "400", "500", "600", "700"],
+  variable: "--font-mukta",
   display:  "swap",
-  preload:  false,
+  preload:  true,
 });
 
 /* ─── Metadata ───────────────────────────────────────────────────────────── */
@@ -88,7 +87,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${fraunces.variable} ${jetbrains.variable} ${geist.variable} ${caveat.variable}`}
+      className={`${fraunces.variable} ${jetbrains.variable} ${rozha.variable} ${mukta.variable}`}
     >
       <body>
         <SessionProvider>

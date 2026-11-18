@@ -16,17 +16,17 @@ import { ChalkMark } from "@/components/ui/ChalkMark";
 const PARAGRAPHS: TypeSegment[][] = [
   [
     "We didn't start a clothing brand. We started a ",
-    { node: <span key="1" className="relative inline-block not-italic text-[--blue]">theka<ChalkMark variant="underline" color="currentColor" animate={false} className="absolute -bottom-0.5 left-0 w-full h-[7px]" /></span>, chars: 5 },
+    { node: <span key="1" className="relative inline-block not-italic text-(--blue)">theka<ChalkMark variant="underline" color="currentColor" animate={false} className="absolute -bottom-0.5 left-0 w-full h-[7px]" /></span>, chars: 5 },
     " — a corner where the dripped meet, where heritage and concrete shake hands, where every fit ",
-    { node: <span key="2" className="relative inline-block not-italic text-[--blue]">means something.<ChalkMark variant="underline" color="currentColor" animate={false} className="absolute -bottom-0.5 left-0 w-full h-[7px]" /></span>, chars: 16 },
+    { node: <span key="2" className="relative inline-block not-italic text-(--blue)">means something.<ChalkMark variant="underline" color="currentColor" animate={false} className="absolute -bottom-0.5 left-0 w-full h-[7px]" /></span>, chars: 16 },
   ],
   [
     "Made in India, for the kids who code at midnight, ride at dawn, and dress like the city is theirs. ",
-    { node: <span key="3" className="relative inline-block not-italic text-[--blue]">Because it is.<ChalkMark variant="underline" color="currentColor" animate={false} className="absolute -bottom-0.5 left-0 w-full h-[7px]" /></span>, chars: 14 },
+    { node: <span key="3" className="relative inline-block not-italic text-(--blue)">Because it is.<ChalkMark variant="underline" color="currentColor" animate={false} className="absolute -bottom-0.5 left-0 w-full h-[7px]" /></span>, chars: 14 },
   ],
   [
     "Six pieces. One colourway. Two hundred of each. When it's gone it's ",
-    { node: <span key="4" className="relative inline-block not-italic text-[--blue]">Tapped Out<ChalkMark variant="underline" color="currentColor" animate={false} className="absolute -bottom-0.5 left-0 w-full h-[7px]" /></span>, chars: 10 },
+    { node: <span key="4" className="relative inline-block not-italic text-(--blue)">Tapped Out<ChalkMark variant="underline" color="currentColor" animate={false} className="absolute -bottom-0.5 left-0 w-full h-[7px]" /></span>, chars: 10 },
     " — no restocks, no waiting lists. You either got it or you didn't. That's not scarcity marketing; that's respect for your time.",
   ],
 ];
@@ -35,7 +35,7 @@ export function StoryTeaser() {
   return (
     <section
       data-nav-tone="dark"
-      className="relative bg-[--cream] py-20 md:py-32"
+      className="relative bg-(--cream) py-20 md:py-32"
       aria-labelledby="story-heading"
     >
       <Sticker variant="bottle-cap" rotate={12} size={72}
@@ -52,20 +52,20 @@ export function StoryTeaser() {
           <div className="md:sticky md:top-[calc(var(--header-h)+2rem)] self-start">
             <div className="flex flex-col gap-5">
               <Reveal delay={50}>
-                <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink]/30">
+                <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-(--ink)/30">
                   About Us
                 </p>
               </Reveal>
               <Reveal delay={100}>
-                <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[--ink]/20">
+                <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-(--ink)/20">
                   01 / Our Why
                 </p>
               </Reveal>
 
-              <div className="hidden md:block w-px h-20 bg-[--ink]/10 mt-2" />
+              <div className="hidden md:block w-px h-20 bg-(--ink)/10 mt-2" />
 
               <Reveal delay={150} className="hidden md:block">
-                <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-[--ink]/15 leading-relaxed max-w-[160px]">
+                <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-(--ink)/15 leading-relaxed max-w-[160px]">
                   Est. MMXXVI<br />New Delhi
                 </p>
               </Reveal>
@@ -81,7 +81,7 @@ export function StoryTeaser() {
                 speed={60}
                 threshold={0.25}
                 as="p"
-                className="font-display italic text-[--ink] leading-[1.2]"
+                className="font-display italic text-(--ink) leading-[1.2]"
                 style={{ fontSize: "clamp(1.4rem, 3vw, 2.4rem)" }}
               />
             ))}
@@ -91,7 +91,7 @@ export function StoryTeaser() {
               <Link
                 href="/story"
                 data-hover
-                className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-[--blue] hover:text-[--ink] transition-colors duration-200 mt-4"
+                className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-(--blue) hover:text-(--ink) transition-colors duration-200 mt-4"
               >
                 Read the full story&nbsp;→
               </Link>

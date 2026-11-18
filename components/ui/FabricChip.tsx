@@ -5,7 +5,7 @@
 // Lifts on hover, cobalt inset ring when active.
 
 import { motion } from "framer-motion";
-import { Grain } from "@/components/ui/Grain";
+import { Grain } from "@/components/theka/Grain";
 import { cn } from "@/lib/utils/cn";
 
 export interface FabricChipProps {
@@ -40,7 +40,7 @@ export function FabricChip({
       transition={{ duration: 0.2, ease: "easeOut" }}
       className={cn(
         "flex flex-col items-center gap-1.5 shrink-0",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--blue] focus-visible:ring-offset-2",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--blue) focus-visible:ring-offset-2",
         disabled ? "opacity-40 grayscale cursor-not-allowed" : "cursor-pointer"
       )}
     >
@@ -64,7 +64,7 @@ export function FabricChip({
       <span
         className={cn(
           "font-mono text-[10px] uppercase tracking-[0.12em]",
-          active ? "text-[--blue]" : "text-[--ink]/50"
+          active ? "text-(--blue)" : "text-(--ink)/50"
         )}
       >
         {colorName}

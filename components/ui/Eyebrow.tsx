@@ -11,9 +11,9 @@ interface EyebrowProps {
 }
 
 const colorMap = {
-  blue:  "text-[--blue]",
-  ink:   "text-[--ink]/50",
-  cream: "text-[--cream]/60",
+  blue:  "text-(--blue)",
+  ink:   "text-(--ink)/50",
+  cream: "text-(--cream)/60",
 };
 
 export function Eyebrow({

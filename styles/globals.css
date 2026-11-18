@@ -1,78 +1,8 @@
-/* ─── Drip Theka — Design Tokens ─────────────────────────────────────────── */
+/* ─── Drip Theka — Global styles (tokens live in ./tokens.css) ─────────── */
 
 @import "tailwindcss";
 
-/* ─── Tanker self-hosted @font-face ─────────────────────────────────────────
-   Place Tanker-Regular.woff2 in /public/fonts/tanker/
-   Download: https://pangrampangram.com/products/tanker (free)
-   Falls back to Impact / Arial Black until the file is present.              */
-
-@font-face {
-  font-family: "Tanker";
-  src: local("Tanker"),
-       url("/fonts/tanker/Tanker-Regular.woff2") format("woff2"),
-       url("/fonts/tanker/Tanker-Regular.woff")  format("woff"),
-       url("/fonts/tanker/Tanker-Regular.otf")   format("opentype");
-  font-weight: 400;
-  font-style:  normal;
-  font-display: swap;
-}
-
-/* ─── Tailwind v4 @theme ─────────────────────────────────────────────────── */
-
-@theme inline {
-  /* Colors */
-  --color-blue:       var(--blue);
-  --color-blue-deep:  var(--blue-deep);
-  --color-cream:      var(--cream);
-  --color-cream-warm: var(--cream-warm);
-  --color-ink:        var(--ink);
-  --color-ink-soft:   var(--ink-soft);
-  /* ── Fonts ─────────────────────────────────────────────────────────────
-     font-tanker  → Tanker — loud, chunky, for hero / marquees / 404 / menu
-     font-display → Fraunces italic — editorial, section headlines, body copy
-     font-mono    → JetBrains Mono — labels, prices, tags, all UI text
-     font-sans    → Geist Sans — body paragraphs, forms, descriptions       */
-
-  --font-tanker:  "Tanker", Impact, "Arial Black", sans-serif;
-  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
-  --font-mono:    var(--font-jetbrains), "Courier New", monospace;
-  --font-sans:    var(--font-geist), system-ui, sans-serif;
-  --font-hand:    var(--font-caveat), "Caveat", cursive;
-
-  /* Easing */
-  --ease-pour:     cubic-bezier(.6,.05,.2,1);
-  --ease-out-expo: cubic-bezier(.16,1,.3,1);
-
-  /* Spacing */
-  --spacing-container: var(--container);
-  --spacing-pad-x:     var(--pad-x);
-  --spacing-header-h:  var(--header-h);
-}
-
-/* ─── CSS custom properties ──────────────────────────────────────────────── */
-
-:root {
-  /* Brand colours */
-  --blue:        #004AAD;
-  --blue-deep:   #002F70;
-  --cream:       #E4E2DD;
-  --cream-warm:  #EFEAD8;
-  --ink:         #141518;
-  --ink-soft:    #2A2B2F;
-
-  /* Layout */
-  --container: 1440px;
-  --pad-x:     clamp(20px, 4vw, 72px);
-  --header-h:  84px;
-
-  /* Easing */
-  --ease-pour:     cubic-bezier(.6,.05,.2,1);
-  --ease-out-expo: cubic-bezier(.16,1,.3,1);
-
-  /* Audio-reactive (driven by AudioReactive.tsx) */
-  --audio-level: 0;
-}
+@import "./tokens.css";
 
 /* ─── Base Reset ─────────────────────────────────────────────────────────── */
 
@@ -131,37 +61,37 @@
 /* ─── Typography scale ───────────────────────────────────────────────────── */
 
 @layer base {
-  /* ── Tanker scale — loud, uppercase, blocked ─────────────────────────
+  /* ── Loud scale — Rozha One, uppercase, blocked ──────────────────────
      Use for: hero wordmark, mobile menu, marquees, 404 headline,
-     pre-footer wordmark, manifesto headline.                            */
+     pre-footer wordmark, manifesto headline, route-shutter wordmark.    */
 
-  .type-tanker-xl {
-    font-family:     var(--font-tanker);
+  .type-loud-xl {
+    font-family:     var(--font-loud);
     font-weight:     400;
     font-style:      normal;
     text-transform:  uppercase;
     font-size:       clamp(5rem, 18vw, 14rem);
-    line-height:     0.82;
+    line-height:     0.9;
     letter-spacing:  -0.02em;
   }
 
-  .type-tanker-lg {
-    font-family:     var(--font-tanker);
+  .type-loud-lg {
+    font-family:     var(--font-loud);
     font-weight:     400;
     font-style:      normal;
     text-transform:  uppercase;
     font-size:       clamp(3.5rem, 8vw, 7rem);
-    line-height:     0.85;
+    line-height:     0.92;
     letter-spacing:  -0.01em;
   }
 
-  .type-tanker-md {
-    font-family:     var(--font-tanker);
+  .type-loud-md {
+    font-family:     var(--font-loud);
     font-weight:     400;
     font-style:      normal;
     text-transform:  uppercase;
     font-size:       clamp(2rem, 5vw, 4rem);
-    line-height:     0.88;
+    line-height:     0.95;
     letter-spacing:  -0.005em;
   }
 
@@ -215,7 +145,7 @@
     text-transform: uppercase;
   }
 
-  /* ── Body — Geist ──────────────────────────────────────────────────── */
+  /* ── Body — Mukta ──────────────────────────────────────────────────── */
 
   .type-body-lg {
     font-family: var(--font-sans);
@@ -272,6 +202,29 @@
     display:     inline-block;
     will-change: transform, opacity;
   }
+}
+
+/* ─── Cursor (components/theka/Cursor.tsx) ────────────────────────────────
+   CSS is the gate: the custom cursor exists only on hover-capable, fine
+   pointers. Touch / pen-only devices (hover: none) never render it and keep
+   their native cursor. The OS cursor is hidden only once JS confirms the
+   custom one is live (html.theka-cursor-on).                               */
+
+.theka-cursor { display: none; }
+
+@media (hover: hover) and (pointer: fine) {
+  .theka-cursor { display: block; }
+
+  html.theka-cursor-on,
+  html.theka-cursor-on * { cursor: none !important; }
+
+  html.theka-cursor-on input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  html.theka-cursor-on textarea,
+  html.theka-cursor-on [contenteditable="true"] { cursor: text !important; }
+}
+
+@media (hover: none) {
+  .theka-cursor { display: none !important; }
 }
 
 /* ─── Audio-reactive backdrop ───────────────────────────────────────────────

@@ -93,13 +93,13 @@ export function HowItPours({ product }: HowItPoursProps) {
 
   return (
     <section
-      className="bg-[--cream] py-20 md:py-28 border-t border-[--ink]/8"
+      className="bg-(--cream) py-20 md:py-28 border-t border-(--ink)/8"
       aria-label="Product story"
     >
       <div style={{ paddingInline: "var(--pad-x)" }}>
         {/* Section label */}
         <Reveal className="mb-12">
-          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[--ink]/30">
+          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-(--ink)/30">
             How It Pours
           </p>
         </Reveal>
@@ -110,18 +110,18 @@ export function HowItPours({ product }: HowItPoursProps) {
             <Reveal key={heading} delay={i * 80}>
               <div className="flex flex-col gap-4">
                 {/* Icon */}
-                <div className="w-10 h-10 flex items-center justify-center border border-[--blue]/20 rounded-sm">
+                <div className="w-10 h-10 flex items-center justify-center border border-(--blue)/20 rounded-sm">
                   {icon}
                 </div>
 
                 {/* Heading */}
-                <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[--ink]">
+                <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-(--ink)">
                   {heading}
                 </p>
 
                 {/* Copy */}
                 <p
-                  className="font-display italic text-[--ink]/65 leading-snug"
+                  className="font-display italic text-(--ink)/65 leading-snug"
                   style={{ fontSize: "clamp(0.95rem, 1.6vw, 1.2rem)" }}
                 >
                   {copy}

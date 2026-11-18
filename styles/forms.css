@@ -1,7 +1,7 @@
 /* ─── Brand form element overrides ──────────────────────────────────────────
-   No Shadcn in this project — these target native HTML elements to ensure
-   consistent brand styling regardless of Tailwind class coverage.
-   Imported after globals.css so it wins the cascade.               */
+   Native HTML elements only — no component library. Ensures inputs,
+   selects, dialogs and bare buttons are on-brand without utility classes.
+   Imported after globals.css so it wins the cascade.                        */
 
 /* ── Inputs & textareas ─────────────────────────────────────────────────── */
 
