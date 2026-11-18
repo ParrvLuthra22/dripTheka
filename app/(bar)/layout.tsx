@@ -1,9 +1,9 @@
 // (bar) layout — the home route's minimal shell.
 //
-// The Bar is a fixed, full-screen experience with its own nav, cursor and
+// The Wall is a fixed, full-screen experience with its own header, lighting and
 // grain, so it does NOT inherit the (site) chrome (Nav, Footer, global Cursor,
-// MorphingLogo, PintGlass, LoadingScreen…). No age block: the Gate's
-// "21+ · the theka has rules…" line is flavour text only.
+// Grain, MorphingLogo, PintGlass, LoadingScreen…) — the wall uses the native
+// pointer and its plaster texture already carries the grain. No age block.
 
 export default function BarLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;

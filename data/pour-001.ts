@@ -11,11 +11,18 @@ export interface SizeVariant {
   sku: string;
 }
 
+export interface WallImages {
+  front: string;        // trimmed transparent cutout, ~1100px tall
+  frontShadow: string;
+  back: string;
+  backShadow: string;
+}
+
 export interface Product {
   id: string;
   slug: string;
   name: string;
-  /** Devanagari / Hinglish subtitle shown under the name on The Bar. */
+  /** Devanagari / Hinglish subtitle shown under the name on The Wall. */
   hindi: string;
   tagline: string;
   type: GarmentType;
@@ -33,13 +40,26 @@ export interface Product {
   dropNumber: "001";
   collectionSlug: "pour-001";
   imageAlt: string;
-  /** Front-of-garment image (public path). Served in the glass on The Bar. */
-  frontImage: string;
-  /** Back-of-garment image (public path). Shown via the FRONT/BACK toggle. */
-  backImage: string;
+  /** Wall number shown as "Drip Theka / 04" and "NO. 04". Wall products only. */
+  code?: string;
+  /** Colourway label, e.g. "Ink / Amber". Wall products only. */
+  colourway?: string;
+  /** One-liner shown in the wall's product view. */
+  blurb?: string;
+  /**
+   * Photographic cutouts for The Wall (public paths). A product only appears on
+   * the wall once it has these — never put tee art on another garment.
+   */
+  wall?: WallImages;
+  /** Demo art — swap `wall` for the real designs, then drop this flag. */
+  placeholderArt?: true;
   isLimited: boolean;
   totalUnits: number;
 }
+
+/** A product that has real wall cutouts — the only kind The Wall shows. */
+export type WallProduct = Product & { wall: WallImages };
+export const hasWall = (p: Product): p is WallProduct => !!p.wall;
 
 export interface Pour {
   slug: "pour-001";
@@ -51,6 +71,66 @@ export interface Pour {
   products: Product[];
   editorialNote: string;
 }
+
+// ── The ten Pour #001 demo tees (The Wall) ───────────────────────────────────
+// Names / Hindi / colourways / blurbs are from the approved wall-reference.
+// `placeholderArt` marks them as demo designs — the real ones replace `wall`.
+
+type WallBase = "bone" | "black" | "cobalt";
+const BASE: Record<WallBase, { hex: string; name: string }> = {
+  bone:   { hex: "#E4E2DD", name: "Bone" },
+  black:  { hex: "#141518", name: "Ink" },
+  cobalt: { hex: "#004AAD", name: "Cobalt" },
+};
+const TEE_STOCK: [Size, number][] = [["S", 30], ["M", 50], ["L", 50], ["XL", 40], ["XXL", 30]];
+
+function wallTee(
+  n: number, name: string, hindi: string, base: WallBase, colourway: string, blurb: string,
+): Product {
+  const code = String(n).padStart(2, "0");
+  const id = `dt-001-${String(6 + n).padStart(3, "0")}`;
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  return {
+    id, slug, name, hindi, code, colourway, blurb,
+    tagline: blurb,
+    type: "tee",
+    fit: "oversized",
+    price: 249900, // ₹2,499
+    depositPercent: 30,
+    colors: [BASE[base].hex],
+    colorNames: [BASE[base].name],
+    sizes: TEE_STOCK.map(([size, stock]) => ({ size, stock, sku: `${id.toUpperCase()}-${size}` })),
+    description: `${blurb} 400 GSM cotton, oversized with a dropped shoulder, screen-printed in Delhi.`,
+    careInstructions: ["Wash cold inside out", "Air dry flat", "Low iron on reverse"],
+    fabric: "100% combed ring-spun cotton, 400gsm",
+    gsm: 400,
+    dropNumber: "001",
+    collectionSlug: "pour-001",
+    imageAlt: `${name} tee — ${colourway}`,
+    isLimited: true,
+    totalUnits: 200,
+    wall: {
+      front:        `/theka/wall/p${code}.webp`,
+      frontShadow:  `/theka/wall/p${code}_sh.webp`,
+      back:         `/theka/wall/back_${base}.webp`,
+      backShadow:   `/theka/wall/back_${base}_sh.webp`,
+    },
+    placeholderArt: true,
+  };
+}
+
+const WALL_TEES: Product[] = [
+  wallTee(1,  "Doodh Nahi",            "दूध नहीं, बीयर", "bone",   "Bone / Red",     "Not milk. Beer. The opening line of every good night."),
+  wallTee(2,  "Shunya",                "शून्य",           "black",  "Ink / Red",      "Zero given. Delivered with a straight face."),
+  wallTee(3,  "Tapped Out",            "खतम",            "cobalt", "Cobalt / Cream", "The keg's dry. Wear the sold-out word as a flex."),
+  wallTee(4,  "Ek Peg Aur",            "एक पेग और",       "black",  "Ink / Amber",    "One more. Always one more."),
+  wallTee(5,  "Side Character",        "बजट",            "bone",   "Bone / Ink",     "Main-character energy. Side-character budget."),
+  wallTee(6,  "Phir Milenge",          "फिर मिलेंगे",     "cobalt", "Cobalt / Amber", "See you again, regular. Scrawled on the way out."),
+  wallTee(7,  "Sabr Kar",              "सब्र कर",         "black",  "Ink / Cobalt",   "The bar's still buffering. Patience, bhai."),
+  wallTee(8,  "Philosopher",           "आधी रात का",      "cobalt", "Cobalt / Cream", "The 2am deep-talk guy, headphones on."),
+  wallTee(9,  "Ro Mat",                "रो मत, पी ले",    "black",  "Ink / Red",      "Don't cry. Drink up."),
+  wallTee(10, "Bartender's Favourite", "ठेके वाला",       "bone",   "Bone / Gold",    "The regular the bartender actually likes. On the house."),
+];
 
 export const POUR_001: Pour = {
   slug: "pour-001",
@@ -96,8 +176,6 @@ export const POUR_001: Pour = {
       dropNumber: "001",
       collectionSlug: "pour-001",
       imageAlt: "Boxy cobalt blue tee with cream wine glass logo on left chest",
-      frontImage: "/bar/first-round-tee-front.png",
-      backImage:  "/bar/first-round-tee-back.png",
       isLimited: true,
       totalUnits: 200,
     },
@@ -132,8 +210,6 @@ export const POUR_001: Pour = {
       dropNumber: "001",
       collectionSlug: "pour-001",
       imageAlt: "Ink black oversized hoodie with LAST CALL embroidery on back",
-      frontImage: "/bar/last-call-hoodie-front.png",
-      backImage:  "/bar/last-call-hoodie-back.png",
       isLimited: true,
       totalUnits: 200,
     },
@@ -168,8 +244,6 @@ export const POUR_001: Pour = {
       dropNumber: "001",
       collectionSlug: "pour-001",
       imageAlt: "Cream cargo pants with POUR 001 stamp on left pocket",
-      frontImage: "/bar/regular-cargo-front.png",
-      backImage:  "/bar/regular-cargo-back.png",
       isLimited: true,
       totalUnits: 200,
     },
@@ -202,8 +276,6 @@ export const POUR_001: Pour = {
       dropNumber: "001",
       collectionSlug: "pour-001",
       imageAlt: "Cobalt waxed cotton jacket with cream quilted liner",
-      frontImage: "/bar/opening-night-jacket-front.png",
-      backImage:  "/bar/opening-night-jacket-back.png",
       isLimited: true,
       totalUnits: 100,
     },
@@ -237,8 +309,6 @@ export const POUR_001: Pour = {
       dropNumber: "001",
       collectionSlug: "pour-001",
       imageAlt: "Cream matching set with wine glass print on shorts back hem",
-      frontImage: "/bar/tapped-out-set-front.png",
-      backImage:  "/bar/tapped-out-set-back.png",
       isLimited: true,
       totalUnits: 150,
     },
@@ -270,11 +340,10 @@ export const POUR_001: Pour = {
       dropNumber: "001",
       collectionSlug: "pour-001",
       imageAlt: "Ink structured 6-panel cap with WRONG THEKA embroidery",
-      frontImage: "/bar/wrong-theka-cap-front.png",
-      backImage:  "/bar/wrong-theka-cap-back.png",
       isLimited: true,
       totalUnits: 300,
     },
+    ...WALL_TEES,
   ],
 };
 

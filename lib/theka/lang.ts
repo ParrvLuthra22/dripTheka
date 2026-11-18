@@ -75,54 +75,65 @@ export const lang = {
     gloss:    "ek aur round",
   },
 
-  // ── The Bar (home: gate → shelf → pour) — copy verbatim from the approved
-  //    bar-reference.html. Do not "improve" these.
+  // ── The Wall (home) — copy verbatim from the approved wall-reference. Do not
+  //    "improve" these.
 
-  bar: {
+  wall: {
     meta: {
-      title:       "Drip Theka — The Bar",
-      description: "Serving fits, not drinks. Enter the theka — the collection, served in glasses.",
+      title:       "Drip Theka — The Wall",
+      description: "Serving fits, not drinks. Pour #001 — the collection, on the wall.",
     },
-    gate: {
-      est:      "Est · ठेका · MMXXVI",
-      city:     "New Delhi",
-      eyebrow:  "— Pour #001 · the doors are open —",
-      mark:     "drip theka",
-      tag:      "serving fits, not drinks.",
-      enter:    "Enter the theka →",
-      fine:     "21+ · the theka has rules. we don't, but legally.",
-      welcome:  "welcome, regular.",
+    hello: {
+      eyebrow: "Pour #001 · currently pouring · अभी निकला है",
+      title:   "Serving fits, not drinks.",
     },
-    nav: {
-      logo:  "drip theka",
-      links: [
-        { label: "The Bar",      href: "/" },
-        { label: "Try the Look", href: "/try-the-look" },
-        { label: "Story",        href: "/story" },
-        { label: "Regulars",     href: "/regulars" },
-      ],
-      bag:      (n: number) => `BAG · ${n}`,
-      bagAria:  (n: number) => `Bag, ${n} item${n === 1 ? "" : "s"}`,
+    header: {
+      logo:       "DRIP THEKA",
+      collection: "Collection",
+      back:       "← Collection",
+      look:       "Try the Look",
+      lookHref:   "/try-the-look",
+      bag:        "Bag",
+      bagAria:    (n: number) => `Bag, ${n} item${n === 1 ? "" : "s"}`,
     },
-    head: {
-      eyebrow: "Currently Pouring",
-      gloss:   "· abhi nikla hai",
-      title:   "What are you drinking?",
+    tag: {
+      pour: "POUR #001",
+      sub:  (n: number, gsm: number) => `${n} fits · ${gsm} GSM`,
+      no:   (code: string) => `NO. ${code}`,
     },
-    hint:      "tap a glass · we pour your fit",
-    swipe:     "◂ swipe ▸",
-    glassAria: (name: string, price: string) => `${name}, ${price} — pour this fit`,
-    cursor:    "POUR",
-    serve: {
-      back:      "← back to the bar",
-      eyebrow:   "Pour #001 · freshly poured",
-      front:     "Front",
-      backSide:  "Back",
-      pour:      "Pour into glass →",
-      poured:    "Poured ✓ · in your bag",
-      tappedOut: "Tapped Out · khatam",
-      sizeAria:  (s: string, out: boolean) => out ? `Size ${s}, tapped out` : `Size ${s}`,
-      dialog:    (name: string) => `${name} — poured`,
+    foot:     "Est. MMXXVI · New Delhi",
+    blackout: "lights on",
+    itemAria: (name: string, price: string) => `${name} — ${price}`,
+    info: {
+      eyebrow: (code: string) => `Drip Theka / ${code}`,
+    },
+    panel: {
+      eyebrow:    "Pour #001 / Tees",
+      chooseSize: "Choose your size",
+      fit:        "Oversized",
+      selectSize: "Select a size",
+      sizeAria:   "Size",
+      add:        "Add to bag",
+      ships:      "Ships in 5–7 days",
+      poured:     "Poured ✓",
+      viewAria:   "View",
+      front:      "Front",
+      back:       "Back",
+      details:    "Design details",
+      prevAria:   "Previous fit",
+      nextAria:   "Next fit",
+    },
+    details: {
+      fabric:    "Fabric",
+      fabricVal: (gsm: number) => `${gsm} GSM cotton`,
+      fit:       "Fit",
+      fitVal:    "Oversized, dropped shoulder",
+      print:     "Print",
+      printVal:  "Screen print, Delhi",
+    },
+    toast: {
+      pickSize: "Pick a size first, regular",
+      poured:   (name: string, size: string) => `${name} · ${size} — poured into your glass`,
     },
   },
 
@@ -131,7 +142,7 @@ export const lang = {
   tryTheLook: {
     eyebrow: "Try the Look · jaldi aa raha hai",
     title:   "This room's still being set up.",
-    back:    "← back to the bar",
+    back:    "← back to the wall",
   },
 
   // ── Cursor labels — used as data-cursor="…" values ────────────────────────
