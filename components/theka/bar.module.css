@@ -101,26 +101,27 @@
 .row { display: flex; gap: clamp(18px,3vw,54px); align-items: flex-end; padding: 0 6vw; max-width: 100%; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
 .row::-webkit-scrollbar { display: none; }
 .unit { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; scroll-snap-align: center; will-change: transform; }
-.stage { position: relative; width: clamp(180px,17vw,230px); height: clamp(300px,34vw,420px); display: flex; align-items: flex-end; justify-content: center; }
+/* One unit width (--w) drives the whole composition: glass = 60% of the unit,
+   fit hem sits inside the bowl's upper lip, stage is only as tall as fit+glass. */
+.stage { --w: clamp(180px,17vw,230px); position: relative; width: var(--w); height: calc(var(--w) * 1.56); display: flex; align-items: flex-end; justify-content: center; }
 /* PRESERVE: glow transitions opacity only */
-.glow { position: absolute; left: 50%; top: 8%; width: 120%; height: 70%; transform: translateX(-50%); background: radial-gradient(ellipse at 50% 45%, rgba(0,74,173,.6), transparent 62%); filter: blur(10px); transition: opacity .4s; opacity: .7; will-change: opacity; }
-.fit { position: absolute; left: 50%; bottom: 118px; transform: translateX(-50%); height: 66%; width: auto; filter: drop-shadow(0 18px 34px rgba(0,0,0,.6)); transition: transform .55s cubic-bezier(.16,1,.3,1); z-index: 2; }
-.goblet { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); width: 62%; z-index: 1; opacity: .95; }
-.pourline { position: absolute; left: 50%; bottom: 92px; width: 2px; height: 60px; transform: translateX(-50%); background: linear-gradient(var(--blue), transparent); opacity: 0; transition: opacity .4s; }
+.glow { position: absolute; left: 50%; top: 6%; width: 150%; height: 94%; transform: translateX(-50%); background: radial-gradient(ellipse 50% 50% at 50% 62%, rgba(0,74,173,.85), rgba(0,74,173,.35) 45%, transparent 72%); filter: blur(10px); transition: opacity .4s; opacity: .7; will-change: opacity; }
+.fit { position: absolute; left: 50%; bottom: calc(var(--w) * .6); transform: translateX(-50%); height: calc(var(--w) * .9); width: auto; filter: drop-shadow(0 18px 34px rgba(0,0,0,.6)); transition: transform .55s cubic-bezier(.16,1,.3,1); z-index: 2; }
+.goblet { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); width: 60%; z-index: 1; opacity: .95; }
+.pourline { position: absolute; left: 50%; bottom: calc(var(--w) * .45); width: 2px; height: calc(var(--w) * .2); z-index: 1; transform: translateX(-50%); background: linear-gradient(var(--blue), transparent); opacity: 0; transition: opacity .4s; }
 .unit:hover .fit, .unit:focus-visible .fit { transform: translateX(-50%) translateY(-14px); }
 .unit:hover .glow, .unit:focus-visible .glow { opacity: 1; }
 .unit:hover .pourline, .unit:focus-visible .pourline { opacity: .8; }
 .unit:focus-visible { outline: 1px solid var(--cream); outline-offset: 6px; border-radius: 8px; }
 .meta { margin-top: 16px; text-align: center; }
 .meta .n { font-family: var(--serif); font-style: italic; font-weight: 600; font-size: clamp(17px,1.8vw,22px); line-height: 1; }
-.meta .h { font-family: var(--dev); font-size: 13px; opacity: .6; margin-top: 3px; }
+.meta .h { font-family: var(--dev); font-size: 13px; opacity: .78; /* AA on the bar */ margin-top: 3px; }
 .meta .p { font-size: 12px; letter-spacing: .08em; margin-top: 7px; color: var(--cream); opacity: .85; }
 .hint { position: absolute; bottom: 24px; left: 0; right: 0; text-align: center; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; opacity: .4; z-index: 6; }
 @media (max-width: 820px) {
   .shelf { top: 180px; }
   .row { gap: 40px; padding: 0 42vw; }
-  .stage { width: 62vw; height: 70vw; }
-  .fit { bottom: 22vw; height: 62%; }
+  .stage { --w: min(62vw, 46svh); }
   .meta .n { font-size: 22px; }
 }
 

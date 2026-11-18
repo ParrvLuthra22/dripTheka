@@ -11,8 +11,8 @@
 import { useId } from "react";
 
 interface GobletProps {
-  /** Rendered width in px. Reference default: 62. */
-  width?: number;
+  /** Rendered width: px number, or a CSS length such as "100%". */
+  width?: number | string;
   className?: string;
 }
 
@@ -20,7 +20,7 @@ export function Goblet({ width = 62, className }: GobletProps) {
   const gid = `gg-${useId().replace(/:/g, "")}`;
   return (
     <div className={className} aria-hidden="true" style={{ display: "flex", justifyContent: "center" }}>
-      {/* Fixed pixel width (as the reference), centred by the flex wrapper */}
+      {/* Centred by the flex wrapper */}
       <svg viewBox="0 0 120 150" width={width} xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id={gid} x1="0" x2="1">

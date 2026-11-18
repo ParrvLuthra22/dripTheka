@@ -43,7 +43,7 @@ export function GlassUnit({ ref, product, onPour }: GlassUnitProps) {
           sizes="(max-width: 820px) 50vw, 230px"
           draggable={false}
         />
-        <Goblet className={s.goblet} />
+        <Goblet className={s.goblet} width="100%" />
       </div>
       <div className={s.meta} aria-hidden="true">
         <div className={s.n}>{product.name}</div>
