@@ -68,7 +68,7 @@
   padding: 22px clamp(16px,2.6vw,44px); pointer-events: none; }
 .header > * { pointer-events: auto; }
 .logo { display: flex; align-items: center; gap: 9px; font-weight: 800; font-size: 17px; letter-spacing: -.01em; }
-.logo svg { width: 18px; height: 22px; }
+.logo img { height: 22px; width: auto; display: block; }
 .center { position: absolute; left: 50%; transform: translateX(-50%); display: flex; gap: 44px; font-size: 12px; font-weight: 500; }
 .center a, .center button { color: var(--txt); text-decoration: none; position: relative; padding-bottom: 5px; opacity: .85; }
 .center .act { opacity: 1; }

@@ -48,7 +48,16 @@ interface WallApi {
   dragging: () => boolean;
 }
 
-export function TheWall({ products }: { products: WallProduct[] }) {
+interface TheWallProps {
+  products: WallProduct[];
+  /** The Entry is playing on top: no intro, chrome hidden, no pointer/keyboard handling. */
+  entering?: boolean;
+  /** When `entering` ends: true → the Entry just handed over (fade the chrome in);
+   *  false → a normal visit (deep link / lights-on intro). */
+  handoff?: boolean;
+}
+
+export function TheWall({ products, entering = false, handoff = false }: TheWallProps) {
   const n = products.length;
   const [store] = useState(createWallStore);
   const view = useSyncExternalStore(store.subscribe, store.get, store.get);
@@ -58,6 +67,9 @@ export function TheWall({ products }: { products: WallProduct[] }) {
   const bagCount = hydrated ? count : 0;
 
   const api = useRef<WallApi | null>(null);
+  // Entry handover: read inside the mount effect without re-running it.
+  const enteringRef = useRef(entering);
+  const lifecycle = useRef<{ start: () => void; reveal: () => void; held: boolean } | null>(null);
 
   const scrollerRef = useRef<HTMLDivElement>(null);
   const worldRef = useRef<HTMLDivElement>(null);
@@ -77,6 +89,15 @@ export function TheWall({ products }: { products: WallProduct[] }) {
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   useLayoutEffect(() => {
+    enteringRef.current = entering;
+    const lc = lifecycle.current;
+    if (!entering && lc?.held) {
+      lc.held = false;
+      if (handoff) lc.reveal(); else lc.start();
+    }
+  }, [entering, handoff]);
+
+  useLayoutEffect(() => {
     const world = worldRef.current, scroller = scrollerRef.current, bg = bgRef.current;
     const hello = helloRef.current, header = headerRef.current, tag = tagRef.current, foot = footRef.current;
     const blackout = blackoutRef.current, toastEl = toastRef.current;
@@ -91,6 +112,7 @@ export function TheWall({ products }: { products: WallProduct[] }) {
 
     const rm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const D = (v: number) => (rm ? 0 : v);
+    const idle = () => enteringRef.current; // Entry on top → the Wall is a backdrop, not interactive
 
     let mode: "wall" | "zoom" = "wall";
     let cur = 0;
@@ -161,7 +183,7 @@ export function TheWall({ products }: { products: WallProduct[] }) {
     };
 
     const open = (i: number) => {
-      if (busy) return;
+      if (busy || idle()) return;
       warmBacks();
       busy = true; mode = "zoom"; cur = i;
       store.set({ zoomed: true, cur: i, side: "front", hover: -1 });
@@ -251,7 +273,7 @@ export function TheWall({ products }: { products: WallProduct[] }) {
       goTo: (i) => { if (mode === "zoom") go(i); },
       close,
       side: (sd) => swapSide(sd),
-      hover: (i) => { if (mode === "wall") store.set({ hover: i }); },
+      hover: (i) => { if (mode === "wall" && !idle()) store.set({ hover: i }); },
       toast,
       bagBounce: () => {
         if (bagNum) gsap.fromTo(bagNum, { y: -8, opacity: 0 }, { y: 0, opacity: 1, duration: D(0.4), ease: "back.out(3)" });
@@ -261,7 +283,7 @@ export function TheWall({ products }: { products: WallProduct[] }) {
 
     // ── gestures ───────────────────────────────────────────────────────────
     const onKey = (e: KeyboardEvent) => {
-      if (mode !== "zoom") return;
+      if (idle() || mode !== "zoom") return;
       // arrow keys inside the size select change the option, not the fit
       if ((e.target as HTMLElement | null)?.closest?.("select, input, textarea")) return;
       if (e.key === "ArrowRight") go(cur + 1);
@@ -270,7 +292,7 @@ export function TheWall({ products }: { products: WallProduct[] }) {
     };
     let sx: number | null = null, sy = 0;
     const onDown = (e: PointerEvent) => {
-      if (mode !== "zoom" || (e.target as Element | null)?.closest?.("[data-nodrag]")) return;
+      if (idle() || mode !== "zoom" || (e.target as Element | null)?.closest?.("[data-nodrag]")) return;
       sx = e.clientX; sy = e.clientY; dragged = false;
     };
     const onMove = (e: PointerEvent) => { if (sx !== null && Math.abs(e.clientX - sx) > 12) dragged = true; };
@@ -308,20 +330,46 @@ export function TheWall({ products }: { products: WallProduct[] }) {
     gsap.set(pv, { autoAlpha: 0 });
 
     let intro: gsap.core.Timeline | null = null;
-    const fitParam = new URLSearchParams(window.location.search).get("fit");
-    const deep = fitParam ? products.findIndex((p) => p.slug === fitParam) : -1;
-    if (deep >= 0) {
+    let reveal: gsap.core.Tween | null = null;
+
+    /** The Wall's own opening: deep link (/?fit=slug), or the lights-on intro, or nothing. */
+    const start = () => {
+      const fitParam = new URLSearchParams(window.location.search).get("fit");
+      const deep = fitParam ? products.findIndex((p) => p.slug === fitParam) : -1;
+      if (deep >= 0) {
+        gsap.set(blackout, { autoAlpha: 0 });
+        openInstant(deep);
+      } else if (rm || lightsSeen()) {
+        gsap.set(blackout, { autoAlpha: 0 });
+      } else {
+        intro = playLightsOn({
+          blackout,
+          fits: items.map((_, i) => fitOf(i)),
+          shadows: items.map((_, i) => shOf(i)),
+          chrome: [hello, header, tag, foot],
+        });
+      }
+    };
+
+    /** Entry → Wall handover (wall.html?entered=1): the Wall is already on screen at 1:1,
+     *  so only the chrome arrives — header / tag / foot fade in (y −6 → 0). */
+    const revealChrome = () => {
+      const chrome = [header, tag, foot];
+      reveal = gsap.fromTo(
+        chrome,
+        { autoAlpha: 0, y: rm ? 0 : -6 },
+        { autoAlpha: 1, y: 0, duration: rm ? 0.6 : 0.9, stagger: rm ? 0 : 0.08, delay: rm ? 0 : 0.15, ease: "power2.out", clearProps: "transform" },
+      );
+    };
+
+    lifecycle.current = { start, reveal: revealChrome, held: false };
+    if (enteringRef.current) {
+      // Entry is on top: no intro, no blackout, no chrome — just the Wall at rest.
+      lifecycle.current.held = true;
       gsap.set(blackout, { autoAlpha: 0 });
-      openInstant(deep);
-    } else if (rm || lightsSeen()) {
-      gsap.set(blackout, { autoAlpha: 0 });
+      gsap.set([header, tag, foot], { autoAlpha: 0 });
     } else {
-      intro = playLightsOn({
-        blackout,
-        fits: items.map((_, i) => fitOf(i)),
-        shadows: items.map((_, i) => shOf(i)),
-        chrome: [hello, header, tag, foot],
-      });
+      start();
     }
 
     return () => {
@@ -333,6 +381,8 @@ export function TheWall({ products }: { products: WallProduct[] }) {
       removeEventListener("resize", onResize);
       clearTimeout(rt);
       intro?.kill();
+      reveal?.kill();
+      lifecycle.current = null;
       gsap.killTweensOf([world, bg, toastEl, ...pv, ...items, hello, tag, foot]);
       api.current = null;
     };
@@ -342,7 +392,7 @@ export function TheWall({ products }: { products: WallProduct[] }) {
   const lit = view.hover >= 0 ? products[view.hover] : null;
 
   return (
-    <div className={s.app}>
+    <div className={s.app} inert={entering} style={entering ? { pointerEvents: "none" } : undefined}>
       <div ref={bgRef} className={s.bg} />
       <div ref={scrollerRef} className={s.scroller} data-wall-scroller>
         <div ref={worldRef} className={s.world}>

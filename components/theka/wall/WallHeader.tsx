@@ -1,4 +1,4 @@
-// Header — wine-glass mark + DRIP THEKA, centre "Collection¹⁰" (→ "← Collection"
+// Header — the brand's glass mark (/brand/logo_glass.png) + DRIP THEKA, centre "Collection¹⁰" (→ "← Collection"
 // in product view) · Try the Look, right Bag (n). Matches the reference exactly.
 
 import Link from "next/link";
@@ -26,9 +26,8 @@ export function WallHeader({ ref, zoomed, total, bagCount, bagNumRef, onBack, ba
   return (
     <header ref={ref} className={s.header} data-nodrag>
       <div className={s.logo} aria-label="Drip Theka">
-        <svg viewBox="0 0 18 22" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
-          <path d="M2 1.5h14c0 6-2.6 9.2-7 9.2S2 7.5 2 1.5Z" /><path d="M9 10.7v8.3M4.5 20.5h9" />
-        </svg>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/brand/logo_glass.png" alt="" width={11} height={20} />
         {H.logo}
       </div>
       <nav className={s.center} aria-label="Primary">
