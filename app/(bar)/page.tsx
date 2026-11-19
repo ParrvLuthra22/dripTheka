@@ -3,6 +3,8 @@
 import type { Metadata } from "next";
 import { preload } from "react-dom";
 import { Home } from "@/components/theka/entry/Home";
+import { ENTRY_SKIP_SCRIPT } from "@/components/theka/entry/entryGate";
+import { InlineScript } from "@/components/theka/entry/InlineScript";
 import { POUR_001, hasWall } from "@/data/pour-001";
 import { lang } from "@/lib/theka/lang";
 
@@ -15,5 +17,12 @@ export const metadata: Metadata = {
 export default function HomePage() {
   // The only Entry asset worth a preload: the wordmark is the first thing a new visitor sees.
   preload("/brand/logo_word.png", { as: "image" });
-  return <Home products={POUR_001.products.filter(hasWall)} />;
+  // Runs while the HTML streams in, before the Entry frame can paint: returning visitors and
+  // /?fit= deep links get `dt-skip-entry` on <html>, which hides the server-rendered Entry.
+  return (
+    <>
+      <InlineScript html={ENTRY_SKIP_SCRIPT} />
+      <Home products={POUR_001.products.filter(hasWall)} />
+    </>
+  );
 }

@@ -392,7 +392,7 @@ export function TheWall({ products, entering = false, handoff = false }: TheWall
   const lit = view.hover >= 0 ? products[view.hover] : null;
 
   return (
-    <div className={s.app} inert={entering} style={entering ? { pointerEvents: "none" } : undefined}>
+    <div className={s.app} data-entering={entering ? "" : undefined} inert={entering} style={entering ? { pointerEvents: "none" } : undefined}>
       <div ref={bgRef} className={s.bg} />
       <div ref={scrollerRef} className={s.scroller} data-wall-scroller>
         <div ref={worldRef} className={s.world}>

@@ -101,8 +101,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
+    // suppressHydrationWarning: the home route's pre-paint script adds `dt-skip-entry` to <html>.
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${fraunces.variable} ${jetbrains.variable} ${rozha.variable} ${mukta.variable}`}
     >
       <body>

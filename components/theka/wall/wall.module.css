@@ -138,6 +138,9 @@
   font-size: 11px; padding: 9px 16px; border-radius: 999px; background: rgba(239,235,230,.92); color: #1b1718; font-weight: 500; white-space: nowrap; }
 
 .blackout { position: fixed; inset: 0; z-index: 50; background: #070606; display: grid; place-items: center; pointer-events: none; }
+/* First visit: the Entry's first frame is what paints, not a dark panel. Applies only while the Entry
+   owns the screen (data-entering) and the pre-paint script has not marked <html> as skipping it. */
+:global(html:not(.dt-skip-entry)) .app[data-entering] .blackout { display: none; }
 .blackout span { font-size: 10px; color: rgba(239,235,230,.5); }
 
 /* ---------- mobile ---------- */

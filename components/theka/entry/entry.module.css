@@ -86,4 +86,8 @@
   .store h2 { font-size: 44px; margin: 8px 0; }
   .city p { font-size: 27px; }
 }
-@media (prefers-reduced-motion: reduce) { .cue i, .tube { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .cue i, .tube { animation: none; } .cue { display: none; } }
+
+/* returning visitor / ?fit= deep link: the pre-paint script marked <html>; the server-rendered
+   first frame never shows and the Wall plays its own opening. */
+:global(html.dt-skip-entry) .root { display: none; }

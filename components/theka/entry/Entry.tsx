@@ -10,6 +10,11 @@
 //
 // Layer order, bottom → top (Wall below this component):
 //   skyfb → aerial → cloud canvas → street (+ letterbox backdrop) → vignette → copy/header
+//
+// Two modes of the same component:
+//   playing=false  the server-rendered first frame only: night gradient, cloud canvas, header,
+//                  wordmark, scroll cue. No journey layers, no effects, no images beyond the logo.
+//   playing=true   the journey layers + scroll track mount and the timeline starts.
 
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { gsap } from "gsap";
@@ -25,7 +30,13 @@ import s from "./entry.module.css";
 gsap.registerPlugin(ScrollTrigger);
 
 export type EntryExit = "complete" | "skip" | "reduced";
-interface EntryProps { onDone: (how: EntryExit) => void }
+interface EntryProps {
+  /** false → static first frame (server + first client render); true → the journey. */
+  playing: boolean;
+  /** prefers-reduced-motion, read by Home on the client (always false while not playing). */
+  reduced: boolean;
+  onDone: (how: EntryExit) => void;
+}
 
 const ENTRY_ASSETS = ["/theka/entry/aerial.jpg", "/theka/entry/store_cut.webp", "/theka/entry/shutter.jpg", "/theka/entry/scooter.png"];
 
@@ -33,8 +44,8 @@ const Arrow = () => (
   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="m6 3 5 5-5 5" /></svg>
 );
 
-export function Entry({ onDone }: EntryProps) {
-  const rm = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+export function Entry({ playing, reduced: rm, onDone }: EntryProps) {
+  const journey = playing && !rm;
   const rootRef = useRef<HTMLDivElement>(null);
   const skyRef = useRef<SkyHandle>(null);
   const doneRef = useRef(onDone);
@@ -42,14 +53,14 @@ export function Entry({ onDone }: EntryProps) {
 
   // Start the photographic layers on mount (after first paint, before anyone can scroll 10%).
   useEffect(() => {
-    if (rm) return;
+    if (!journey) return;
     const t = window.setTimeout(() => ENTRY_ASSETS.forEach((src) => { const im = new Image(); (im as HTMLImageElement & { fetchPriority: string }).fetchPriority = "low"; im.src = src; }), 0);
     return () => clearTimeout(t);
-  }, [rm]);
+  }, [journey]);
 
   // ── reduced motion: no journey, one button ─────────────────────────────────
   useLayoutEffect(() => {
-    if (!rm) return;
+    if (!playing || !rm) return;
     const root = rootRef.current!;
     let gone = false;
     const btn = root.querySelector<HTMLButtonElement>("[data-e=enter]")!;
@@ -59,11 +70,11 @@ export function Entry({ onDone }: EntryProps) {
     };
     btn.addEventListener("click", onClick);
     return () => { btn.removeEventListener("click", onClick); gsap.killTweensOf(root); };
-  }, [rm]);
+  }, [playing, rm]);
 
   // ── the journey ────────────────────────────────────────────────────────────
   useLayoutEffect(() => {
-    if (rm) return;
+    if (!journey) return;
     const root = rootRef.current!;
     const $ = <T extends HTMLElement>(k: string) => root.querySelector<T>(`[data-e=${k}]`)!;
     const track = document.querySelector<HTMLElement>("[data-entry-track]")!;
@@ -99,16 +110,35 @@ export function Entry({ onDone }: EntryProps) {
     place();
 
     const ctx = gsap.context(() => {
-      const tl = gsap.timeline({
+      let gone = false;
+      function finish(how: EntryExit) {
+        if (gone) return;
+        gone = true;
+        doneRef.current(how);
+      }
+
+      // The scrub is smoothed (1.1s), so the playhead trails the scroll position. Completion is
+      // therefore decided by the timeline reaching its end — never by scroll progress, which hits
+      // ~1 while the camera is still mid-journey after a fast scroll (End key, drag, momentum).
+      let keep = 0; // scroll progress just before a refresh re-measures the track
+      const tl: gsap.core.Timeline = gsap.timeline({
         defaults: { ease: "none" },
+        onComplete: () => { if (tl.progress() === 1) finish("complete"); },
         scrollTrigger: {
           trigger: track, start: "top top", end: "bottom bottom", scrub: 1.1,
-          onUpdate: (st) => {
-            bar.style.width = `${st.progress * 100}%`;
-            if (st.progress > 0.992) finish("complete");
+          onUpdate: (st) => { bar.style.width = `${st.progress * 100}%`; },
+          // A refresh (resize, fonts, the Wall mounting underneath) changes the track's pixel
+          // length. Hold the *progress*, not the pixel offset, so it can't leap toward the end.
+          onRefreshInit: (st) => { keep = st.progress; },
+          onRefresh: (st) => {
+            if (keep <= 0 || keep >= 1 || Math.abs(st.progress - keep) < 0.001) return;
+            scrollTo(0, st.start + keep * (st.end - st.start));
           },
         },
       });
+      try {
+        if (sessionStorage.getItem("dt_entry_debug") === "1") (window as unknown as { __dtEntry?: unknown }).__dtEntry = { tl };
+      } catch { /* storage blocked */ }
       const inv = () => sky.invalidate();
 
       // 0 → 2.7  fall through the cloud deck; the sky thins away and Delhi shows through the gaps
@@ -150,13 +180,6 @@ export function Entry({ onDone }: EntryProps) {
         onUpdate: () => sky.setActive(tl.time() < 3.1), // clouds are gone after 3.1 — stop drawing
       });
 
-      let gone = false;
-      function finish(how: EntryExit) {
-        if (gone) return;
-        gone = true;
-        doneRef.current(how);
-      }
-
       const skip = $("skip"), walk = $("walk");
       const onSkip = () => {
         if (gone) return;
@@ -185,6 +208,7 @@ export function Entry({ onDone }: EntryProps) {
         removeEventListener("resize", onResize);
         removeEventListener("pageshow", onShow);
         clearTimeout(rt);
+        delete (window as unknown as { __dtEntry?: unknown }).__dtEntry;
       };
     }, root);
 
@@ -192,14 +216,14 @@ export function Entry({ onDone }: EntryProps) {
       ctx.revert();
       history.scrollRestoration = prevRestoration;
     };
-  }, [rm]);
+  }, [journey]);
 
   return (
     <>
       <div ref={rootRef} className={s.root} data-entry-root>
         <div className={s.stage} aria-hidden="true">
           <div className={`${s.layer} ${s.skyfb}`} data-e="skyfb" />
-          {!rm && (
+          {journey && (
             <div className={`${s.layer} ${s.aerial}`} data-e="aerial">
               <div className={s.scene} data-e="aerialScene">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -208,14 +232,14 @@ export function Entry({ onDone }: EntryProps) {
             </div>
           )}
           <div className={s.layer}><SkyCanvas ref={skyRef} reduced={rm} /></div>
-          {!rm && <StreetScene />}
-          {!rm && <div className={s.vig} data-e="vig" />}
+          {journey && <StreetScene />}
+          {journey && <div className={s.vig} data-e="vig" />}
         </div>
 
         <header className={s.header} data-e="header">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <div className={s.logo}><img src="/brand/logo_glass.png" alt="" width={11} height={20} />DRIP THEKA</div>
-          {!rm && <button type="button" className={`${s.skip} ${s.mono}`} data-e="skip">Skip to the wall →</button>}
+          {journey && <button type="button" className={`${s.skip} ${s.mono}`} data-e="skip">Skip to the wall →</button>}
         </header>
 
         <section className={`${s.copy} ${s.hero}`} data-e="hero">
@@ -230,9 +254,9 @@ export function Entry({ onDone }: EntryProps) {
           )}
         </section>
 
-        {!rm && (
+        {!rm && <div className={`${s.cue} ${s.mono}`} data-e="cue"><span>Scroll to descend</span><i /></div>}
+        {journey && (
           <>
-            <div className={`${s.cue} ${s.mono}`} data-e="cue"><span>Scroll to descend</span><i /></div>
             <section className={`${s.copy} ${s.city}`} data-e="city">
               <div className={`${s.eb} ${s.mono}`}>Dilli · 1:47 AM</div>
               <p className={s.disp}><span style={{ color: "inherit", whiteSpace: "nowrap" }}>Somewhere down there,</span><br /><span style={{ whiteSpace: "nowrap" }}>one shutter&rsquo;s still up.</span></p>
@@ -251,7 +275,7 @@ export function Entry({ onDone }: EntryProps) {
           </>
         )}
       </div>
-      {!rm && <div className={s.track} data-entry-track aria-hidden="true" />}
+      {journey && <div className={s.track} data-entry-track aria-hidden="true" />}
     </>
   );
 }
