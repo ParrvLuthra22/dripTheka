@@ -137,6 +137,38 @@ export const lang = {
     },
   },
 
+  // ── Product page (/product/[slug]) — below the fold ───────────────────────
+
+  product: {
+    how: {
+      eyebrow: "The making",
+      title:   "How it's poured",
+      cols: {
+        fabric: {
+          label: "Fabric",
+          title: (gsm: number) => `${gsm} GSM`,
+          body:  "Heavy ring-spun cotton. It hangs like it has somewhere to be.",
+        },
+        fit: {
+          label: "Fit",
+          title: "Oversized",
+          body:  "Dropped shoulder, boxy body. Size down if you like it closer.",
+        },
+        print: {
+          label: "Print",
+          title: "Screen print, Delhi",
+          body:  "Pulled by hand in small runs, so every one is slightly its own.",
+        },
+      },
+    },
+    also: {
+      eyebrow: "Keep walking the aisle",
+      title:   "Also on the wall",
+      aria:    (name: string, price: string) => `${name} — ${price}`,
+    },
+    back: "← Back to the wall",
+  },
+
   // ── Try the Look (stub room) ──────────────────────────────────────────────
 
   tryTheLook: {

@@ -21,7 +21,7 @@
 .mono { font-family: var(--mono); text-transform: uppercase; letter-spacing: .08em; }
 
 /* ---------- the room ---------- */
-.bg { position: fixed; inset: -3%; background: #5c5555 url(/theka/wall/wall.jpg) center/cover no-repeat; transform-origin: 50% 50%; }
+.bg { position: fixed; inset: -3%; background: #5c5555 url(/theka/wall/wall.webp) center/cover no-repeat; transform-origin: 50% 50%; }
 .light { position: fixed; inset: 0; pointer-events: none; z-index: 2;
   background:
     radial-gradient(55% 60% at 18% 12%, rgba(255,222,200,.22), transparent 70%),
@@ -164,3 +164,49 @@
 }
 @media (min-width: 821px) { .pvrow { display: flex; flex-direction: column; align-items: flex-start; } }
 @media (prefers-reduced-motion: reduce) { .app, .app *, .app *::before, .app *::after { transition: none !important; } }
+
+/* ===================================================================
+   Product page (/product/[slug]) — the Wall's zoomed view, statically.
+   `.page` turns the fixed full-screen `.app` into a one-screen hero that
+   scrolls with the document. The camera is pure CSS: item geometry uses the
+   same formulas as wallLayout.ts (container units of `.scene`), and the world
+   transform is `translate(X − s·cx, Y − s·cy) scale(s)`. Only `--s` needs JS
+   (it's min(.72vh/h, .42vw/w) — a ratio of lengths CSS can't compute);
+   ProductStage sets it on mount, the value below is the 1440×900 / 390×844 case.
+   =================================================================== */
+.page { position: relative; inset: auto; height: 100vh; height: 100svh; overflow: hidden; --s: 3.55; }
+.scene { position: absolute; inset: 0; overflow: hidden; container-type: size; }
+.page .bg { position: absolute; transform: scale(calc(1 + (var(--s) - 1) * .1)); }
+.page .light { position: absolute; }
+.page .pv { opacity: 1; visibility: visible; }
+.page :is(.header, .info, .panel, .navArrow, .count) { position: absolute; }
+
+.page .world, .page .item {
+  --pitch: calc(100cqw * .17);
+  --h: min(calc(100cqh * .205), calc(var(--pitch) * .62 / var(--ar)));
+  --w: calc(var(--h) * var(--ar));
+  --cx: calc(100cqw * .075 + var(--pitch) * (var(--c) + .5));
+  --ly: calc(100cqh * (.545 + var(--r) * .34));
+}
+.page .world {
+  position: absolute; left: 0; top: 0; width: 100cqw; height: 100cqh; transform-origin: 0 0;
+  transform: translate(calc(50cqw - var(--s) * var(--cx)), calc(55cqh - var(--s) * (var(--ly) - var(--h) * .46))) scale(var(--s));
+}
+.page .item { width: var(--w); height: var(--h); left: calc(var(--cx) - var(--w) / 2); top: calc(var(--ly) - var(--h)); }
+.page .item:not([data-main]) { cursor: pointer; }
+.page .item[data-main] { cursor: default; }
+
+@media (max-width: 820px) {
+  .page { --s: 1.94; }
+  .page .world, .page .item {
+    --pitch: calc((100cqw - 32px) / 2);
+    --w: calc(var(--pitch) * .74);
+    --h: calc(var(--w) / var(--ar));
+    --cx: calc(16px + var(--pitch) * (var(--c) + .5));
+    --ly: calc(150px + var(--h) + var(--r) * (var(--h) + 74px));
+  }
+  .page .world { transform: translate(calc(50cqw - var(--s) * var(--cx)), calc(40cqh - var(--s) * (var(--ly) - var(--h) * .46))) scale(var(--s)); }
+  .page .item:not([data-main]) { display: none; }   /* mobile isolates the chosen fit */
+  /* sticky bottom buy dock — stays on screen while the page scrolls */
+  .page .panel { position: fixed; }
+}

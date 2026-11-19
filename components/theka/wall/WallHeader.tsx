@@ -13,12 +13,14 @@ interface WallHeaderProps {
   total: number;
   bagCount: number;
   bagNumRef?: Ref<HTMLElement>;
-  onBack: () => void;
+  onBack?: () => void;
+  /** Product page: "← Collection" is a real link (works without JS). */
+  backHref?: string;
 }
 
 const H = lang.wall.header;
 
-export function WallHeader({ ref, zoomed, total, bagCount, bagNumRef, onBack }: WallHeaderProps) {
+export function WallHeader({ ref, zoomed, total, bagCount, bagNumRef, onBack, backHref }: WallHeaderProps) {
   return (
     <header ref={ref} className={s.header} data-nodrag>
       <div className={s.logo} aria-label="Drip Theka">
@@ -28,7 +30,9 @@ export function WallHeader({ ref, zoomed, total, bagCount, bagNumRef, onBack }: 
         {H.logo}
       </div>
       <nav className={s.center} aria-label="Primary">
-        {zoomed ? (
+        {zoomed && backHref ? (
+          <Link href={backHref} className={s.backBtn} style={{ display: "inline-block" }}>{H.back}</Link>
+        ) : zoomed ? (
           <button type="button" className={s.backBtn} style={{ display: "inline-block" }} onClick={onBack}>{H.back}</button>
         ) : (
           <button type="button" className={s.act} aria-current="page">{H.collection}<sup>{total}</sup></button>
