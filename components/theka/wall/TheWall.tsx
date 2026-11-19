@@ -334,6 +334,10 @@ export function TheWall({ products, entering = false, handoff = false }: TheWall
 
     /** The Wall's own opening: deep link (/?fit=slug), or the lights-on intro, or nothing. */
     const start = () => {
+      // The Wall was held under the Entry with its chrome hidden (inline autoAlpha:0). Every path
+      // out of the hold must begin from a visible baseline, or a `from()` tween would animate
+      // 0 → 0 and the header / tag / foot stay hidden for good. Zoomed deep links re-hide tag/foot below.
+      gsap.set([header, tag, foot], { clearProps: "opacity,visibility,transform" });
       const fitParam = new URLSearchParams(window.location.search).get("fit");
       const deep = fitParam ? products.findIndex((p) => p.slug === fitParam) : -1;
       if (deep >= 0) {

@@ -54,5 +54,11 @@ export function playLightsOn({ blackout, fits, shadows, chrome, onDone }: Lights
       onComplete: () => { gsap.set(fits, { clearProps: "transform" }); },
     }, "-=.8")
     .to(shadows, { opacity: 0.75, duration: 0.9, stagger: 0.07 }, "<")
-    .from(chrome, { autoAlpha: 0, y: 8, duration: 0.7, stagger: 0.08 }, "<.2");
+    .fromTo(
+      chrome,
+      { autoAlpha: 0, y: 8 },
+      // explicit end state (never "whatever it is now"), and no inline transform left behind
+      { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.08, clearProps: "transform" },
+      "<.2",
+    );
 }

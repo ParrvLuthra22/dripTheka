@@ -196,6 +196,103 @@ for (const [tag, opts] of [["1440x900", DESKTOP], ["390x844", MOBILE]]) {
   }
 }
 
+// ── 6. Wall chrome is visible 2s after landing, whichever way in ───────────────────
+// Header (logo, Bag), #tag, #foot and #hello must end at opacity 1 / visibility visible, inside the viewport.
+// No inline or CSS state (entering / dt-skip-entry) may leave them hidden.
+const CHROME = {
+  logo: "header[data-nodrag] [class*=logo]", bag: "header[data-nodrag] a[href='/cart']",
+  tag: "[class*=tag]:not([class*=tagline])", foot: "[class*=foot]", hello: "[class*=hello]",
+};
+async function chromeState(page) {
+  return page.evaluate((sels) => {
+    const out = {};
+    for (const [k, sel] of Object.entries(sels)) {
+      const el = document.querySelector(sel);
+      if (!el) { out[k] = "missing"; continue; }
+      // effective opacity = product along the ancestor chain; visibility is inherited by computed style
+      let op = 1; for (let e = el; e; e = e.parentElement) op *= +getComputedStyle(e).opacity;
+      const r = el.getBoundingClientRect(), cs = getComputedStyle(el);
+      const inView = r.width > 0 && r.height > 0 && r.left >= -1 && r.top >= -1 && r.right <= innerWidth + 1 && r.bottom <= innerHeight + 1;
+      out[k] = op > 0.99 && cs.visibility === "visible" && cs.display !== "none" && inView ? "ok" : `op=${op.toFixed(2)} vis=${cs.visibility} inView=${inView}`;
+    }
+    return out;
+  }, CHROME);
+}
+const opts_isMobile = (page) => page.viewportSize().width <= 820;
+const backLabel = (page) => page.evaluate(() => document.querySelector("header[data-nodrag] nav button, header[data-nodrag] nav a")?.textContent?.trim());
+// logo + Bag are the required pair; tag/foot/hello are only on the unzoomed wall
+async function assertChrome(tag, what, page, { zoomed = false, wait = 2000 } = {}) {
+  await page.waitForSelector("header[data-nodrag]", { state: "attached", timeout: 30000 }); // landing = the Wall's own header is mounted
+  await page.waitForTimeout(wait);
+  const c = await chromeState(page);
+  const mob = opts_isMobile(page);
+  // #tag / #foot are display:none under 820px by design (wall.module.css) → desktop only
+  const need = zoomed ? ["logo", "bag"] : mob ? ["logo", "bag", "hello"] : ["logo", "bag", "tag", "foot", "hello"];
+  const bad = need.filter((k) => c[k] !== "ok");
+  check(`${tag} ${what}: header logo + Bag${zoomed ? "" : opts_isMobile(page) ? " + #hello" : " + #tag/#foot/#hello"} visible 2s after landing`, bad.length === 0, bad.map((k) => `${k}: ${c[k]}`).join("; "));
+  const html = await page.evaluate(() => ({ cls: document.documentElement.className, entering: !!document.querySelector("[data-entering]"), inert: !!document.querySelector("[inert]") }));
+  check(`${tag} ${what}: no lingering entering / inert state`, !html.entering && !html.inert, JSON.stringify(html));
+}
+const FIT = "ek-peg-aur";
+for (const [tag, opts] of [["1440x900", DESKTOP], ["390x844", MOBILE]]) {
+  { // 1. full scroll to the end
+    const { ctx, page } = await open(opts); await ready(page);
+    await goTo(page, 1); await page.waitForFunction(() => window.__rootGone, null, { timeout: 20000 });
+    await assertChrome(tag, "full scroll", page); await shot(page, `${tag}-chrome-scroll`); await ctx.close();
+  }
+  { // 2. Walk in
+    const { ctx, page } = await open(opts); await ready(page);
+    await goTo(page, 0.8); await settle(page, 0.8);
+    await page.evaluate(() => document.querySelector("[data-e=walk]").click());
+    await page.waitForFunction(() => window.__rootGone, null, { timeout: 25000 });
+    await assertChrome(tag, "Walk in", page); await shot(page, `${tag}-chrome-walkin`); await ctx.close();
+  }
+  { // 3. Skip to the wall
+    const { ctx, page } = await open(opts); await ready(page);
+    await page.evaluate(() => document.querySelector("[data-e=skip]").click());
+    await page.waitForFunction(() => window.__rootGone || !document.querySelector("[data-entry-root]"), null, { timeout: 8000 });
+    await assertChrome(tag, "Skip to the wall", page); await shot(page, `${tag}-chrome-skip`); await ctx.close();
+  }
+  { // 4. reduced-motion Enter button
+    const { ctx, page } = await open(opts, { reduced: true });
+    await page.waitForSelector("[data-e=enter]", { timeout: 60000 });
+    await page.click("[data-e=enter]");
+    await page.waitForFunction(() => !document.querySelector("[data-entry-root]"), null, { timeout: 8000 });
+    await assertChrome(tag, "reduced-motion Enter", page); await ctx.close();
+  }
+  { // 5. returning visit, same session: dt-skip-entry + the Wall's own lights-on intro (≈2.0s long, so allow +0.6s)
+    const { ctx, page } = await open(opts, { entered: true });
+    await assertChrome(tag, "returning visit (lights-on)", page, { wait: 2600 });
+    check(`${tag} returning visit: dt-skip-entry is on <html>`, await page.evaluate(() => document.documentElement.classList.contains("dt-skip-entry")));
+    await shot(page, `${tag}-chrome-returning`);
+    // …and once lights have been seen the Wall opens with no intro at all: chrome must still appear
+    await page.reload({ waitUntil: "commit" });
+    await assertChrome(tag, "returning visit (lights already seen)", page, { wait: 2600 });
+    await ctx.close();
+  }
+  { // 6. /?fit= deep link, then ← Collection
+    const { ctx, page } = await open(opts, { url: `/?fit=${FIT}` });
+    await assertChrome(tag, "fit deep link", page, { zoomed: true });
+    check(`${tag} fit deep link: zoomed header shows "← Collection"`, (await backLabel(page)) === "← Collection", String(await backLabel(page)));
+    await shot(page, `${tag}-chrome-fit-zoomed`);
+    await page.evaluate(() => document.querySelector("header[data-nodrag] nav button").click());
+    // on a phone the wall scrolls to that fit's row on close, so the in-world #hello is legitimately off-screen: assert the fixed header only
+    await assertChrome(tag, "fit deep link → ← Collection", page, { wait: 2200, zoomed: opts_isMobile(page) });
+    check(`${tag} after ← Collection: back on the wall (header says Collection, url has no ?fit)`, /^Collection/.test(await backLabel(page) ?? "") && !page.url().includes("fit="), `${await backLabel(page)} ${page.url()}`);
+    await shot(page, `${tag}-chrome-fit-closed`); await ctx.close();
+  }
+  { // 7. browser back from /product/[slug] to /
+    const { ctx, page } = await open(opts, { entered: true });
+    await page.waitForTimeout(500);
+    await page.goto(`${BASE}/product/${FIT}`, { waitUntil: "load" });
+    check(`${tag} product page: header shows "← Collection"`, (await backLabel(page)) === "← Collection", String(await backLabel(page)));
+    await page.goBack({ waitUntil: "commit" });
+    await page.waitForURL((u) => u.pathname === "/", { timeout: 10000 });
+    await assertChrome(tag, "browser back from /product", page, { wait: 2600 });
+    await shot(page, `${tag}-chrome-back`); await ctx.close();
+  }
+}
+
 await browser.close();
 const failed = results.filter((r) => !r.ok);
 console.log(`\n${results.length - failed.length}/${results.length} passed`);
