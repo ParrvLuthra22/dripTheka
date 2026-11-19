@@ -1,11 +1,13 @@
 // Below the fold of /product/[slug] (server component): "How it's poured" and
-// "Also on the wall". Plain <img> to match the Wall's ledge look at card scale.
+// "Also on the wall". Plain <img>s (via CardArt, which defers them until near the viewport)
+// to match the Wall's ledge look at card scale.
 
 import Link from "next/link";
 import type { WallProduct } from "@/data/pour-001";
 import { formatPrice } from "@/lib/utils/format";
 import { lang } from "@/lib/theka/lang";
 import { Ledge } from "./Ledge";
+import { CardArt } from "./CardArt";
 import p from "./productPage.module.css";
 
 const H = lang.product.how;
@@ -42,12 +44,9 @@ export function ProductBelow({ product, related }: { product: WallProduct; relat
               <li key={r.slug}>
                 <Link href={`/product/${r.slug}`} className={p.card} aria-label={A.aria(r.name, formatPrice(r.price))}>
                   <div className={p.stage}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img className={p.sh} src={r.wall.frontShadow} alt="" loading="lazy" fetchPriority="low" decoding="async" />
+                    <CardArt shadow={r.wall.frontShadow} fit={r.wall.front} shadowClass={p.sh} fitClass={p.fit} />
                     <Ledge />
                     <div className={p.contact} />
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img className={p.fit} src={r.wall.front} alt="" loading="lazy" fetchPriority="low" decoding="async" />
                   </div>
                   <div className={p.meta}>
                     <span className={p.name}>{r.name}</span>

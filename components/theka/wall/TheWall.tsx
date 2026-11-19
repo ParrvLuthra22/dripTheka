@@ -31,6 +31,9 @@ import s from "./wall.module.css";
 
 const W = lang.wall;
 
+/** Fits that are in the first phone screen (3 rows × 2); the rest fetch their art when scrolled near. */
+const FIRST_SCREEN = 6;
+
 interface WallApi {
   open: (i: number) => void;
   step: (d: number) => void;
@@ -159,6 +162,7 @@ export function TheWall({ products }: { products: WallProduct[] }) {
 
     const open = (i: number) => {
       if (busy) return;
+      warmBacks();
       busy = true; mode = "zoom"; cur = i;
       store.set({ zoomed: true, cur: i, side: "front", hover: -1 });
       scroller.style.overflowY = "hidden";
@@ -287,10 +291,16 @@ export function TheWall({ products }: { products: WallProduct[] }) {
     addEventListener("pointercancel", onCancel);
     addEventListener("resize", onResize);
 
-    // back images are only seen after a flip — warm them (and their shadows)
-    const warm = new Set<string>();
-    products.forEach((p) => { warm.add(p.wall.back); warm.add(p.wall.backShadow); });
-    warm.forEach((src) => { const im = new Image(); im.src = src; });
+    // Back images are only seen after a flip, which needs the product view — so warm them
+    // (and their shadows) the first time a fit is opened, not on page load (~230KB).
+    let warmed = false;
+    const warmBacks = () => {
+      if (warmed) return;
+      warmed = true;
+      const warm = new Set<string>();
+      products.forEach((p) => { warm.add(p.wall.back); warm.add(p.wall.backShadow); });
+      warm.forEach((src) => { const im = new Image(); im.src = src; });
+    };
 
     // ── start ──────────────────────────────────────────────────────────────
     applyLayout();
@@ -334,7 +344,7 @@ export function TheWall({ products }: { products: WallProduct[] }) {
   return (
     <div className={s.app}>
       <div ref={bgRef} className={s.bg} />
-      <div ref={scrollerRef} className={s.scroller}>
+      <div ref={scrollerRef} className={s.scroller} data-wall-scroller>
         <div ref={worldRef} className={s.world}>
           <div ref={helloRef} className={s.hello}>
             <div className={`${s.eb} ${s.mono}`}>{W.hello.eyebrow}</div>
@@ -345,6 +355,7 @@ export function TheWall({ products }: { products: WallProduct[] }) {
               key={p.slug}
               ref={(el) => { itemRefs.current[i] = el; }}
               product={p}
+              deferArt={i >= FIRST_SCREEN}
               on={view.hover === i}
               showBack={view.side === "back" && view.cur === i}
               onEnter={() => api.current?.hover(i)}

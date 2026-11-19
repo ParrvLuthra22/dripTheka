@@ -3,26 +3,21 @@
 // Wall products (those with `wall` cutouts) render ProductStage: the same
 // plaster, light and ledge as the live Wall, framed by CSS so the server HTML is
 // already the finished picture (no camera animation), then a scrolling "below the
-// fold". Products with no wall art yet keep the legacy split-screen page, wrapped
-// in the (site) shell.
+// fold". Products with no wall art yet keep the legacy split-screen page, served
+// from app/(site)/shop/[slug] via a rewrite (see next.config.ts).
 //
 // Lives in the (bar) group — like the Wall itself it has its own header and
 // native cursor, and shouldn't load the (site) chrome (Nav, Cursor, Grain, glass…).
 
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { preload } from "react-dom";
 import {
-  POUR_001, POURING_PRODUCTS, getPriceDisplay, hasWall, isTappedOut,
+  POUR_001, hasWall, isTappedOut,
   type WallProduct,
 } from "@/data/pour-001";
 import { ProductStage, type StageCell } from "@/components/theka/wall/ProductStage";
 import { ProductBelow } from "@/components/theka/wall/ProductBelow";
-import { SiteShell }      from "@/components/theka/SiteShell";
-import { ProductHero }    from "@/components/sections/product/ProductHero";
-import { ProductSidebar } from "@/components/sections/product/ProductSidebar";
-import { HowItPours }     from "@/components/sections/product/HowItPours";
-import { AlsoPouring }    from "@/components/sections/product/AlsoPouring";
+import { productMetadata } from "@/lib/theka/productMetadata";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -34,28 +29,12 @@ const COLS = 5; // the Wall's desktop grid
 const wallProducts = (): WallProduct[] => POUR_001.products.filter(hasWall);
 
 export function generateStaticParams() {
-  const slugs = new Set([...wallProducts(), ...POURING_PRODUCTS].map((p) => p.slug));
-  return [...slugs].map((slug) => ({ slug }));
+  return wallProducts().map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const product = POUR_001.products.find((p) => p.slug === slug);
-  if (!product) return { title: "Not Found" };
-
-  const title = `${product.name} — Drip Theka`;
-  const description = hasWall(product)
-    ? (product.blurb ?? product.tagline)
-    : `${product.tagline} ${getPriceDisplay(product.price)} · Pour #${product.dropNumber}`;
-  const url = `/product/${product.slug}`;
-
-  return {
-    title: { absolute: title },
-    description,
-    alternates: { canonical: url },
-    openGraph: { type: "website", url, title, description, siteName: "Drip Theka" },
-    twitter: { card: "summary_large_image", title, description },
-  };
+  return productMetadata(slug);
 }
 
 function availability(p: WallProduct): string {
@@ -90,19 +69,9 @@ export default async function ProductPage({ params }: Props) {
   const product = POUR_001.products.find((p) => p.slug === slug);
   if (!product) notFound();
 
-  // ── No wall art yet → the legacy split-screen page, inside the site shell ──
-  if (!hasWall(product)) {
-    return (
-      <SiteShell>
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_400px] lg:grid-cols-[1fr_440px] items-start">
-          <div className="order-2 md:order-1"><ProductHero product={product} /></div>
-          <div className="order-1 md:order-2"><ProductSidebar product={product} /></div>
-        </div>
-        <HowItPours product={product} />
-        <AlsoPouring currentSlug={product.slug} />
-      </SiteShell>
-    );
-  }
+  // Products with no wall art yet render at app/(site)/shop/[slug] (rewritten from this
+  // URL in next.config.ts) so the Theka shell stays out of this route's JS.
+  if (!hasWall(product)) notFound();
 
   // ── Wall product ──────────────────────────────────────────────────────────
   const all = wallProducts();
@@ -120,8 +89,8 @@ export default async function ProductPage({ params }: Props) {
   // Three more from the aisle, wrapping round.
   const related = [1, 2, 3].map((d) => at(index + d)).filter((p) => p.slug !== product.slug);
 
-  preload(product.wall.front, { as: "image", fetchPriority: "high" });
-  preload(product.wall.frontShadow, { as: "image", fetchPriority: "high" });
+  // No preload() here: the front <img> (fetchPriority="high") is already in the server HTML,
+  // and a preload hint would also fire whenever a neighbouring page is prefetched.
 
   return (
     <>

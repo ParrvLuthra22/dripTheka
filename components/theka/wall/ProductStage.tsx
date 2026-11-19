@@ -81,12 +81,6 @@ export function ProductStage({ product, index, total, cells, ars, prevHref, next
     return () => { clearTimeout(t); ro.disconnect(); };
   }, [ars, index]);
 
-  // Prefetch the neighbouring pages so the arrows feel instant.
-  useEffect(() => {
-    router.prefetch(prevHref);
-    router.prefetch(nextHref);
-  }, [router, prevHref, nextHref]);
-
   // Esc → back to the wall, ←/→ → neighbours (same keys as the Wall; not while typing in the size select)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -179,8 +173,8 @@ export function ProductStage({ product, index, total, cells, ars, prevHref, next
         code={product.code ?? ""}
         index={index + 1}
         total={total}
-        onPrev={() => router.push(prevHref)}
-        onNext={() => router.push(nextHref)}
+        prevHref={prevHref}
+        nextHref={nextHref}
       />
       <div ref={toastRef} className={s.toast} role="status" aria-live="polite" />
     </div>

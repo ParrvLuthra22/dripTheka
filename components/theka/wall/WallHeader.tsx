@@ -20,6 +20,8 @@ interface WallHeaderProps {
 
 const H = lang.wall.header;
 
+// /cart and the try-the-look room live in the (site) shell (Lenis, motion, sound…): never
+// prefetch them from the Wall, or their JS rides along on every wall page.
 export function WallHeader({ ref, zoomed, total, bagCount, bagNumRef, onBack, backHref }: WallHeaderProps) {
   return (
     <header ref={ref} className={s.header} data-nodrag>
@@ -37,9 +39,9 @@ export function WallHeader({ ref, zoomed, total, bagCount, bagNumRef, onBack, ba
         ) : (
           <button type="button" className={s.act} aria-current="page">{H.collection}<sup>{total}</sup></button>
         )}
-        <Link href={H.lookHref} className={s.tl}>{H.look}</Link>
+        <Link href={H.lookHref} prefetch={false} className={s.tl}>{H.look}</Link>
       </nav>
-      <Link href="/cart" className={s.bag} aria-label={H.bagAria(bagCount)}>
+      <Link href="/cart" prefetch={false} className={s.bag} aria-label={H.bagAria(bagCount)}>
         {H.bag} (<b ref={bagNumRef}>{bagCount}</b>)
       </Link>
     </header>

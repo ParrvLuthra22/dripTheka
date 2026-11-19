@@ -15,6 +15,7 @@
 //   ToastStack 150 · UpsellModal / LoadingScreen 200 · Hangover / Drunk 250
 //   PourTransition     → --z-shutter (400)  · Cursor → --z-cursor (9999)
 
+import { SessionProvider }     from "@/components/providers/SessionProvider";
 import { SmoothScroll }       from "@/components/theka/SmoothScroll";
 import { SoundProvider }      from "@/components/sound/SoundProvider";
 import { SoundToggle }        from "@/components/sound/SoundToggle";
@@ -45,6 +46,7 @@ export function SiteShell({
   children: React.ReactNode;
 }) {
   return (
+    <SessionProvider>
     <SoundProvider>
       <SmoothScroll>
         <PourTransition>
@@ -98,5 +100,6 @@ export function SiteShell({
       {/* Page grain — one fixed overlay, plain opacity, no blend mode */}
       <Grain fixed />
     </SoundProvider>
+    </SessionProvider>
   );
 }

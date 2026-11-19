@@ -7,7 +7,6 @@ import {
 } from "next/font/google";
 import "../styles/globals.css";
 import "../styles/forms.css";
-import { SessionProvider } from "@/components/providers/SessionProvider";
 
 /* ─── Fonts ──────────────────────────────────────────────────────────────────
    Exactly four families. Each exposes a CSS variable on <html>; the Tailwind
@@ -22,13 +21,13 @@ const fraunces = Fraunces({
   style:    ["normal", "italic"],
   axes:     ["SOFT", "WONK", "opsz"],
   display:  "swap",
-  preload:  true,
+  preload:  false, // not needed for first paint (Wall + product page don't use it)
 });
 
 // JetBrains Mono — labels, prices, tags, nav, all UI chrome.
 const jetbrains = JetBrains_Mono({
   subsets:  ["latin"],
-  variable: "--font-jetbrains",
+  variable: "--font-jetbrains", // variable file: one request covers 400/500/700 (cart + chrome use medium/bold)
   display:  "swap",
   preload:  true,
 });
@@ -39,17 +38,34 @@ const rozha = Rozha_One({
   weight:   "400",
   variable: "--font-rozha",
   display:  "swap",
-  preload:  true,
+  preload:  false,
 });
 
 // Mukta — body copy. Latin + Devanagari so Hinglish/Hindi glosses never fall back.
+// Weights in use: 400 (body), 500 (UI/subtitles), 700 (bold), 800 (wordmarks, titles).
+// 300 and 600 are unused on Mukta (grep-verified), so they are not shipped.
+// preload:false → the browser fetches a weight/subset only when text needs it
+// (Devanagari loads on demand via unicode-range).
 const mukta = Mukta({
   subsets:  ["latin", "devanagari"],
-  weight:   ["300", "400", "500", "600", "700", "800"],
+  weight:   ["400", "500", "700", "800"],
   variable: "--font-mukta",
+  display:  "swap",
+  preload:  false,
+});
+
+// First paint only needs Mukta 800 + 500, latin. next/font preloads every weight
+// of a call, so these two files are preloaded through a twin instance (same
+// Google files → same hashed URLs as the family above, so nothing downloads
+// twice). The twin's variable class is intentionally not applied to <html>.
+const muktaFirstPaint = Mukta({
+  subsets:  ["latin"],
+  weight:   ["500", "800"],
+  variable: "--font-mukta-first-paint",
   display:  "swap",
   preload:  true,
 });
+void muktaFirstPaint;
 
 /* ─── Metadata ───────────────────────────────────────────────────────────── */
 
@@ -90,9 +106,7 @@ export default function RootLayout({
       className={`${fraunces.variable} ${jetbrains.variable} ${rozha.variable} ${mukta.variable}`}
     >
       <body>
-        <SessionProvider>
-          {children}
-        </SessionProvider>
+        {children}
       </body>
     </html>
   );

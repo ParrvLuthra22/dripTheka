@@ -123,7 +123,7 @@
 .detl li { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(239,235,230,.1); }
 .detl li span:last-child { color: var(--txt); }
 
-.navArrow { position: fixed; top: 50%; z-index: 20; width: 46px; height: 46px; margin-top: -23px; border-radius: 50%;
+.navArrow { color: inherit; text-decoration: none; position: fixed; top: 50%; z-index: 20; width: 46px; height: 46px; margin-top: -23px; border-radius: 50%;
   border: 1px solid rgba(239,235,230,.25); display: grid; place-items: center; background: rgba(20,16,16,.18);
   backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: background .3s, border-color .3s; }
 .navArrow:hover { background: rgba(239,235,230,.12); border-color: rgba(239,235,230,.6); }
