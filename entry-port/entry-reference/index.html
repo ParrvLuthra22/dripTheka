@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Drip Theka Entry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Mukta:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="preload" as="image" href="assets/aerial.jpg">
+<link rel="preload" as="image" href="assets/store.jpg">
+<style>
+:root{--cream:#E4E2DD;--txt:#efebe6;--mut:rgba(239,235,230,.62);--amber:#F4A52C;--blue:#004AAD;--night:#04060d;--ease:cubic-bezier(.16,1,.3,1)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--night:#04060d;--txt:#efebe6}}
+:root[data-theme="dark"]{--night:#04060d;--txt:#efebe6}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--night);color:var(--txt);font-family:Mukta,system-ui,sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
+body{overflow-x:hidden}
+button,a{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-decoration:none}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace;text-transform:uppercase;letter-spacing:.14em}
+.disp{font-weight:800;letter-spacing:-.035em;line-height:.9;text-transform:uppercase}
+
+#stage{position:fixed;inset:0;overflow:hidden;background:var(--night)}
+.layer{position:absolute;inset:0}
+#skyfb{background:radial-gradient(70% 50% at 70% 18%,#1d2950 0,#0a1024 45%,#04060d 100%)}
+#sky{width:100%;height:100%;display:block}
+.scene{position:absolute;left:0;top:0;width:1536px;height:864px;transform-origin:0 0;backface-visibility:hidden}
+.scene img{position:absolute;display:block;user-select:none;-webkit-user-drag:none}
+#aerial,#street{opacity:0}
+#streetBg{position:absolute;inset:-40px;width:calc(100% + 80px);height:calc(100% + 80px);object-fit:cover;filter:blur(24px) brightness(.35);display:none}
+@media (max-width:820px){#streetBg{display:block}}
+/* the doorway: a window onto the real wall, held at 1:1 on screen */
+#opening{position:absolute;left:694px;top:240px;width:420px;height:496px;overflow:hidden}
+#portal{border:0;width:100%;height:100%;pointer-events:none;background:#4e4747}
+#warm{position:absolute;inset:0;pointer-events:none;background:radial-gradient(70% 60% at 50% 55%,rgba(255,170,90,.0),rgba(40,20,8,.55));opacity:1}
+#shutterwrap{position:absolute;inset:0;will-change:transform}
+#shutter{left:0;top:0;width:100%;height:100%}
+#shutter-edge{position:absolute;left:0;right:0;height:10px;bottom:0;background:linear-gradient(#3a3631,#14110f);box-shadow:0 4px 10px rgba(0,0,0,.6)}
+#spill{position:absolute;left:560px;top:600px;width:700px;height:300px;opacity:0;pointer-events:none;
+  background:radial-gradient(50% 55% at 50% 10%,rgba(255,168,80,.5),rgba(255,140,60,.16) 45%,transparent 72%);mix-blend-mode:screen}
+#tube{position:absolute;left:690px;top:118px;width:505px;height:56px;pointer-events:none;mix-blend-mode:screen;
+  background:radial-gradient(50% 50% at 50% 50%,rgba(220,235,255,.32),transparent 70%);animation:hum 6s infinite steps(1)}
+@keyframes hum{0%,100%{opacity:1}43%{opacity:.55}44%{opacity:1}46%{opacity:.7}47%{opacity:1}}
+#scooter{left:930px;top:455px;width:490px;height:385px}
+#vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 50% 45%,transparent 55%,rgba(0,0,0,.5) 100%)}
+
+header{position:fixed;left:0;right:0;top:0;z-index:20;display:flex;justify-content:space-between;align-items:center;padding:22px clamp(16px,2.6vw,44px)}
+.logo{display:flex;align-items:center;gap:9px;font-weight:800;font-size:16px;letter-spacing:-.01em}
+.logo img{height:20px;width:auto}
+#skip{font-size:10px;color:var(--mut);padding:8px 0;transition:color .3s}
+#skip:hover{color:var(--txt)}
+
+.copy{position:fixed;z-index:10;pointer-events:none;opacity:0}
+.copy .eb{font-size:10px;color:var(--mut)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+#c-hero{left:clamp(16px,6vw,110px);top:50%;transform:translateY(-55%);opacity:1}
+#c-hero .word{display:block;width:clamp(260px,38vw,600px);height:auto;margin-top:22px;filter:drop-shadow(0 6px 30px rgba(0,0,0,.35))}
+#c-hero .rule{width:64px;height:1px;background:rgba(239,235,230,.5);margin:26px 0 14px}
+#c-hero .sub{font-size:11px;color:var(--mut)}
+#cue{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:10px;font-size:9px;color:var(--mut)}
+#cue i{display:block;width:1px;height:38px;background:linear-gradient(rgba(239,235,230,.8),transparent);animation:drop 1.8s var(--ease) infinite;transform-origin:top}
+@keyframes drop{0%{transform:scaleY(0)}55%{transform:scaleY(1);opacity:1}100%{transform:scaleY(1);opacity:0}}
+#c-city{left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;width:min(94vw,1200px)}
+#c-city p{font-size:clamp(30px,4.3vw,66px);text-shadow:0 2px 30px rgba(0,0,0,.6)}
+#c-city p span{color:var(--amber)}
+#c-city .eb{margin-bottom:18px}
+#c-store{left:clamp(16px,4.5vw,80px);top:50%;transform:translateY(-50%);max-width:380px;pointer-events:auto;padding:28px 28px 26px;border-radius:20px;
+  background:rgba(10,8,8,.58);backdrop-filter:blur(14px) saturate(1.1);-webkit-backdrop-filter:blur(14px) saturate(1.1);border:1px solid rgba(239,235,230,.08)}
+#c-store h2{font-size:clamp(44px,4.8vw,76px);margin:14px 0 14px}
+#c-store p{font-size:13px;line-height:1.55;color:var(--mut);max-width:290px}
+#walk{margin-top:22px;display:inline-flex;align-items:center;gap:12px;padding:7px 7px 7px 20px;border-radius:999px;background:rgba(239,235,230,.9);color:#1b1718;font-weight:700;font-size:13px;transition:background .3s,transform .3s var(--ease)}
+#walk:hover{background:#fff}
+#walk span.ic{width:34px;height:34px;border-radius:50%;background:#1b1718;color:var(--cream);display:grid;place-items:center}
+#c-in{left:50%;top:50%;transform:translate(-50%,-50%);text-align:center}
+#c-in p{font-size:clamp(48px,7.4vw,120px);color:#fff4e6;text-shadow:0 4px 40px rgba(0,0,0,.55)}
+#c-in .hi{font-size:clamp(18px,1.8vw,26px);color:var(--amber);margin-top:10px;font-weight:500}
+#bar{position:fixed;left:0;bottom:0;height:2px;background:var(--amber);width:0;z-index:20;opacity:.8}
+#track{height:900vh;position:relative;z-index:-1}
+@media (max-width:820px){
+  header{padding:16px;background:linear-gradient(rgba(4,6,13,.6),transparent)}
+  #c-hero{top:44%}
+  #c-hero .word{width:min(84vw,380px)}
+  #c-store{left:16px;right:16px;top:auto;bottom:calc(22px + env(safe-area-inset-bottom));transform:none;max-width:none;padding:18px}
+  #c-store h2{font-size:44px;margin:8px 0}
+  #c-city p{font-size:27px}
+}
+@media (prefers-reduced-motion:reduce){#cue i,#tube{animation:none}}
+</style>
+</head>
+<body>
+<div id="stage" aria-hidden="true">
+  <iframe class="layer" id="portal" src="wall.html?embed=1" title="" tabindex="-1"></iframe>
+  <div class="layer" id="skyfb"></div>
+  <div class="layer" id="aerial"><div class="scene" id="aerialScene"><img src="assets/aerial.jpg" alt="" style="left:0;top:0;width:1536px;height:864px"></div></div>
+  <canvas class="layer" id="sky"></canvas>
+  <div class="layer" id="street"><img id="streetBg" src="assets/store.jpg" alt=""><div class="scene" id="streetScene">
+    <img src="assets/store_cut.webp" alt="" style="left:0;top:0;width:1536px;height:864px">
+    <div id="tube"></div>
+    <div id="opening">
+      <div id="warm"></div>
+      <div id="shutterwrap"><img id="shutter" src="assets/shutter.jpg" alt=""><div id="shutter-edge"></div></div>
+    </div>
+    <div id="spill"></div>
+    <img id="scooter" src="assets/scooter.png" alt="">
+  </div></div>
+  <div id="vig"></div>
+</div>
+
+<header>
+  <div class="logo"><img src="assets/logo_glass.png" alt="">DRIP THEKA</div>
+  <button id="skip" class="mono">Skip to the wall →</button>
+</header>
+
+<section class="copy" id="c-hero">
+  <div class="eb mono">Est. MMXXVI · New Delhi</div>
+  <h1 class="sr">Drip Theka</h1><img class="word" src="assets/logo_word.png" alt="ड्रिप ठेका streetwear">
+  <div class="rule"></div>
+  <div class="sub mono">Serving fits, not drinks</div>
+</section>
+<div id="cue" class="mono"><span>Scroll to descend</span><i></i></div>
+<section class="copy" id="c-city"><div class="eb mono">Dilli · 1:47 AM</div><p class="disp"><span style="color:inherit;white-space:nowrap">Somewhere down there,</span><br><span style="white-space:nowrap">one shutter's still up.</span></p></section>
+<section class="copy" id="c-store">
+  <div class="eb mono">The Theka · Pour #001</div>
+  <h2 class="disp">Now<br>pouring</h2>
+  <p>Ten fits on the wall tonight. 400 GSM, oversized, printed in Delhi. Regulars only. Kidding, everyone's a regular.</p>
+  <button id="walk">Walk in <span class="ic"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m6 3 5 5-5 5"/></svg></span></button>
+</section>
+<section class="copy" id="c-in"><p class="disp">Welcome,<br>regular.</p><div class="hi">आइए, बैठिए</div></section>
+<div id="bar"></div>
+<div id="track"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+gsap.registerPlugin(ScrollTrigger);
+const $=s=>document.querySelector(s);
+const RM=matchMedia("(prefers-reduced-motion:reduce)").matches;
+const WALL="wall.html?entered=1";
+const IW=1536, IH=864;
+
+/* ---------- volumetric night clouds (WebGL, rendered on demand) ---------- */
+const cv=$("#sky"); let gl=null, prog, U={}, P={u:0,r:0}, dirty=true;
+const FS=`precision highp float;
+uniform vec2 R; uniform float T; uniform float D; uniform float RV;
+float h(vec3 p){p=fract(p*.3183099+.1);p*=17.;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}
+float n(vec3 x){vec3 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);
+ return mix(mix(mix(h(i),h(i+vec3(1,0,0)),f.x),mix(h(i+vec3(0,1,0)),h(i+vec3(1,1,0)),f.x),f.y),
+            mix(mix(h(i+vec3(0,0,1)),h(i+vec3(1,0,1)),f.x),mix(h(i+vec3(0,1,1)),h(i+vec3(1,1,1)),f.x),f.y),f.z);}
+float fbm5(vec3 p){float a=.5,s=0.;for(int i=0;i<5;i++){s+=a*n(p);p=p*2.03+vec3(1.7,9.2,3.1);a*=.5;}return s;}
+float fbm3(vec3 p){float a=.5,s=0.;for(int i=0;i<3;i++){s+=a*n(p);p=p*2.03+vec3(1.7,9.2,3.1);a*=.5;}return s;}
+float prof(float y){return smoothstep(0.,.7,y)*smoothstep(2.4,1.2,y);}
+float dens(vec3 p){
+ if(p.y<0.||p.y>2.4) return 0.;
+ vec3 q=p*vec3(.38,.6,.38)+vec3(T*.012,0.,T*.02);
+ float f=fbm5(q+.35*fbm3(q*1.7)); float pr=prof(p.y);
+ return clamp((f-.52-.34*RV+.22*pr)*3.6*pr,0.,1.);}
+float densLo(vec3 p){
+ if(p.y<0.||p.y>2.4) return 0.;
+ vec3 q=p*vec3(.38,.6,.38)+vec3(T*.012,0.,T*.02); float pr=prof(p.y);
+ return clamp((fbm3(q)-.52-.34*RV+.22*pr)*3.6*pr,0.,1.);}
+vec3 sky(vec3 rd,vec3 md){
+ float y=rd.y;
+ vec3 c=mix(vec3(.10,.11,.19),vec3(.012,.02,.055),smoothstep(-.05,.6,y));
+ c+=vec3(.55,.24,.08)*exp(-abs(y+.02)*14.)*.55;
+ float m=dot(rd,md); c+=vec3(.75,.8,.95)*smoothstep(.9994,.9997,m); c+=vec3(.25,.3,.45)*pow(max(m,0.),40.)*.6;
+ vec3 sp=floor(rd*260.); c+=step(.9975,h(sp))*.7*smoothstep(.05,.4,y);
+ if(y<0.) c=mix(vec3(.22,.23,.33),vec3(.08,.09,.15),smoothstep(0.,-.25,y))+vec3(.5,.22,.08)*exp(-abs(y)*18.)*.5;
+ return c;}
+void main(){
+ vec2 uv=(gl_FragCoord.xy-.5*R)/R.y;
+ float d=D;
+ vec3 ro=vec3(0.,mix(4.2,-.7,d),T*.25+d*9.);
+ float pitch=mix(-.06,-.42,smoothstep(.0,.8,d));
+ vec3 fw=normalize(vec3(0.,sin(pitch),cos(pitch)));
+ vec3 rt=normalize(cross(vec3(0,1,0),fw)); vec3 up=cross(fw,rt);
+ vec3 rd=normalize(fw*1.35+uv.x*rt+uv.y*up);
+ vec3 md=normalize(vec3(.34,.24,.9));
+ vec3 bg=sky(rd,md);
+ float t0=(0.-ro.y)/rd.y, t1=(2.4-ro.y)/rd.y; if(t0>t1){float k=t0;t0=t1;t1=k;}
+ t0=max(t0,0.); t1=min(t1,40.);
+ vec3 acc=vec3(0.); float Tr=1.;
+ if(t1>t0){
+  float dt=min((t1-t0)/40.,.9); float t=t0+dt*fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5);
+  for(int i=0;i<40;i++){
+   vec3 p=ro+rd*t; float de=dens(p)*smoothstep(.15,2.2,t);   // no grey wall right in front of the lens
+   if(de>.01){
+     float sh=densLo(p+md*.35)+densLo(p+md*.9)*.6; float lit=exp(-sh*2.6);
+     vec3 c=mix(vec3(.035,.045,.1),vec3(.86,.9,1.05),lit*lit*.7+lit*.3);
+     c+=vec3(.55,.26,.1)*smoothstep(1.,0.,p.y)*.55;
+     float a=1.-exp(-de*dt*2.2);
+     acc+=Tr*a*c; Tr*=1.-a;
+     if(Tr<.02) break;
+   }
+   t+=dt;
+  }
+ }
+ vec3 col=bg*Tr*(1.-RV)+acc;
+ float alpha=1.-Tr*RV;
+ col=1.-exp(-col*1.5); col=pow(col,vec3(.92));
+ gl_FragColor=vec4(min(col,vec3(alpha)),alpha);
+}`;
+function initGL(){
+  try{gl=cv.getContext("webgl",{antialias:false,alpha:true,premultipliedAlpha:true,powerPreference:"high-performance"})}catch(e){}
+  if(!gl){cv.style.display="none";return}
+  const sh=(t,s)=>{const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw gl.getShaderInfoLog(o);return o};
+  try{prog=gl.createProgram();
+    gl.attachShader(prog,sh(gl.VERTEX_SHADER,"attribute vec2 p;void main(){gl_Position=vec4(p,0,1);}"));
+    gl.attachShader(prog,sh(gl.FRAGMENT_SHADER,FS));gl.linkProgram(prog);gl.useProgram(prog);
+  }catch(e){console.warn(e);gl=null;cv.style.display="none";return}
+  const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+  const l=gl.getAttribLocation(prog,"p");gl.enableVertexAttribArray(l);gl.vertexAttribPointer(l,2,gl.FLOAT,false,0,0);
+  ["R","T","D","RV"].forEach(k=>U[k]=gl.getUniformLocation(prog,k));
+}
+function sizeGL(){ if(!gl)return;
+  const target=innerWidth<=820?520:640;                    // rows of cloud resolution: sharp, still cheap
+  const sc=Math.min(1,target/innerHeight)*Math.min(devicePixelRatio||1,1.5);
+  cv.width=Math.round(innerWidth*sc); cv.height=Math.round(innerHeight*sc); gl.viewport(0,0,cv.width,cv.height); dirty=true; }
+const t0=performance.now(); let last=0, skyVisible=true;
+function frame(now){
+  const idle=P.u<.02;                                       // gentle drift only while hovering at the top
+  if(gl&&skyVisible&&(dirty||(idle&&!RM&&now-last>66))){
+    gl.uniform2f(U.R,cv.width,cv.height);gl.uniform1f(U.T,RM?0:(now-t0)/1000);gl.uniform1f(U.D,P.u);gl.uniform1f(U.RV,P.r);
+    gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);gl.drawArrays(gl.TRIANGLES,0,3); dirty=false; last=now;
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ---------- photographic scenes: one camera, always moving forward ---------- */
+function cover(fx,fy){const vw=innerWidth,vh=innerHeight,s=Math.max(vw/IW,vh/IH);
+  let x=vw/2-fx*s,y=vh/2-fy*s; x=Math.min(0,Math.max(vw-IW*s,x)); y=Math.min(0,Math.max(vh-IH*s,y)); return {s,x,y};}
+const CAM={a:{z:1,fx:785,fy:330},s:{z:1,fx:904,fy:488}};   // zoom anchors: the lane's glow, the shop's doorway
+const BASE={}, SCR={};
+function place(){
+  const mob=innerWidth<=820, vw=innerWidth, vh=innerHeight;
+  BASE.a=cover(785,mob?420:400);
+  BASE.s=mob?(s=>({s,x:vw/2-938*s,y:Math.max(60,vh*.44-450*s)}))(vw/560):cover(880,450);
+  const cam=(b,c,el,k)=>{const px=b.x+c.fx*b.s, py=b.y+c.fy*b.s, s=b.s*c.z, tx=px-c.fx*s, ty=py-c.fy*s;
+    el.style.transform=`translate3d(${tx}px,${ty}px,0) scale(${s})`; SCR[k]={s,tx,ty,px,py};};
+  cam(BASE.a,CAM.a,$("#aerialScene"),"a"); cam(BASE.s,CAM.s,$("#streetScene"),"s");
+  // mobile letterbox backdrop must not cover the doorway: cut the same hole in it (screen space)
+  const S=SCR.s, x1=S.tx+694*S.s, y1=S.ty+240*S.s, x2=S.tx+1114*S.s, y2=S.ty+736*S.s;
+  $("#streetBg").style.clipPath=`polygon(evenodd,-50px -50px,${vw+100}px -50px,${vw+100}px ${vh+100}px,-50px ${vh+100}px,-50px -50px,${x1+40}px ${y1+40}px,${x2+40}px ${y1+40}px,${x2+40}px ${y2+40}px,${x1+40}px ${y2+40}px,${x1+40}px ${y1+40}px)`;
+}
+function walkZ(){ // zoom at which the doorway (below the rolled shutter) covers the whole screen
+  const vw=innerWidth,vh=innerHeight, b=BASE.s, px=b.x+904*b.s, py=b.y+488*b.s;
+  return Math.max(Math.max(px,vw-px)/210, py/214, (vh-py)/248)/b.s*1.03;
+}
+
+/* ---------- the journey ---------- */
+function build(){
+  const tl=gsap.timeline({defaults:{ease:"none"},
+    scrollTrigger:{trigger:"#track",start:"top top",end:"bottom bottom",scrub:RM?true:1.1,
+      onUpdate:s=>{$("#bar").style.width=(s.progress*100)+"%"; if(s.progress>.992)go();}}});
+  const P_=()=>{dirty=true};
+  // 0 → 2.7  fall through the cloud deck; the sky thins away and Delhi shows through the gaps
+  tl.to(P,{u:1,duration:2.7,ease:"power1.inOut",onUpdate:P_},0)
+    .to(P,{r:1,duration:1.0,ease:"power2.out",onUpdate:P_},1.25)
+    .to("#c-hero",{opacity:0,y:-30,duration:.6},0.05)
+    .to("#cue",{opacity:0,duration:.3},0)
+    .set("#aerial",{opacity:1},1.2)
+    .to("#sky",{opacity:0,duration:.5},2.55)
+  // 1.2 → 4.4  one long push toward the glowing lane
+    .fromTo(CAM.a,{z:1},{z:2.05,duration:3.2,ease:"power1.in",onUpdate:place},1.2)
+    .fromTo("#c-city",{opacity:0,y:16},{opacity:1,y:0,duration:.35},2.75).to("#c-city",{opacity:0,y:-16,duration:.3},3.55)
+  // 3.8 → 4.5  the lane's glow becomes the shop's glow (forward momentum never stops)
+    .to("#street",{opacity:1,duration:.7,ease:"sine.inOut"},3.8)
+    .fromTo(CAM.s,{z:1},{z:1.14,duration:1.3,onUpdate:place},3.8)
+    .set(["#aerial","#skyfb"],{opacity:0},4.55)
+    .to(CAM.s,{z:1.2,duration:2.6,onUpdate:place},5.1)
+    .fromTo("#c-store",{opacity:0,y:18},{opacity:1,y:0,duration:.4},4.85)
+  // 6.1 → 7.4  shutter rolls up on the lit wall
+    .to("#c-store",{opacity:0,y:-14,duration:.3},6.25)
+    .to("#shutterwrap",{yPercent:-94,duration:1.3,ease:"power1.inOut"},6.1)
+    .to("#warm",{opacity:.25,duration:1.3},6.2)
+    .to("#spill",{opacity:1,duration:1.1},6.3)
+  // 7.4 → 9.5  walk through the door; the wall is already there at full size
+    .to(CAM.s,{z:walkZ,duration:2.1,ease:"power2.in",onUpdate:place},7.6)
+    .to(["#scooter","#spill"],{opacity:0,duration:.8},8.1)
+    .to("#warm",{opacity:0,duration:.8},8.4)
+    .fromTo("#c-in",{opacity:0,scale:.96},{opacity:1,scale:1,duration:.4},8.1).to("#c-in",{opacity:0,duration:.35},9.1)
+    .to({},{duration:.3});
+  return tl;
+}
+let gone=false;
+function go(){ if(gone)return; gone=true; location.href=WALL; }
+$("#skip").onclick=()=>{gone=true;gsap.to("#stage",{opacity:0,duration:.4,onComplete:()=>location.href=WALL})};
+$("#walk").onclick=()=>{const end=document.documentElement.scrollHeight-innerHeight, o={y:scrollY};
+  gsap.to(o,{y:end,duration:RM?0:4.6,ease:"power1.inOut",onUpdate:()=>scrollTo(0,o.y)})};
+
+initGL(); sizeGL(); place(); requestAnimationFrame(frame);
+history.scrollRestoration="manual"; scrollTo(0,0);
+const TL=build();
+ScrollTrigger.create({trigger:"#track",start:"top top",end:"bottom bottom",onUpdate:()=>{skyVisible=TL.time()<3.1}});
+let rt; addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{sizeGL();place();ScrollTrigger.refresh()},80)});
+addEventListener("pageshow",e=>{if(e.persisted){gone=false;scrollTo(0,0);gsap.set("#stage",{opacity:1})}});
+</script>
+</body>
+</html>
