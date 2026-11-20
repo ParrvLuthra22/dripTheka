@@ -44,8 +44,12 @@ export interface Product {
   imageAlt: string;
   /** Wall number shown as "Drip Theka / 04" and "NO. 04". Wall products only. */
   code?: string;
-  /** Colourway label, e.g. "Ink / Amber". Wall products only. */
+  /** Colourway label, e.g. "Ink / Cobalt". Wall products only. */
   colourway?: string;
+  /** Hex of the colourway's round swatch. Wall products only. */
+  swatch?: string;
+  /** Design slug shared by every colourway of one design ("no-smoking"). Wall products only. */
+  design?: string;
   /** One-liner shown in the wall's product view. */
   blurb?: string;
   /**
@@ -53,8 +57,10 @@ export interface Product {
    * the wall once it has these — never put tee art on another garment.
    */
   wall?: WallImages;
-  /** Demo art — swap `wall` for the real designs, then drop this flag. */
+  /** Demo art — fenced off from reservations/shop listings. (Nothing sets this any more.) */
   placeholderArt?: true;
+  /** The front image is a plain tee until the real front print arrives. */
+  frontIsStandIn?: true;
   isLimited: boolean;
   totalUnits: number;
 }
@@ -62,6 +68,42 @@ export interface Product {
 /** A product that has real wall cutouts — the only kind The Wall shows. */
 export type WallProduct = Product & { wall: WallImages };
 export const hasWall = (p: Product): p is WallProduct => !!p.wall;
+
+/** One wall item: a design and its colourways (each colourway is its own product). */
+export interface WallDesign {
+  design: string;
+  code: string;
+  name: string;
+  hindi: string;
+  blurb: string;
+  gsm: number;
+  products: WallProduct[];
+}
+
+/** Group wall products by design, preserving wall order (first colourway = default). */
+export function groupDesigns(products: readonly WallProduct[]): WallDesign[] {
+  const map = new Map<string, WallDesign>();
+  for (const p of products) {
+    const key = p.design ?? p.slug;
+    let d = map.get(key);
+    if (!d) {
+      d = { design: key, code: p.code ?? "", name: p.name, hindi: p.hindi, blurb: p.blurb ?? p.tagline, gsm: p.gsm ?? 0, products: [] };
+      map.set(key, d);
+    }
+    d.products.push(p);
+  }
+  return [...map.values()];
+}
+
+/** Locate a /?fit= or /product/ slug — a design slug or a colourway slug. */
+export function findWallSlug(designs: readonly WallDesign[], slug: string): { design: number; colourway: number } | null {
+  for (let di = 0; di < designs.length; di++) {
+    if (designs[di].design === slug) return { design: di, colourway: 0 };
+    const ci = designs[di].products.findIndex((p) => p.slug === slug);
+    if (ci >= 0) return { design: di, colourway: ci };
+  }
+  return null;
+}
 
 export interface Pour {
   slug: "pour-001";
@@ -74,65 +116,101 @@ export interface Pour {
   editorialNote: string;
 }
 
-// ── The ten Pour #001 demo tees (The Wall) ───────────────────────────────────
-// Names / Hindi / colourways / blurbs are from the approved wall-reference.
-// `placeholderArt` marks them as demo designs — the real ones replace `wall`.
+// ── Pour #001: Ayaan's seven designs (The Wall) ──────────────────────────────
+// One wall item per design; every colourway is its own product (own slug) so the cart,
+// /api/reserve and orders know the colour with no backend change. Source of truth for the
+// seed data: docs/reference/pour001/designs.json. Backs are the hero art; the fronts are
+// plain stand-ins (`frontIsStandIn`) until Ayaan sends the real ones.
 
-type WallBase = "bone" | "black" | "cobalt";
-const BASE: Record<WallBase, { hex: string; name: string }> = {
-  bone:   { hex: "#E4E2DD", name: "Bone" },
-  black:  { hex: "#141518", name: "Ink" },
-  cobalt: { hex: "#004AAD", name: "Cobalt" },
-};
-const TEE_STOCK: [Size, number][] = [["S", 30], ["M", 50], ["L", 50], ["XL", 40], ["XXL", 30]];
-
-function wallTee(
-  n: number, name: string, hindi: string, base: WallBase, colourway: string, blurb: string,
-): Product {
-  const code = String(n).padStart(2, "0");
-  const id = `dt-001-${String(6 + n).padStart(3, "0")}`;
-  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-  return {
-    id, slug, name, hindi, code, colourway, blurb,
-    tagline: blurb,
-    type: "tee",
-    fit: "oversized",
-    price: 249900, // ₹2,499
-    depositPercent: 30,
-    colors: [BASE[base].hex],
-    colorNames: [BASE[base].name],
-    sizes: TEE_STOCK.map(([size, stock]) => ({ size, stock, sku: `${id.toUpperCase()}-${size}` })),
-    description: `${blurb} 400 GSM cotton, oversized with a dropped shoulder, screen-printed in Delhi.`,
-    careInstructions: ["Wash cold inside out", "Air dry flat", "Low iron on reverse"],
-    fabric: "100% combed ring-spun cotton, 400gsm",
-    gsm: 400,
-    dropNumber: "001",
-    collectionSlug: "pour-001",
-    imageAlt: `${name} tee — ${colourway}`,
-    isLimited: true,
-    totalUnits: 200,
-    wall: {
-      front:        `/theka/wall/p${code}.webp`,
-      frontShadow:  `/theka/wall/p${code}_sh.webp`,
-      back:         `/theka/wall/back_${base}.webp`,
-      backShadow:   `/theka/wall/back_${base}_sh.webp`,
-    },
-    placeholderArt: true,
-  };
+interface DesignSeed {
+  code: string; design: string; name: string; hindi: string; blurb: string;
+  colourways: { slug: string; label: string; swatch: string; back: string; front: string }[];
 }
 
-const WALL_TEES: Product[] = [
-  wallTee(1,  "Doodh Nahi",            "दूध नहीं, बीयर", "bone",   "Bone / Red",     "Not milk. Beer. The opening line of every good night."),
-  wallTee(2,  "Shunya",                "शून्य",           "black",  "Ink / Red",      "Zero given. Delivered with a straight face."),
-  wallTee(3,  "Tapped Out",            "खतम",            "cobalt", "Cobalt / Cream", "The keg's dry. Wear the sold-out word as a flex."),
-  wallTee(4,  "Ek Peg Aur",            "एक पेग और",       "black",  "Ink / Amber",    "One more. Always one more."),
-  wallTee(5,  "Side Character",        "बजट",            "bone",   "Bone / Ink",     "Main-character energy. Side-character budget."),
-  wallTee(6,  "Phir Milenge",          "फिर मिलेंगे",     "cobalt", "Cobalt / Amber", "See you again, regular. Scrawled on the way out."),
-  wallTee(7,  "Sabr Kar",              "सब्र कर",         "black",  "Ink / Cobalt",   "The bar's still buffering. Patience, bhai."),
-  wallTee(8,  "Philosopher",           "आधी रात का",      "cobalt", "Cobalt / Cream", "The 2am deep-talk guy, headphones on."),
-  wallTee(9,  "Ro Mat",                "रो मत, पी ले",    "black",  "Ink / Red",      "Don't cry. Drink up."),
-  wallTee(10, "Bartender's Favourite", "ठेके वाला",       "bone",   "Bone / Gold",    "The regular the bartender actually likes. On the house."),
+const DESIGNS: DesignSeed[] = [
+  { code: "01", design: "its-done-bro", name: "Its Done Bro", hindi: "हो गया, भाई",
+    blurb: "For when it's handled. Leaning back, shades on, zero follow-up questions.",
+    colourways: [
+      { slug: "its-done-bro-ink", label: "Ink", swatch: "#141414", back: "b01_ink", front: "f_ink" },
+      { slug: "its-done-bro-bone", label: "Bone", swatch: "#e6e1d6", back: "b01_bone", front: "f_bone" },
+    ] },
+  { code: "02", design: "bad-influence", name: "Bad Influence", hindi: "बुरी संगत",
+    blurb: "34 + 35. Two can play this game.",
+    colourways: [
+      { slug: "bad-influence-ink-cobalt", label: "Ink / Cobalt", swatch: "#1d4fc4", back: "b02_cobalt", front: "f_ink" },
+      { slug: "bad-influence-ink-pink", label: "Ink / Pink", swatch: "#a8558f", back: "b02_pink", front: "f_ink" },
+    ] },
+  { code: "03", design: "richer-than-my-teacher", name: "Richer Than My Teacher", hindi: "मास्टरजी से अमीर",
+    blurb: "Circled in red, like every answer you got right anyway.",
+    colourways: [
+      { slug: "richer-than-my-teacher-ink", label: "Ink", swatch: "#141414", back: "b03_ink", front: "f_ink" },
+      { slug: "richer-than-my-teacher-cocoa", label: "Cocoa", swatch: "#3e2a24", back: "b03_cocoa", front: "f_cocoa" },
+    ] },
+  { code: "04", design: "absolutly-sober", name: "Absolutly Sober", hindi: "बिल्कुल होश में",
+    blurb: "A smooth blend of questionable choices. Bottled by Drip Theka, 100% certified drip.",
+    colourways: [
+      { slug: "absolutly-sober-ink", label: "Ink", swatch: "#141414", back: "b04_ink", front: "f_ink" },
+      { slug: "absolutly-sober-bone", label: "Bone", swatch: "#e6e1d6", back: "b04_bone", front: "f_bone" },
+    ] },
+  { code: "05", design: "no-smoking", name: "No Smoking", hindi: "धूम्रपान वर्जित*",
+    blurb: "*Without me. The red-collar raglan comes in bone.",
+    colourways: [
+      { slug: "no-smoking-bone-red", label: "Bone / Red", swatch: "#e6e1d6", back: "b05_bone", front: "f_bone" },
+      { slug: "no-smoking-ink-red", label: "Ink / Red", swatch: "#141414", back: "b05_ink", front: "f_ink" },
+    ] },
+  { code: "06", design: "janwar", name: "Janwar", hindi: "जानवर",
+    blurb: "Harmonica out, collar up. Wear it like the interval just ended.",
+    colourways: [
+      { slug: "janwar-bone", label: "Bone", swatch: "#e6e1d6", back: "b06_bone", front: "f_bone" },
+      { slug: "janwar-ink", label: "Ink", swatch: "#141414", back: "b06_ink", front: "f_ink" },
+    ] },
+  { code: "07", design: "aap-zara", name: "Aap Zara?", hindi: "आप ज़रा फ़क ऑफ होंगे?",
+    blurb: "Enlightened. Headphones on. Politely asking you to leave.",
+    colourways: [
+      { slug: "aap-zara-bone", label: "Bone", swatch: "#e6e1d6", back: "b07_bone", front: "f_bone" },
+      { slug: "aap-zara-ink", label: "Ink", swatch: "#141414", back: "b07_ink", front: "f_ink" },
+    ] },
 ];
+
+const TEE_STOCK: [Size, number][] = [["S", 30], ["M", 50], ["L", 50], ["XL", 40], ["XXL", 30]];
+const WALL_DIR = "/theka/wall/pour001";
+export const POUR_001_PRICE = 129900; // ₹1,299 in paise
+
+const WALL_TEES: Product[] = DESIGNS.flatMap((d, di) =>
+  d.colourways.map((c, ci): Product => {
+    const n = DESIGNS.slice(0, di).reduce((t, x) => t + x.colourways.length, 0) + ci;
+    const id = `dt-001-${String(7 + n).padStart(3, "0")}`;
+    return {
+      id, slug: c.slug, name: d.name, hindi: d.hindi, code: d.code, design: d.design,
+      colourway: c.label, swatch: c.swatch, blurb: d.blurb,
+      tagline: d.blurb,
+      type: "tee",
+      fit: "oversized",
+      price: POUR_001_PRICE,
+      depositPercent: 30,
+      colors: [c.swatch],
+      colorNames: [c.label],
+      sizes: TEE_STOCK.map(([size, stock]) => ({ size, stock, sku: `${id.toUpperCase()}-${size}` })),
+      description: `${d.blurb} 400 GSM cotton, oversized with a dropped shoulder, screen-printed in Delhi.`,
+      careInstructions: ["Wash cold inside out", "Air dry flat", "Low iron on reverse"],
+      fabric: "100% combed ring-spun cotton, 400gsm",
+      gsm: 400,
+      dropNumber: "001",
+      collectionSlug: "pour-001",
+      imageAlt: `${d.name} tee, ${c.label}`,
+      isLimited: true,
+      totalUnits: 200,
+      wall: {
+        front:       `${WALL_DIR}/${c.front}.webp`,
+        frontShadow: `${WALL_DIR}/${c.front}_sh.webp`,
+        back:        `${WALL_DIR}/${c.back}.webp`,
+        backShadow:  `${WALL_DIR}/${c.back}_sh.webp`,
+        ar: 1.0,
+      },
+      frontIsStandIn: true,
+    };
+  }),
+);
 
 export const POUR_001: Pour = {
   slug: "pour-001",

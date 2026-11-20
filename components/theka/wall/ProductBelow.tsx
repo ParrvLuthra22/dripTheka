@@ -44,7 +44,7 @@ export function ProductBelow({ product, related }: { product: WallProduct; relat
               <li key={r.slug}>
                 <Link href={`/product/${r.slug}`} className={p.card} aria-label={A.aria(r.name, formatPrice(r.price))}>
                   <div className={p.stage}>
-                    <CardArt shadow={r.wall.frontShadow} fit={r.wall.front} shadowClass={p.sh} fitClass={p.fit} />
+                    <CardArt shadow={r.wall.backShadow} fit={r.wall.back} shadowClass={p.sh} fitClass={p.fit} />
                     <Ledge />
                     <div className={p.contact} />
                   </div>

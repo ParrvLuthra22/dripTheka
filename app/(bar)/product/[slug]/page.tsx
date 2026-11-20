@@ -9,10 +9,10 @@
 // Lives in the (bar) group — like the Wall itself it has its own header and
 // native cursor, and shouldn't load the (site) chrome (Nav, Cursor, Grain, glass…).
 
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import {
-  POUR_001, hasWall, isTappedOut,
+  POUR_001, groupDesigns, hasWall, isTappedOut,
   type WallProduct,
 } from "@/data/pour-001";
 import { ProductStage, type StageCell } from "@/components/theka/wall/ProductStage";
@@ -24,7 +24,7 @@ interface Props {
 }
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://driptheka.com";
-const COLS = 5; // the Wall's desktop grid
+const COLS = 4; // the Wall's desktop grid (rows of 4, then 3)
 
 const wallProducts = (): WallProduct[] => POUR_001.products.filter(hasWall);
 
@@ -66,6 +66,10 @@ function jsonLd(p: WallProduct) {
 
 export default async function ProductPage({ params }: Props) {
   const { slug } = await params;
+  const designs = groupDesigns(wallProducts());
+  // A design slug ("no-smoking") lands on its first colourway.
+  const asDesign = designs.find((d) => d.design === slug);
+  if (asDesign && !POUR_001.products.some((p) => p.slug === slug)) redirect(`/product/${asDesign.products[0].slug}`);
   const product = POUR_001.products.find((p) => p.slug === slug);
   if (!product) notFound();
 
@@ -74,20 +78,24 @@ export default async function ProductPage({ params }: Props) {
   if (!hasWall(product)) notFound();
 
   // ── Wall product ──────────────────────────────────────────────────────────
-  const all = wallProducts();
-  const total = all.length;
-  const index = all.findIndex((p) => p.slug === product.slug);
-  const at = (i: number) => all[(i + total) % total];
+  const total = designs.length;
+  const index = designs.findIndex((d) => d.products.some((p) => p.slug === product.slug));
+  const design = designs[index];
+  const at = (i: number) => designs[(i + total) % total];
 
   // Same-row neighbours peek in at the edges (desktop). Mobile isolates the fit (CSS).
   const row = Math.floor(index / COLS);
-  const cells: StageCell[] = all
-    .map((p, i) => ({ product: p, col: i % COLS, row: Math.floor(i / COLS), i }))
+  const cells: StageCell[] = designs
+    .map((d, i) => ({ d, col: i % COLS, row: Math.floor(i / COLS), i }))
     .filter((c) => c.row === row && Math.abs(c.i - index) <= 1)
-    .map(({ product: p, col, row: r }) => ({ product: p, col, row: r }));
+    .map(({ d, col, row: r, i }) => ({
+      design: d, col, row: r,
+      inRow: Math.min(COLS, total - r * COLS),
+      product: i === index ? product : d.products[0],
+    }));
 
-  // Three more from the aisle, wrapping round.
-  const related = [1, 2, 3].map((d) => at(index + d)).filter((p) => p.slug !== product.slug);
+  // Three more designs from the aisle, wrapping round.
+  const related = [1, 2, 3].map((d) => at(index + d)).filter((d) => d !== design).map((d) => d.products[0]);
 
   // No preload() here: the front <img> (fetchPriority="high") is already in the server HTML,
   // and a preload hint would also fire whenever a neighbouring page is prefetched.
@@ -100,13 +108,14 @@ export default async function ProductPage({ params }: Props) {
       />
       <main>
       <ProductStage
+        design={design}
         product={product}
         index={index}
         total={total}
         cells={cells}
-        ars={all.map((p) => p.wall.ar ?? 0.84)}
-        prevHref={`/product/${at(index - 1).slug}`}
-        nextHref={`/product/${at(index + 1).slug}`}
+        ars={designs.map((d) => d.products[0].wall.ar ?? 1)}
+        prevHref={`/product/${at(index - 1).products[0].slug}`}
+        nextHref={`/product/${at(index + 1).products[0].slug}`}
         backHref={`/?fit=${product.slug}`}
       />
       <ProductBelow product={product} related={related} />

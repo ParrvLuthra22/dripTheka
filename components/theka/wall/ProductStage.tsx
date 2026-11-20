@@ -14,7 +14,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from
 import { flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
 import { gsap } from "gsap";
-import type { WallProduct } from "@/data/pour-001";
+import type { WallDesign, WallProduct } from "@/data/pour-001";
 import { useCartStore } from "@/lib/store/cart";
 import { useHydrated } from "@/lib/theka/hooks";
 import { AR, cameraTarget, computeLayout } from "./wallLayout";
@@ -28,15 +28,21 @@ import { AisleControls } from "./AisleControls";
 import s from "./wall.module.css";
 
 export interface StageCell {
+  design: WallDesign;
+  /** The colourway shown in this cell. */
   product: WallProduct;
-  /** Desktop grid cell (5 columns) — the same as on the Wall. */
+  /** Desktop grid cell (rows of 4) — the same as on the Wall. */
   col: number;
   row: number;
+  /** Fits in this cell's row (short rows are centred). */
+  inRow: number;
 }
 
 interface ProductStageProps {
+  design: WallDesign;
+  /** The colourway the URL names. */
   product: WallProduct;
-  /** Position of `product` in wall order (0-based) and the number of fits on the wall. */
+  /** Position of the design in wall order (0-based) and the number of designs on the wall. */
   index: number;
   total: number;
   /** The current fit plus the same-row neighbours that peek in at the edges. */
@@ -49,15 +55,20 @@ interface ProductStageProps {
 }
 
 const cellStyle = (c: StageCell): CSSProperties =>
-  ({ "--c": c.col, "--r": c.row, "--ar": c.product.wall.ar ?? AR }) as CSSProperties;
+  ({ "--c": c.col, "--r": c.row, "--n": c.inRow, "--ar": c.product.wall.ar ?? AR }) as CSSProperties;
 
-export function ProductStage({ product, index, total, cells, ars, prevHref, nextHref, backHref }: ProductStageProps) {
+export function ProductStage({ design, product: initial, index, total, cells, ars, prevHref, nextHref, backHref }: ProductStageProps) {
   const router = useRouter();
   const hydrated = useHydrated();
   const count = useCartStore((st) => st.items.reduce((t, i) => t + i.quantity, 0));
   const bagCount = hydrated ? count : 0;
 
-  const [side, setSide] = useState<Side>("front");
+  const [side, setSide] = useState<Side>("back");
+  // Colourway chosen (label / swatches / add-to-bag) and colourway on the ledge (follows after the crossfade).
+  const start = Math.max(0, design.products.findIndex((p) => p.slug === initial.slug));
+  const [pick, setPick] = useState(start);
+  const [art, setArt] = useState(start);
+  const product = design.products[pick];
   const rootRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<HTMLDivElement>(null);
   const mainRef = useRef<HTMLButtonElement>(null);
@@ -129,7 +140,25 @@ export function ProductStage({ product, index, total, cells, ars, prevHref, next
     if (el && !prefersReducedMotion()) gsap.fromTo(el, { y: -8, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "back.out(3)" });
   };
 
-  const main = cells.find((c) => c.product.slug === product.slug) ?? cells[0];
+  const pickCw = (j: number) => {
+    if (j === pick) return;
+    setPick(j);
+    try { window.history.replaceState(null, "", `/product/${design.products[j].slug}`); } catch { /* sandboxed */ }
+    const m = mainRef.current;
+    const f = m?.querySelector<HTMLElement>("[data-fit]"), sh = m?.querySelector<HTMLElement>("[data-sh]");
+    if (!f || !sh || prefersReducedMotion()) { setArt(j); return; }
+    gsap.killTweensOf([f, sh]);
+    gsap.to([f, sh], {
+      opacity: 0, duration: 0.18,
+      onComplete: () => {
+        flushSync(() => setArt(j)); // src swaps while hidden
+        gsap.to(f, { opacity: 1, duration: 0.35 });
+        gsap.to(sh, { opacity: 0.75, duration: 0.35 });
+      },
+    });
+  };
+
+  const main = cells.find((c) => c.design === design) ?? cells[0];
 
   return (
     <div ref={rootRef} className={`${s.app} ${s.page}`} data-product-stage>
@@ -137,17 +166,17 @@ export function ProductStage({ product, index, total, cells, ars, prevHref, next
         <div className={s.bg} />
         <div className={s.world} style={cellStyle(main)}>
           {cells.map((c) => {
-            const isMain = c.product.slug === product.slug;
+            const isMain = c.design === design;
             return (
               <WallItem
-                key={c.product.slug}
+                key={c.design.design}
                 ref={isMain ? mainRef : undefined}
-                product={c.product}
+                product={isMain ? design.products[art] : c.product}
                 on={false}
-                showBack={isMain && side === "back"}
+                showFront={isMain && side === "front"}
                 onEnter={() => {}}
                 onLeave={() => {}}
-                onClick={() => { if (!isMain) router.push(`/product/${c.product.slug}`); }}
+                onClick={() => { if (!isMain) router.push(`/product/${c.design.products[0].slug}`); }}
                 style={cellStyle(c)}
                 priority={isMain}
                 lazy={!isMain}
@@ -161,16 +190,18 @@ export function ProductStage({ product, index, total, cells, ars, prevHref, next
       </div>
 
       <WallHeader zoomed total={total} bagCount={bagCount} bagNumRef={bagNumRef} backHref={backHref} />
-      <ProductInfo product={product} />
+      <ProductInfo product={design} />
       <BuyPanel
+        design={design}
         product={product}
+        onPick={pickCw}
         side={side}
         onSide={flipTo}
         onToast={toast}
         onAdded={bagBounce}
       />
       <AisleControls
-        code={product.code ?? ""}
+        code={design.code}
         index={index + 1}
         total={total}
         prevHref={prevHref}

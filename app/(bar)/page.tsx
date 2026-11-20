@@ -1,11 +1,11 @@
-// Home — The Entry (first visit) in front of The Wall. Products with wall cutouts hang on acrylic ledges; click one
-// and the camera zooms in. /?fit={slug} deep-links straight to a product view.
+// Home — The Entry (first visit) in front of The Wall. Designs hang on acrylic ledges (Ayaan's Pour #001, one per design, colourways inside); click one
+// and the camera zooms in. /?fit={design or colourway slug} deep-links straight to a product view.
 import type { Metadata } from "next";
 import { preload } from "react-dom";
 import { Home } from "@/components/theka/entry/Home";
 import { ENTRY_SKIP_SCRIPT } from "@/components/theka/entry/entryGate";
 import { InlineScript } from "@/components/theka/entry/InlineScript";
-import { POUR_001, hasWall } from "@/data/pour-001";
+import { POUR_001, groupDesigns, hasWall } from "@/data/pour-001";
 import { lang } from "@/lib/theka/lang";
 
 export const metadata: Metadata = {
@@ -22,7 +22,7 @@ export default function HomePage() {
   return (
     <>
       <InlineScript html={ENTRY_SKIP_SCRIPT} />
-      <Home products={POUR_001.products.filter(hasWall)} />
+      <Home designs={groupDesigns(POUR_001.products.filter(hasWall))} />
     </>
   );
 }

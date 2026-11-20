@@ -3,8 +3,9 @@
 //
 //   store_cut.webp   the shopfront, with a TRANSPARENT doorway (694,240 → 1114,736)
 //   tube             flickering tube-light glow over the sign
-//   #opening         warm overlay + the rolling shutter, exactly over the doorway
-//   spill / scooter  warm light on the street, the parked scooter
+//   #opening         the cold-cobalt glare (#blue) + the rolling shutter, exactly over the doorway
+//   spill / bloom    cobalt light cast on the street / a big screen-blended glow around the gap
+//   scooter          the parked scooter
 //
 // There is no picture of the Wall here: the doorway is a hole, and the real <TheWall>
 // is rendered underneath the whole Entry at 1:1.
@@ -24,13 +25,14 @@ export function StreetScene() {
         <img src={`${SRC}/store_cut.webp`} alt="" width={1536} height={864} fetchPriority="low" decoding="async" style={{ left: 0, top: 0, width: 1536, height: 864 }} />
         <div className={s.tube} />
         <div className={s.opening}>
-          <div className={s.warm} data-e="warm" />
+          <div className={s.blue} data-e="blue" />
           <div className={s.shutterwrap} data-e="shutterwrap">
             <img className={s.shutter} src={`${SRC}/shutter.jpg`} alt="" fetchPriority="low" decoding="async" />
-            <div className={s.shutterEdge} />
+            <div className={s.shutterEdge} data-e="edge" />
           </div>
         </div>
         <div className={s.spill} data-e="spill" />
+        <div className={s.bloom} data-e="bloom" />
         <img className={s.scooter} data-e="scooter" src={`${SRC}/scooter.png`} alt="" width={490} height={385} fetchPriority="low" decoding="async" />
         {/* eslint-enable @next/next/no-img-element */}
       </div>

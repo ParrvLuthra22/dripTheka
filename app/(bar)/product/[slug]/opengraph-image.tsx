@@ -30,7 +30,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
 
   let fit = "";
   if (product) {
-    const fitBuf = await sharp(pub(product.wall.front)).resize({ height: 470 }).png().toBuffer();
+    const fitBuf = await sharp(pub(product.wall.back)).resize({ height: 470 }).png().toBuffer();
     fit = `data:image/png;base64,${fitBuf.toString("base64")}`;
   }
 
@@ -48,6 +48,9 @@ export default async function Image({ params }: { params: Promise<{ slug: string
           </div>
           <div style={{ display: "flex", fontSize: 86, fontWeight: 800, lineHeight: 0.95, marginTop: 18, textTransform: "uppercase", letterSpacing: -2 }}>
             {product?.name ?? "Drip Theka"}
+          </div>
+          <div style={{ display: "flex", fontSize: 26, marginTop: 14, opacity: 0.7 }}>
+            {product?.colourway ?? ""}
           </div>
           <div style={{ display: "flex", fontSize: 30, marginTop: 28, opacity: 0.85 }}>
             {product ? formatPrice(product.price) : ""}

@@ -1,7 +1,7 @@
 "use client";
 
 // Top-right buy panel on desktop, bottom dock on mobile (CSS only).
-// Size select (native) · Add to bag · Front/Back · Design details.
+// Colourway swatches · size select (native) · Add to bag · Back/Front · Design details.
 //
 // Add to bag → the existing cart store's addItem(product, size, colour) — the
 // same call the product page makes. With no size: the select underline goes
@@ -10,7 +10,7 @@
 
 import { useRef, useState, type Ref } from "react";
 import { gsap } from "gsap";
-import type { Size, WallProduct } from "@/data/pour-001";
+import type { Size, WallDesign, WallProduct } from "@/data/pour-001";
 import { useCartStore } from "@/lib/store/cart";
 import { formatPrice } from "@/lib/utils/format";
 import { lang } from "@/lib/theka/lang";
@@ -23,7 +23,10 @@ const D = lang.wall.details;
 
 interface BuyPanelProps {
   ref?: Ref<HTMLElement>;
+  /** The design on screen and the colourway (its own product) that is chosen. */
+  design: WallDesign;
   product: WallProduct;
+  onPick: (index: number) => void;
   side: Side;
   onSide: (side: Side) => void;
   onToast: (text: string) => void;
@@ -31,7 +34,7 @@ interface BuyPanelProps {
   onAdded: () => void;
 }
 
-export function BuyPanel({ ref, product, side, onSide, onToast, onAdded }: BuyPanelProps) {
+export function BuyPanel({ ref, design, product, onPick, side, onSide, onToast, onAdded }: BuyPanelProps) {
   const addItem = useCartStore((st) => st.addItem);
   const selwRef = useRef<HTMLDivElement>(null);
   const detlRef = useRef<HTMLUListElement>(null);
@@ -75,6 +78,21 @@ export function BuyPanel({ ref, product, side, onSide, onToast, onAdded }: BuyPa
         <span className={s.cw}>{product.colourway}</span>
         <span className={s.pr}>{formatPrice(product.price)}</span>
       </div>
+      <div className={s.sws} role="radiogroup" aria-label={P.colourwayAria}>
+        {design.products.map((c, j) => (
+          <button
+            key={c.slug}
+            type="button"
+            role="radio"
+            aria-checked={c.slug === product.slug}
+            aria-label={c.colourway}
+            title={c.colourway}
+            data-sw={c.slug}
+            style={{ background: c.swatch }}
+            onClick={() => onPick(j)}
+          />
+        ))}
+      </div>
       <div className={s.lab}>
         <span>{P.chooseSize}</span>
         <span className={s.mono}>{P.fit}</span>
@@ -104,8 +122,8 @@ export function BuyPanel({ ref, product, side, onSide, onToast, onAdded }: BuyPa
       </button>
       <div className={s.pvrow}>
         <div className={`${s.flip} ${s.mono}`} role="group" aria-label={P.viewAria}>
-          <button type="button" aria-pressed={side === "front"} onClick={() => onSide("front")}>{P.front}</button>
           <button type="button" aria-pressed={side === "back"} onClick={() => onSide("back")}>{P.back}</button>
+          <button type="button" aria-pressed={side === "front"} onClick={() => onSide("front")}>{P.front}</button>
         </div>
         <button type="button" className={s.det} aria-expanded={open} onClick={toggleDetails}>{P.details}</button>
       </div>

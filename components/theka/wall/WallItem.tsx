@@ -16,8 +16,8 @@ interface WallItemProps {
   product: WallProduct;
   /** Ledge lit (hover / focus). */
   on: boolean;
-  /** Show the back of the garment (product view, this fit). */
-  showBack: boolean;
+  /** Show the front instead of the back (product view, this fit). The back print is the default. */
+  showFront: boolean;
   onEnter: () => void;
   onLeave: () => void;
   onClick: () => void;
@@ -39,7 +39,7 @@ interface WallItemProps {
   deferArt?: boolean;
 }
 
-export function WallItem({ ref, product, on, showBack, onEnter, onLeave, onClick, style, priority, lazy, tabIndex, main, deferArt }: WallItemProps) {
+export function WallItem({ ref, product, on, showFront, onEnter, onLeave, onClick, style, priority, lazy, tabIndex, main, deferArt }: WallItemProps) {
   const { wall } = product;
   const own = useRef<HTMLButtonElement | null>(null);
   const [armed, setArmed] = useState(!deferArt);
@@ -83,7 +83,7 @@ export function WallItem({ ref, product, on, showBack, onEnter, onLeave, onClick
       onClick={onClick}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className={s.sh} data-sh src={art(showBack ? wall.backShadow : wall.frontShadow)} alt="" draggable={false} decoding="async"
+      <img className={s.sh} data-sh src={art(showFront ? wall.frontShadow : wall.backShadow)} alt="" draggable={false} decoding="async"
         {...(lazy ? { loading: "lazy" as const, fetchPriority: "low" as const } : {})} />
       <Ledge />
       <div className={s.contact} />
@@ -91,8 +91,8 @@ export function WallItem({ ref, product, on, showBack, onEnter, onLeave, onClick
       <img
         className={s.fit}
         data-fit
-        src={art(showBack ? wall.back : wall.front)}
-        alt={`${product.name} tee`}
+        src={art(showFront ? wall.front : wall.back)}
+        alt={`${product.name} tee, ${showFront ? "front" : "back print"}`}
         draggable={false}
         {...(priority ? { fetchPriority: "high" as const, loading: "eager" as const } : lazy ? { loading: "lazy" as const, fetchPriority: "low" as const } : {})}
       />

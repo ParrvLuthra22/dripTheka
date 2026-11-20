@@ -43,3 +43,7 @@ next-env.d.ts
 # reference prompts/ports live in docs/reference/
 entry-port/
 wall-port/
+
+# Pour #001 port bundle (zip) — reference lives in docs/reference/pour001/
+pour001-port/
+pour001-port.zip

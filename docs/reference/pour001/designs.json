@@ -1,0 +1,22 @@
+{
+  "price_inr": 1299,
+  "gsm": 400,
+  "fit": "Oversized, dropped shoulder",
+  "note": "One wall item per design. Each colourway is its own product slug (so the cart, reservations and orders know the colour without any backend change). Back print is the hero image. Fronts are plain stand-ins (f_*) until Ayaan's real fronts arrive.",
+  "designs": [
+    {"code":"01","design":"its-done-bro","name":"Its Done Bro","hindi":"हो गया, भाई","blurb":"For when it's handled. Leaning back, shades on, zero follow-up questions.",
+     "colourways":[{"slug":"its-done-bro-ink","label":"Ink","swatch":"#141414","back":"b01_ink","front":"f_ink"},{"slug":"its-done-bro-bone","label":"Bone","swatch":"#e6e1d6","back":"b01_bone","front":"f_bone"}]},
+    {"code":"02","design":"bad-influence","name":"Bad Influence","hindi":"बुरी संगत","blurb":"34 + 35. Two can play this game.",
+     "colourways":[{"slug":"bad-influence-ink-cobalt","label":"Ink / Cobalt","swatch":"#1d4fc4","back":"b02_cobalt","front":"f_ink"},{"slug":"bad-influence-ink-pink","label":"Ink / Pink","swatch":"#a8558f","back":"b02_pink","front":"f_ink"}]},
+    {"code":"03","design":"richer-than-my-teacher","name":"Richer Than My Teacher","hindi":"मास्टरजी से अमीर","blurb":"Circled in red, like every answer you got right anyway.",
+     "colourways":[{"slug":"richer-than-my-teacher-ink","label":"Ink","swatch":"#141414","back":"b03_ink","front":"f_ink"},{"slug":"richer-than-my-teacher-cocoa","label":"Cocoa","swatch":"#3e2a24","back":"b03_cocoa","front":"f_cocoa"}]},
+    {"code":"04","design":"absolutly-sober","name":"Absolutly Sober","hindi":"बिल्कुल होश में","blurb":"A smooth blend of questionable choices. Bottled by Drip Theka, 100% certified drip.",
+     "colourways":[{"slug":"absolutly-sober-ink","label":"Ink","swatch":"#141414","back":"b04_ink","front":"f_ink"},{"slug":"absolutly-sober-bone","label":"Bone","swatch":"#e6e1d6","back":"b04_bone","front":"f_bone"}]},
+    {"code":"05","design":"no-smoking","name":"No Smoking","hindi":"धूम्रपान वर्जित*","blurb":"*Without me. The red-collar raglan comes in bone.",
+     "colourways":[{"slug":"no-smoking-bone-red","label":"Bone / Red","swatch":"#e6e1d6","back":"b05_bone","front":"f_bone"},{"slug":"no-smoking-ink-red","label":"Ink / Red","swatch":"#141414","back":"b05_ink","front":"f_ink"}]},
+    {"code":"06","design":"janwar","name":"Janwar","hindi":"जानवर","blurb":"Harmonica out, collar up. Wear it like the interval just ended.",
+     "colourways":[{"slug":"janwar-bone","label":"Bone","swatch":"#e6e1d6","back":"b06_bone","front":"f_bone"},{"slug":"janwar-ink","label":"Ink","swatch":"#141414","back":"b06_ink","front":"f_ink"}]},
+    {"code":"07","design":"aap-zara","name":"Aap Zara?","hindi":"आप ज़रा फ़क ऑफ होंगे?","blurb":"Enlightened. Headphones on. Politely asking you to leave.",
+     "colourways":[{"slug":"aap-zara-bone","label":"Bone","swatch":"#e6e1d6","back":"b07_bone","front":"f_bone"},{"slug":"aap-zara-ink","label":"Ink","swatch":"#141414","back":"b07_ink","front":"f_ink"}]}
+  ]
+}

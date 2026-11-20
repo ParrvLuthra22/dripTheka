@@ -1,41 +1,58 @@
 "use client";
 
-// The Entry — sky → Delhi → the theka → the Wall, one continuous camera that only
-// ever moves forward. Ported 1:1 from entry-reference/index.html; geometry lives in
-// entryCamera.ts, the cloud deck in SkyCanvas.tsx, the shopfront in StreetScene.tsx.
+// The Entry — sky → Delhi → the theka → the Wall, one continuous camera. Ported 1:1 from
+// pour001-reference/index.html; geometry lives in entryCamera.ts, the cloud deck in
+// SkyCanvas.tsx, the shopfront in StreetScene.tsx.
 //
-// The doorway is a real hole: <TheWall> is rendered underneath this overlay at 1:1
-// and shows through store_cut.webp's transparent doorway. When the journey ends the
-// Entry just unmounts — the Wall is already exactly where it should be.
+// The doorway is a real hole: <TheWall> is rendered underneath this overlay at 1:1 and shows
+// through store_cut.webp's transparent doorway. The Entry NEVER unmounts: it keeps its scroll
+// track, and the journey is reversible.
+//
+//   live     the timeline reached its end (progress ≥ .999): the Wall takes over — interactive, its
+//            chrome visible — and the Entry layers are hidden, pointer-events none, aria-hidden.
+//   dormant  progress fell back below .985 (a scrollbar drag, or the walk back out): the Wall is a
+//            backdrop again and the Entry layers are back.
+//   exitUp() the Wall asks to walk back out: go dormant and tween the scroll to maxScroll − 1.4·vh,
+//            from where normal scrolling plays the journey in reverse.
 //
 // Layer order, bottom → top (Wall below this component):
 //   skyfb → aerial → cloud canvas → street (+ letterbox backdrop) → vignette → copy/header
 //
-// Two modes of the same component:
+// Modes of the same component:
 //   playing=false  the server-rendered first frame only: night gradient, cloud canvas, header,
-//                  wordmark, scroll cue. No journey layers, no effects, no images beyond the logo.
+//                  wordmark, scroll cue. No journey layers, no effects.
 //   playing=true   the journey layers + scroll track mount and the timeline starts.
+//   startLive      (returning visitor / ?fit= deep link) start at the END of the track, already live.
 
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useImperativeHandle, useLayoutEffect, useRef, type Ref } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SkyCanvas, type SkyHandle } from "./SkyCanvas";
 import { StreetScene } from "./StreetScene";
 import {
-  AERIAL_ANCHOR, STREET_ANCHOR, aerialBase, camTransform, cssTransform,
-  doorwayHoleClip, streetBase, walkZ, type Base, type Cam,
+  AERIAL_ANCHOR, DUCK_FY, STREET_ANCHOR, aerialBase, camTransform, cssTransform,
+  doorwayHoleClip, duckZ, streetBase, type Base, type Cam,
 } from "./entryCamera";
+import { ENTRY_SKIP_CLASS } from "./entryGate";
 import s from "./entry.module.css";
 
 gsap.registerPlugin(ScrollTrigger);
 
-export type EntryExit = "complete" | "skip" | "reduced";
+export interface EntryHandle {
+  /** The Wall asked to walk back out: go dormant and scroll back into the journey. */
+  exitUp: () => void;
+}
+
 interface EntryProps {
+  ref?: Ref<EntryHandle>;
   /** false → static first frame (server + first client render); true → the journey. */
   playing: boolean;
   /** prefers-reduced-motion, read by Home on the client (always false while not playing). */
   reduced: boolean;
-  onDone: (how: EntryExit) => void;
+  /** Start at the end of the track, already live (returning visit / deep link). */
+  startLive?: boolean;
+  /** The Wall is live (true) or dormant (false). */
+  onLive: (live: boolean) => void;
 }
 
 const ENTRY_ASSETS = ["/theka/entry/aerial.jpg", "/theka/entry/store_cut.webp", "/theka/entry/shutter.jpg", "/theka/entry/scooter.png"];
@@ -44,12 +61,21 @@ const Arrow = () => (
   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="m6 3 5 5-5 5" /></svg>
 );
 
-export function Entry({ playing, reduced: rm, onDone }: EntryProps) {
+/** Park the page's own scroll while the Wall is live: wheel/keys must not walk the journey. */
+function parkPageScroll(on: boolean, root: HTMLElement) {
+  document.documentElement.classList.toggle("dt-live", on);
+  root.toggleAttribute("data-live", on);
+  if (on) root.setAttribute("aria-hidden", "true"); else root.removeAttribute("aria-hidden");
+}
+
+export function Entry({ ref, playing, reduced: rm, startLive = false, onLive }: EntryProps) {
   const journey = playing && !rm;
   const rootRef = useRef<HTMLDivElement>(null);
   const skyRef = useRef<SkyHandle>(null);
-  const doneRef = useRef(onDone);
-  useLayoutEffect(() => { doneRef.current = onDone; });
+  const liveRef = useRef(onLive);
+  useLayoutEffect(() => { liveRef.current = onLive; });
+  const exitRef = useRef<() => void>(() => {});
+  useImperativeHandle(ref, () => ({ exitUp: () => exitRef.current() }), []);
 
   // Start the photographic layers on mount (after first paint, before anyone can scroll 10%).
   useEffect(() => {
@@ -62,15 +88,20 @@ export function Entry({ playing, reduced: rm, onDone }: EntryProps) {
   useLayoutEffect(() => {
     if (!playing || !rm) return;
     const root = rootRef.current!;
-    let gone = false;
-    const btn = root.querySelector<HTMLButtonElement>("[data-e=enter]")!;
-    const onClick = () => {
-      if (gone) return; gone = true;
-      gsap.to(root, { opacity: 0, duration: 0.6, ease: "power1.inOut", onComplete: () => doneRef.current("reduced") });
+    let live = false;
+    const go = (instant: boolean) => {
+      if (live) return; live = true;
+      parkPageScroll(true, root);
+      const done = () => { gsap.set(root, { autoAlpha: 0 }); liveRef.current(true); };
+      if (instant) { done(); document.documentElement.classList.remove(ENTRY_SKIP_CLASS); }
+      else gsap.to(root, { opacity: 0, duration: 0.6, ease: "power1.inOut", onComplete: done });
     };
+    const btn = root.querySelector<HTMLButtonElement>("[data-e=enter]")!;
+    const onClick = () => go(false);
     btn.addEventListener("click", onClick);
-    return () => { btn.removeEventListener("click", onClick); gsap.killTweensOf(root); };
-  }, [playing, rm]);
+    if (startLive) go(true);
+    return () => { btn.removeEventListener("click", onClick); gsap.killTweensOf(root); parkPageScroll(false, root); };
+  }, [playing, rm, startLive]);
 
   // ── the journey ────────────────────────────────────────────────────────────
   useLayoutEffect(() => {
@@ -88,21 +119,22 @@ export function Entry({ playing, reduced: rm, onDone }: EntryProps) {
     const aerialScene = $("aerialScene"), aerial = $("aerial"), skyfb = $("skyfb"), skyWrap = $("sky");
     const street = $("street"), streetScene = $("streetScene"), streetBg = $("streetBg");
     const hero = $("hero"), cue = $("cue"), city = $("city"), store = $("store"), inn = $("inn");
-    const shutterwrap = $("shutterwrap"), warm = $("warm"), spill = $("spill"), scooter = $("scooter");
+    const shutterwrap = $("shutterwrap"), blue = $("blue"), bloom = $("bloom"), edge = $("edge"), spill = $("spill"), scooter = $("scooter");
     const bar = $("bar"), vig = $("vig"), header = $("header");
 
-    // zoom anchors: the lane's glow, the shop's doorway
+    // zoom anchors: the lane's glow, the shop's doorway. k: 0 = the anchor stays put on screen,
+    // 1 = the anchor has glided to the screen centre (the duck under the shutter).
     const CAM: { a: Cam; s: Cam } = {
-      a: { z: 1, ...AERIAL_ANCHOR },
-      s: { z: 1, ...STREET_ANCHOR },
+      a: { z: 1, ...AERIAL_ANCHOR, k: 0 },
+      s: { z: 1, ...STREET_ANCHOR, k: 0 },
     };
     let baseA: Base, baseS: Base;
     const place = () => {
       const vw = innerWidth, vh = innerHeight;
       baseA = aerialBase(vw, vh);
       baseS = streetBase(vw, vh);
-      aerialScene.style.transform = cssTransform(camTransform(baseA, CAM.a));
-      const S = camTransform(baseS, CAM.s);
+      aerialScene.style.transform = cssTransform(camTransform(baseA, CAM.a, vw, vh));
+      const S = camTransform(baseS, CAM.s, vw, vh);
       streetScene.style.transform = cssTransform(S);
       // mobile letterbox backdrop must not cover the doorway: cut the same hole in it
       streetBg.style.clipPath = doorwayHoleClip(S, vw, vh);
@@ -110,20 +142,24 @@ export function Entry({ playing, reduced: rm, onDone }: EntryProps) {
     place();
 
     const ctx = gsap.context(() => {
-      let gone = false;
-      function finish(how: EntryExit) {
-        if (gone) return;
-        gone = true;
-        doneRef.current(how);
-      }
+      // ── live / dormant ──────────────────────────────────────────────────────
+      // The scrub is smoothed (1.1s), so the playhead trails the scroll position: liveness is decided
+      // by the timeline reaching its end (≥ .999) and released when it falls back below .985.
+      let live = false;
+      const setLive = (on: boolean, instant = false) => {
+        if (on === live) return;
+        live = on;
+        parkPageScroll(on, root);
+        gsap.set([street, vig], { autoAlpha: on ? 0 : 1 });
+        if (instant) gsap.set([header, bar], { autoAlpha: on ? 0 : 1 });
+        else gsap.to([header, bar], { autoAlpha: on ? 0 : 1, duration: 0.3 });
+        liveRef.current(on);
+      };
 
-      // The scrub is smoothed (1.1s), so the playhead trails the scroll position. Completion is
-      // therefore decided by the timeline reaching its end — never by scroll progress, which hits
-      // ~1 while the camera is still mid-journey after a fast scroll (End key, drag, momentum).
       let keep = 0; // scroll progress just before a refresh re-measures the track
       const tl: gsap.core.Timeline = gsap.timeline({
         defaults: { ease: "none" },
-        onComplete: () => { if (tl.progress() === 1) finish("complete"); },
+        onUpdate: () => { const p = tl.progress(); if (!live && p >= 0.999) setLive(true); else if (live && p < 0.985) setLive(false); },
         scrollTrigger: {
           trigger: track, start: "top top", end: "bottom bottom", scrub: 1.1,
           onUpdate: (st) => { bar.style.width = `${st.progress * 100}%`; },
@@ -152,46 +188,82 @@ export function Entry({ playing, reduced: rm, onDone }: EntryProps) {
         .fromTo(CAM.a, { z: 1 }, { z: 2.05, duration: 3.2, ease: "power1.in", onUpdate: place }, 1.2)
         .fromTo(city, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.35 }, 2.75)
         .to(city, { opacity: 0, y: -16, duration: 0.3 }, 3.55)
-        // 3.8 → 4.5  the lane's glow becomes the shop's glow (forward momentum never stops)
+        // 3.8 → 6.0  the lane's glow becomes the shop; slow approach
         .to(street, { opacity: 1, duration: 0.7, ease: "sine.inOut" }, 3.8)
         .fromTo(CAM.s, { z: 1 }, { z: 1.14, duration: 1.3, onUpdate: place }, 3.8)
         .set([aerial, skyfb], { opacity: 0 }, 4.55)
         .to(CAM.s, { z: 1.2, duration: 2.6, onUpdate: place }, 5.1)
-        .fromTo(store, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.4 }, 4.85)
-        // 6.1 → 7.4  shutter rolls up on the lit wall
-        .to(store, { opacity: 0, y: -14, duration: 0.3 }, 6.25)
-        .to(shutterwrap, { yPercent: -94, duration: 1.3, ease: "power1.inOut" }, 6.1)
-        .to(warm, { opacity: 0.25, duration: 1.3 }, 6.2)
-        .to(spill, { opacity: 1, duration: 1.1 }, 6.3)
-        // 7.4 → 9.7  walk through the door; the Wall is already there at full size
-        .to(CAM.s, { z: () => walkZ(baseS, innerWidth, innerHeight), duration: 2.1, ease: "power2.in", onUpdate: place }, 7.6)
-        .to([scooter, spill], { opacity: 0, duration: 0.8 }, 8.1)
-        .to(warm, { opacity: 0, duration: 0.8 }, 8.4)
-        .fromTo(inn, { opacity: 0, scale: 0.96 }, { opacity: 1, scale: 1, duration: 0.4 }, 8.1)
-        .to(inn, { opacity: 0, duration: 0.35 }, 9.1)
-        // handoff polish (not in the reference): the vignette and Entry header leave with the walk,
-        // so the frame the Wall inherits has no Entry on it → no visible step at the handover.
-        .to(vig, { opacity: 0, duration: 0.8 }, 8.9)
-        .to(header, { opacity: 0, duration: 0.5 }, 9.2)
-        .to({}, { duration: 0.3 });
+        .fromTo(store, { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: 0.4 }, 4.85)
+        // 6.1 → 7.0  the shutter jerks halfway up and cold cobalt light floods the lane
+        .to(store, { autoAlpha: 0, y: -14, duration: 0.3 }, 6.2)
+        .to(shutterwrap, { yPercent: -50, duration: 0.9, ease: "power3.out" }, 6.1)
+        .fromTo(shutterwrap, { x: 0 }, { x: 1.4, duration: 0.06, repeat: 7, yoyo: true, ease: "none" }, 6.1)
+        .to(blue, { opacity: 1, duration: 0.45, ease: "power2.out" }, 6.15)
+        .to(bloom, { opacity: 1, duration: 0.55, ease: "power2.out" }, 6.2)
+        .to(spill, { opacity: 1, duration: 0.55 }, 6.25)
+        .to(edge, { boxShadow: "0 4px 10px rgba(0,0,0,.6),0 10px 30px rgba(80,140,255,.9)", duration: 0.5 }, 6.2)
+        // 7.0 → 7.8  eyes adjust: the glare settles and the tees show through the gap
+        .to(blue, { opacity: 0.1, duration: 0.9, ease: "power1.inOut" }, 7.0)
+        .to(bloom, { opacity: 0.5, duration: 0.9 }, 7.0)
+        // 7.8 → 9.9  duck under the shutter; the wall is already there at full size
+        .to(CAM.s, { z: () => duckZ(baseS, innerWidth, innerHeight), fy: DUCK_FY, k: 1, duration: 2.1, ease: "power2.in", onUpdate: place }, 7.8)
+        .to([scooter, spill, bloom], { opacity: 0, duration: 0.8 }, 8.4)
+        .to(blue, { opacity: 0, duration: 0.6 }, 8.9)
+        .fromTo(inn, { opacity: 0, scale: 0.96 }, { opacity: 1, scale: 1, duration: 0.4 }, 8.3)
+        .to(inn, { opacity: 0, duration: 0.35 }, 9.3)
+        .to({}, { duration: 0.35 });
 
       ScrollTrigger.create({
         trigger: track, start: "top top", end: "bottom bottom",
         onUpdate: () => sky.setActive(tl.time() < 3.1), // clouds are gone after 3.1 — stop drawing
       });
 
-      const skip = $("skip"), walk = $("walk");
-      const onSkip = () => {
-        if (gone) return;
-        gone = true;
-        gsap.to(root, { opacity: 0, duration: 0.4, onComplete: () => doneRef.current("skip") });
+      const maxScroll = () => ScrollTrigger.maxScroll(window);
+      /** Jump to the end of the track and go live (skip, and returning visitors). */
+      const toEndLive = (instant: boolean) => {
+        scrollTo(0, maxScroll());
+        tl.progress(1);
+        sky.setActive(false);
+        setLive(true, instant);
       };
+
+      // walking back out: dormant, then ease into the journey just before the shutter
+      exitRef.current = () => {
+        if (!live) return;
+        setLive(false);
+        const o = { y: scrollY };
+        gsap.to(o, { y: maxScroll() - innerHeight * 1.4, duration: 1.2, ease: "power2.out", onUpdate: () => scrollTo(0, o.y) });
+      };
+
+      const skip = $("skip"), walk = $("walk");
+      const onSkip = () => toEndLive(false);
       const onWalk = () => {
-        const end = document.documentElement.scrollHeight - innerHeight, o = { y: scrollY };
-        gsap.to(o, { y: end, duration: 4.6, ease: "power1.inOut", onUpdate: () => scrollTo(0, o.y) });
+        const o = { y: scrollY };
+        gsap.to(o, { y: maxScroll(), duration: 4.6, ease: "power1.inOut", onUpdate: () => scrollTo(0, o.y) });
       };
       skip.addEventListener("click", onSkip);
       walk.addEventListener("click", onWalk);
+
+      // Park the page's own scroll while the Wall is live: wheel/keys on the Wall must not drive the
+      // journey (the Wall asks for the walk back out itself, through exitUp()).
+      const onWheelPark = (e: WheelEvent) => {
+        if (!live || e.ctrlKey) return;
+        const sc = (e.target as Element | null)?.closest?.<HTMLElement>("[data-wall-scroller]");
+        if (sc && sc.scrollHeight > sc.clientHeight + 1 && getComputedStyle(sc).overflowY === "auto") {
+          const atTop = sc.scrollTop <= 0, atBottom = sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 1;
+          if ((e.deltaY < 0 && atTop) || (e.deltaY > 0 && atBottom)) e.preventDefault();
+          return;
+        }
+        e.preventDefault();
+      };
+      addEventListener("wheel", onWheelPark, { passive: false });
+
+      // Returning visitors and /?fit= deep links start at the end, already live. The sky frame never
+      // shows: the pre-paint class hid it; it only comes off once the layers are hidden (live).
+      if (startLive) {
+        toEndLive(true);
+        document.documentElement.classList.remove(ENTRY_SKIP_CLASS);
+      }
 
       let rt = 0;
       const onResize = () => {
@@ -199,15 +271,15 @@ export function Entry({ playing, reduced: rm, onDone }: EntryProps) {
         rt = window.setTimeout(() => { place(); tl.invalidate(); ScrollTrigger.refresh(); }, 80);
       };
       addEventListener("resize", onResize);
-      const onShow = (e: PageTransitionEvent) => { if (e.persisted) { gone = false; scrollTo(0, 0); gsap.set(root, { opacity: 1 }); } };
-      addEventListener("pageshow", onShow);
 
       return () => {
         skip.removeEventListener("click", onSkip);
         walk.removeEventListener("click", onWalk);
+        removeEventListener("wheel", onWheelPark);
         removeEventListener("resize", onResize);
-        removeEventListener("pageshow", onShow);
         clearTimeout(rt);
+        exitRef.current = () => {};
+        parkPageScroll(false, root);
         delete (window as unknown as { __dtEntry?: unknown }).__dtEntry;
       };
     }, root);
@@ -216,7 +288,7 @@ export function Entry({ playing, reduced: rm, onDone }: EntryProps) {
       ctx.revert();
       history.scrollRestoration = prevRestoration;
     };
-  }, [journey]);
+  }, [journey, startLive]);
 
   return (
     <>
@@ -264,7 +336,7 @@ export function Entry({ playing, reduced: rm, onDone }: EntryProps) {
             <section className={`${s.copy} ${s.store}`} data-e="store">
               <div className={`${s.eb} ${s.mono}`}>The Theka · Pour #001</div>
               <h2 className={s.disp}>Now<br />pouring</h2>
-              <p>Ten fits on the wall tonight. 400 GSM, oversized, printed in Delhi. Regulars only. Kidding, everyone&rsquo;s a regular.</p>
+              <p>Seven fits on the wall tonight. 400 GSM, oversized, printed in Delhi. Regulars only. Kidding, everyone&rsquo;s a regular.</p>
               <button type="button" className={s.walk} data-e="walk">Walk in <span className={s.ic}><Arrow /></span></button>
             </section>
             <section className={`${s.copy} ${s.inn}`} data-e="inn">

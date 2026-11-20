@@ -28,12 +28,15 @@
 
 /* the doorway: a real hole onto the live Wall, which sits under the whole Entry at 1:1 */
 .opening { position: absolute; left: 694px; top: 240px; width: 420px; height: 496px; overflow: hidden; }
-.warm { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(70% 60% at 50% 55%, rgba(255,170,90,.0), rgba(40,20,8,.55)); opacity: 1; }
+.blue { position: absolute; inset: 0; opacity: 0; pointer-events: none;
+  background: radial-gradient(90% 70% at 50% 92%, rgba(225,236,255,1) 0, rgba(110,160,255,.96) 30%, rgba(47,107,214,.92) 55%, rgba(0,52,140,.9) 85%); }
 .shutterwrap { position: absolute; inset: 0; will-change: transform; }
 .shutter { left: 0; top: 0; width: 100%; height: 100%; }
-.shutterEdge { position: absolute; left: 0; right: 0; height: 10px; bottom: 0; background: linear-gradient(#3a3631, #14110f); box-shadow: 0 4px 10px rgba(0,0,0,.6); }
-.spill { position: absolute; left: 560px; top: 600px; width: 700px; height: 300px; opacity: 0; pointer-events: none;
-  background: radial-gradient(50% 55% at 50% 10%, rgba(255,168,80,.5), rgba(255,140,60,.16) 45%, transparent 72%); mix-blend-mode: screen; }
+.shutterEdge { position: absolute; left: 0; right: 0; height: 10px; bottom: 0; background: linear-gradient(#3a3631, #14110f); box-shadow: 0 4px 10px rgba(0,0,0,.6), 0 8px 26px rgba(47,107,214,0); }
+.spill { position: absolute; left: 520px; top: 700px; width: 780px; height: 240px; opacity: 0; pointer-events: none;
+  background: radial-gradient(50% 60% at 50% 8%, rgba(120,165,255,.75), rgba(47,107,214,.32) 40%, transparent 72%); mix-blend-mode: screen; }
+.bloom { position: absolute; left: 354px; top: 300px; width: 1100px; height: 700px; opacity: 0; pointer-events: none; mix-blend-mode: screen;
+  background: radial-gradient(38% 34% at 50% 62%, rgba(110,160,255,.55), rgba(0,74,173,.22) 55%, transparent 75%); }
 .tube { position: absolute; left: 690px; top: 118px; width: 505px; height: 56px; pointer-events: none; mix-blend-mode: screen;
   background: radial-gradient(50% 50% at 50% 50%, rgba(220,235,255,.32), transparent 70%); animation: hum 6s infinite steps(1); }
 @keyframes hum { 0%,100% { opacity: 1 } 43% { opacity: .55 } 44% { opacity: 1 } 46% { opacity: .7 } 47% { opacity: 1 } }
@@ -88,6 +91,11 @@
 }
 @media (prefers-reduced-motion: reduce) { .cue i, .tube { animation: none; } .cue { display: none; } }
 
-/* returning visitor / ?fit= deep link: the pre-paint script marked <html>; the server-rendered
-   first frame never shows and the Wall plays its own opening. */
+/* returning visitor / ?fit= deep link: the pre-paint script marked <html> ("start at the end").
+   The server-rendered sky frame must never show: the first frame is the Wall. Entry jumps its
+   scroll to the end, goes live (its layers hidden) and only then removes the class. */
 :global(html.dt-skip-entry) .root { display: none; }
+
+/* The Wall is live: the page's own scroll is parked (the journey resumes only through a gesture on
+   the Wall). The gutter stays reserved so a classic scrollbar vanishing can't shift the Wall. */
+:global(html.dt-live) { overflow: hidden; scrollbar-gutter: stable; overscroll-behavior: none; background: #2b2627; }

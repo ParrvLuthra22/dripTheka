@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  cover, aerialBase, streetBase, camTransform, walkZ, doorwayHoleClip, cssTransform,
+  cover, aerialBase, streetBase, camTransform, duckZ, DUCK_FY, doorwayHoleClip, cssTransform,
 } from "./entryCamera.ts";
 
 const close = (a: number, b: number, eps = 1e-6) =>
@@ -40,41 +40,77 @@ test("aerialBase uses fy 420 on mobile, 400 on desktop", () => {
   assert.deepEqual(aerialBase(1440, 900), cover(785, 400, 1440, 900));
 });
 
-test("camTransform keeps the anchor pinned on screen at any zoom", () => {
+test("camTransform with k = 0 keeps the anchor pinned on screen at any zoom", () => {
   const b = streetBase(1440, 900);
   for (const z of [1, 1.14, 1.2, 3]) {
-    const p = camTransform(b, { z, fx: 904, fy: 488 });
+    const p = camTransform(b, { z, fx: 904, fy: 488, k: 0 }, 1440, 900);
     close(p.tx + 904 * p.s, p.px);
     close(p.ty + 488 * p.s, p.py);
     close(p.s, b.s * z);
+    close(p.px, b.x + 904 * b.s);
+    close(p.py, b.y + 488 * b.s);
+  }
+});
+
+test("camTransform moves the anchor toward the screen centre by k: p = p0 + (centre − p0)·k", () => {
+  for (const [vw, vh] of [[1440, 900], [390, 844]]) {
+    const b = streetBase(vw, vh);
+    const p0 = camTransform(b, { z: 1, fx: 904, fy: 488, k: 0 }, vw, vh);
+    for (const k of [0.25, 0.5, 1]) {
+      const p = camTransform(b, { z: 1.3, fx: 904, fy: 488, k }, vw, vh);
+      close(p.px, p0.px + (vw / 2 - p0.px) * k);
+      close(p.py, p0.py + (vh / 2 - p0.py) * k);
+      // the anchor is still pinned to (px, py) in screen space
+      close(p.tx + 904 * p.s, p.px);
+      close(p.ty + 488 * p.s, p.py);
+    }
+    const c = camTransform(b, { z: 2, fx: 904, fy: 488, k: 1 }, vw, vh);
+    close(c.px, vw / 2);
+    close(c.py, vh / 2);
+  }
+});
+
+test("k = 1 with fy = 612 puts scene (904, 612) — the middle of the gap — dead centre", () => {
+  for (const [vw, vh] of [[1440, 900], [390, 844]]) {
+    const b = streetBase(vw, vh);
+    const p = camTransform(b, { z: duckZ(b, vw, vh), fx: 904, fy: DUCK_FY, k: 1 }, vw, vh);
+    close(p.tx + 904 * p.s, vw / 2);
+    close(p.ty + 612 * p.s, vh / 2);
   }
 });
 
 test("zoom only grows: the camera never zooms out", () => {
   const b = streetBase(1440, 900);
   let prev = 0;
-  for (const z of [1, 1.05, 1.14, 1.2, walkZ(b, 1440, 900)]) {
-    const p = camTransform(b, { z, fx: 904, fy: 488 });
+  for (const z of [1, 1.05, 1.14, 1.2, duckZ(b, 1440, 900)]) {
+    const p = camTransform(b, { z, fx: 904, fy: 488, k: 0 }, 1440, 900);
     assert.ok(p.s > prev);
     prev = p.s;
   }
 });
 
-test("walkZ: the doorway (210 left/right, 214 up past the shutter lip, 248 down) covers the screen", () => {
+test("duckZ = max(vw/2/210, vh/2/112, vh/2/122) / base.s · 1.04", () => {
   for (const [vw, vh] of [[1440, 900], [1920, 1080], [390, 844]]) {
     const b = streetBase(vw, vh);
-    const z = walkZ(b, vw, vh);
-    assert.ok(z > 1.2, `walk must go past the 1.2 hold (got ${z})`);
-    const p = camTransform(b, { z, fx: 904, fy: 488 });
-    assert.ok(p.px - 210 * p.s <= 0, "left edge covered");
-    assert.ok(p.px + 210 * p.s >= vw, "right edge covered");
-    assert.ok(p.py - 214 * p.s <= 0, "top edge covered");
-    assert.ok(p.py + 248 * p.s >= vh, "bottom edge covered");
+    close(duckZ(b, vw, vh), (Math.max(vw / 2 / 210, vh / 2 / 112, vh / 2 / 122) / b.s) * 1.04);
+    assert.ok(duckZ(b, vw, vh) > 1.2, "ducking must go past the 1.2 hold");
+  }
+});
+
+test("duckZ: the gap under the half-raised shutter covers the screen", () => {
+  for (const [vw, vh] of [[1440, 900], [1920, 1080], [390, 844], [2560, 1000]]) {
+    const b = streetBase(vw, vh);
+    const p = camTransform(b, { z: duckZ(b, vw, vh), fx: 904, fy: DUCK_FY, k: 1 }, vw, vh);
+    assert.ok(p.px - 210 * p.s <= 1e-6, "left edge covered");
+    assert.ok(p.px + 210 * p.s >= vw - 1e-6, "right edge covered");
+    // the gap is scene y 488 → 736 (124 either side of 612); the shutter edge sits on the top 488 line
+    assert.ok(p.py - 124 * p.s <= 1e-6, "top edge covered");
+    assert.ok(p.py + 124 * p.s >= vh - 1e-6, "bottom edge covered");
   }
 });
 
 test("doorwayHoleClip is an evenodd polygon with the hole 40px-offset", () => {
-  const p = camTransform(streetBase(390, 844), { z: 1, fx: 904, fy: 488 });
+  const p = camTransform(streetBase(390, 844), { z: 1, fx: 904, fy: 488, k: 0 }, 390, 844);
   const c = doorwayHoleClip(p, 390, 844);
   assert.ok(c.startsWith("polygon(evenodd,-50px -50px,490px -50px,490px 944px,-50px 944px,-50px -50px,"));
   assert.ok(c.includes(`${p.tx + 694 * p.s + 40}px ${p.ty + 240 * p.s + 40}px`));

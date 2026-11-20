@@ -1,4 +1,4 @@
-// Run with:  npm test   (node's built-in runner — Node ≥ 22.18 strips TS types)
+// Run with:  pnpm test   (node's built-in runner — Node ≥ 22.18 strips TS types)
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -8,48 +8,53 @@ import {
 const close = (a: number, b: number, eps = 1e-6) =>
   assert.ok(Math.abs(a - b) < eps, `${a} ≉ ${b}`);
 
-test("desktop 1440×900: 5 columns, two ledge rows at .545 / .885 vh", () => {
-  const L = computeLayout(1440, 900, 10);
+test("desktop 1440×900, 7 items: rows of 4 then 3, ledges at .545 / .885 vh", () => {
+  const L = computeLayout(1440, 900, 7);
   assert.equal(L.mob, false);
-  assert.equal(L.cols, 5);
-  assert.equal(L.items.length, 10);
+  assert.equal(L.cols, 4);
+  assert.equal(L.items.length, 7);
+  assert.deepEqual(L.items.map((b) => b.row), [0, 0, 0, 0, 1, 1, 1]);
+  assert.deepEqual(L.items.map((b) => b.inRow), [4, 4, 4, 4, 3, 3, 3]);
   close(L.items[0].ly, 900 * 0.545);
-  close(L.items[5].ly, 900 * 0.885);
-  assert.equal(L.items[4].ly, L.items[0].ly);
-  // pitch = (1440 − 2·108) / 5 = 244.8; first centre = 108 + 122.4
-  close(L.items[0].cx, 230.4);
-  close(L.items[1].cx - L.items[0].cx, 244.8);
-  // h = min(.205·900, 244.8·.62/AR)
-  close(L.items[0].h, Math.min(900 * 0.205, (244.8 * 0.62) / AR));
+  close(L.items[4].ly, 900 * 0.885);
+  // margin .1·vw = 144; pitch = (1440 − 288) / 4 = 288
+  close(L.items[0].cx, 144 + 144);
+  close(L.items[1].cx - L.items[0].cx, 288);
+  // h = min(.215·vh, pitch·.66/ar); ar = 1
+  close(L.items[0].h, Math.min(900 * 0.215, (288 * 0.66) / AR));
   close(L.items[0].w, L.items[0].h * AR);
-  close(L.items[0].cy, L.items[0].ly - L.items[0].h * 0.46);
+  close(L.items[0].cy, L.items[0].ly - L.items[0].h * 0.48);
   assert.equal(L.worldHeight, 900);
   assert.equal(L.scrollable, false);
   close(L.hello.left, Math.max(16, 1440 * 0.026));
   close(L.hello.top, 900 * 0.17);
 });
 
-test("desktop >2 rows generalises: same row pitch, scrollable world", () => {
-  const L = computeLayout(1440, 900, 12);
-  const pitch = 900 * 0.34;
-  close(L.items[10].ly - L.items[5].ly, pitch);
-  assert.equal(L.scrollable, true);
-  assert.ok(L.worldHeight > 900);
-  close(L.worldHeight, L.items[10].ly + 900 * 0.115);
+test("desktop: the short row is centred on the viewport", () => {
+  const L = computeLayout(1440, 900, 7);
+  const row = L.items.slice(4);
+  close((row[0].cx + row[2].cx) / 2, 720); // 3 centred items
+  close(row[1].cx, 720);
+  close(row[1].cx - row[0].cx, 288);
+  // the full row is centred too (its centre is the viewport centre)
+  close((L.items[0].cx + L.items[3].cx) / 2, 720);
 });
 
-test("mobile 375×812: 2 columns, 150px lead-in, row gap = h + 74", () => {
-  const L = computeLayout(375, 812, 10);
+test("mobile 390×844, 7 items: 2 per row, last row centred, w = .84·pitch, top 150, gap h + 70", () => {
+  const L = computeLayout(390, 844, 7);
   assert.equal(L.mob, true);
   assert.equal(L.cols, 2);
-  const pitch = (375 - 32) / 2;
-  close(L.items[0].w, pitch * 0.74);
+  const pitch = (390 - 32) / 2;
+  close(L.items[0].w, pitch * 0.84);
   close(L.items[0].h, L.items[0].w / AR);
   close(L.items[0].ly, 150 + L.items[0].h);
-  close(L.items[2].ly - L.items[0].ly, L.items[0].h + 74);
-  close(L.items[0].cx, 16 + pitch * 0.5);
-  close(L.items[1].cx, 16 + pitch * 1.5);
-  close(L.worldHeight, 150 + 5 * (L.items[0].h + 74) + 60); // 10 items → 5 rows
+  close(L.items[2].ly - L.items[0].ly, L.items[0].h + 70);
+  assert.deepEqual(L.items.map((b) => b.row), [0, 0, 1, 1, 2, 2, 3]);
+  assert.deepEqual(L.items.map((b) => b.inRow), [2, 2, 2, 2, 2, 2, 1]);
+  close(L.items[0].cx, 195 - pitch / 2);
+  close(L.items[1].cx, 195 + pitch / 2);
+  close(L.items[6].cx, 195); // lone last item is centred
+  close(L.worldHeight, 150 + 4 * (L.items[0].h + 70) + 70);
   assert.equal(L.scrollable, true);
   assert.deepEqual(L.hello, { left: 16, top: 74 });
 });
@@ -59,66 +64,52 @@ test("820px is mobile, 821px is desktop", () => {
   assert.equal(computeLayout(821, 800, 4).mob, false);
 });
 
-test("desktop camera: ~72% of viewport height, centred at (.5vw, .55vh)", () => {
-  const L = computeLayout(1440, 900, 10);
+test("a per-item aspect ratio changes that box only", () => {
+  const L = computeLayout(1440, 900, [1, 2, 1]);
+  close(L.items[1].w, L.items[1].h * 2);
+  close(L.items[0].w, L.items[0].h);
+});
+
+test("cameraTarget desktop: s = min(.70vh/h, .40vw/w), centre (.5vw, .55vh)", () => {
+  const L = computeLayout(1440, 900, 7);
+  const it = L.items[2];
+  const c = cameraTarget(L, 2, 0);
+  close(c.s, Math.min((900 * 0.7) / it.h, (1440 * 0.4) / it.w));
+  close(c.x, 720 - c.s * it.cx);
+  close(c.y, 900 * 0.55 - c.s * it.cy);
+  // the item's centre lands on the screen point
+  close(c.x + c.s * it.cx, 720);
+  close(c.y + c.s * it.cy, 495);
+});
+
+test("cameraTarget mobile: s = min(.80vw/w, .40vh/h), centre (.5vw, .40vh); scrollTop shifts y", () => {
+  const L = computeLayout(390, 844, 7);
   const it = L.items[3];
-  const cam = cameraTarget(L, 3, 0);
-  close(cam.s, Math.min((900 * 0.72) / it.h, (1440 * 0.42) / it.w));
-  // screen position of the item centre after the camera = target point
-  close(cam.x + cam.s * it.cx, 1440 * 0.5);
-  close(cam.y + cam.s * it.cy, 900 * 0.55);
-  // product fills ~72% of the viewport height when height-limited
-  assert.ok(cam.s * it.h <= 900 * 0.72 + 1e-6);
+  const a = cameraTarget(L, 3, 0), b = cameraTarget(L, 3, 120);
+  close(a.s, Math.min((390 * 0.8) / it.w, (844 * 0.4) / it.h));
+  close(a.x + a.s * it.cx, 195);
+  close(a.y + a.s * it.cy, 844 * 0.4);
+  close(b.y - a.y, 120);
 });
 
-test("mobile camera: centre at (.5vw, .40vh); scrollTop is added to y", () => {
-  const L = computeLayout(375, 812, 10);
-  const it = L.items[5];
-  const cam0 = cameraTarget(L, 5, 0);
-  const cam1 = cameraTarget(L, 5, 120);
-  close(cam0.s, Math.min((375 * 0.66) / it.w, (812 * 0.4) / it.h));
-  close(cam0.x + cam0.s * it.cx, 375 * 0.5);
-  close(cam0.y + cam0.s * it.cy, 812 * 0.4);
-  close(cam1.y - cam0.y, 120);
-  assert.equal(cam1.x, cam0.x);
-});
-
-test("background scales a tenth as much as the world", () => {
-  close(bgScale({ s: 3.5, x: 0, y: 0 }), 1 + 2.5 * 0.1);
+test("bgScale is a tenth of the world zoom", () => {
+  close(bgScale({ s: 3, x: 0, y: 0 }), 1.2);
   close(bgScale({ s: 1, x: 0, y: 0 }), 1);
 });
 
-test("scrollAfterClose: 0 on a fixed desktop wall, centred+clamped when scrollable", () => {
-  assert.equal(scrollAfterClose(computeLayout(1440, 900, 10), 7), 0);
-  const M = computeLayout(375, 812, 10);
-  const max = M.worldHeight - 812;
-  assert.equal(scrollAfterClose(M, 0), 0); // clamped to the top
-  assert.equal(scrollAfterClose(M, 9), Math.min(max, M.items[9].cy - 812 * 0.45));
-  close(scrollAfterClose(M, 4), M.items[4].cy - 812 * 0.45);
+test("scrollAfterClose: 0 on desktop, the item centred (clamped) on mobile", () => {
+  assert.equal(scrollAfterClose(computeLayout(1440, 900, 7), 5), 0);
+  const L = computeLayout(390, 844, 7);
+  const max = L.worldHeight - 844;
+  close(scrollAfterClose(L, 0), Math.min(max, Math.max(0, L.items[0].cy - 844 * 0.45)));
+  assert.ok(scrollAfterClose(L, 6) <= max + 1e-9);
 });
 
-test("row jump: 05→06 on desktop drops to row 2; neighbours in a row do not", () => {
-  const L = computeLayout(1440, 900, 10);
-  assert.equal(isRowJump(L, 4, 5), true);
-  assert.equal(isRowJump(L, 5, 4), true);
-  assert.equal(isRowJump(L, 1, 2), false);
-  assert.equal(isRowJump(L, 9, 0), true); // wrap-around
-});
-
-test("per-product AR: desktop box uses its own ratio; default array equals a count", () => {
-  const ars = [0.84, 1.0, 0.7, 0.84, 0.84];
-  const L = computeLayout(1440, 900, ars);
-  ars.forEach((ar, i) => close(L.items[i].w / L.items[i].h, ar));
-  const a = computeLayout(1440, 900, 10), b = computeLayout(1440, 900, Array(10).fill(AR));
-  assert.deepEqual(a, b);
-  const m1 = computeLayout(375, 812, 10), m2 = computeLayout(375, 812, Array(10).fill(AR));
-  assert.deepEqual(m1, m2);
-});
-
-test("mobile rows take the tallest fit's height and share a ledge line", () => {
-  const L = computeLayout(375, 812, [0.84, 1.0, 0.7, 0.84]);
-  close(L.items[0].ly, L.items[1].ly);
-  close(L.items[0].ly, 150 + L.items[0].h); // row 0 is as tall as the 0.84 box (taller than 1.0)
-  close(L.items[2].ly, L.items[0].ly + 74 + L.items[2].h); // row 1 tallest is the 0.7 box
-  close(L.worldHeight, L.items[3].ly + 74 + 60);
+test("isRowJump uses each item's row", () => {
+  const L = computeLayout(1440, 900, 7);
+  assert.equal(isRowJump(L, 0, 3), false);
+  assert.equal(isRowJump(L, 3, 4), true);
+  const M = computeLayout(390, 844, 7);
+  assert.equal(isRowJump(M, 0, 1), false);
+  assert.equal(isRowJump(M, 1, 2), true);
 });

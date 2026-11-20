@@ -2,11 +2,10 @@
 // aisle is announced.
 
 import type { Ref } from "react";
-import type { WallProduct } from "@/data/pour-001";
 import { lang } from "@/lib/theka/lang";
 import s from "./wall.module.css";
 
-export function ProductInfo({ ref, product }: { ref?: Ref<HTMLElement>; product: WallProduct }) {
+export function ProductInfo({ ref, product }: { ref?: Ref<HTMLElement>; product: { code?: string; name: string; hindi: string; blurb?: string } }) {
   return (
     <section ref={ref} className={`${s.info} ${s.pv}`} aria-live="polite">
       <div className={`${s.eb} ${s.mono}`}>{lang.wall.info.eyebrow(product.code ?? "")}</div>

@@ -111,6 +111,7 @@ export const lang = {
       eyebrow:    "Pour #001 / Tees",
       chooseSize: "Choose your size",
       fit:        "Oversized",
+      colourwayAria: "Colourway",
       selectSize: "Select a size",
       sizeAria:   "Size",
       add:        "Add to bag",

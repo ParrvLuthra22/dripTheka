@@ -2,7 +2,8 @@
 
 // TheWall — the home route. A plaster wall, products on acrylic ledges, and a
 // camera (the #world scale/translate, tweened with GSAP) that zooms into a fit.
-// Ported 1:1 from wall-reference/index.html; geometry lives in wallLayout.ts.
+// Ported 1:1 from pour001-reference/wall.html; geometry lives in wallLayout.ts.
+// One wall item per DESIGN; each design's colourways are separate products (own slug).
 //
 //   mode:  'wall' ⇄ 'zoom'        (imperative — drives the camera + gestures)
 //   view:  zoomed · cur · side · hover   (wallStore → what React renders)
@@ -13,7 +14,7 @@
 import { useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { flushSync } from "react-dom";
 import { gsap } from "gsap";
-import type { WallProduct } from "@/data/pour-001";
+import { findWallSlug, type WallDesign } from "@/data/pour-001";
 import { useCartStore } from "@/lib/store/cart";
 import { useHydrated } from "@/lib/theka/hooks";
 import { lang } from "@/lib/theka/lang";
@@ -31,11 +32,13 @@ import s from "./wall.module.css";
 
 const W = lang.wall;
 
-/** Fits that are in the first phone screen (3 rows × 2); the rest fetch their art when scrolled near. */
-const FIRST_SCREEN = 6;
+/** Fits that are in the first phone screen (2 per row); the rest fetch their art when scrolled near. */
+const FIRST_SCREEN = 4;
 
 interface WallApi {
   open: (i: number) => void;
+  /** Choose colourway j of the design on screen (crossfades the art, switches the product). */
+  pick: (j: number) => void;
   step: (d: number) => void;
   /** Glide to fit i (neighbour click). */
   goTo: (i: number) => void;
@@ -49,17 +52,19 @@ interface WallApi {
 }
 
 interface TheWallProps {
-  products: WallProduct[];
-  /** The Entry is playing on top: no intro, chrome hidden, no pointer/keyboard handling. */
-  entering?: boolean;
-  /** When `entering` ends: true → the Entry just handed over (fade the chrome in);
-   *  false → a normal visit (deep link / lights-on intro). */
+  designs: WallDesign[];
+  /** The Entry is on top: no intro, chrome hidden, no pointer/keyboard handling, aria-hidden. */
+  dormant?: boolean;
+  /** On the first wake: true → the Entry just handed over (fade the chrome in);
+   *  false → a visit that starts at the Wall (deep link / lights-on intro). Later wakes always fade the chrome in. */
   handoff?: boolean;
+  /** Visitor scrolled up at the top of the Wall: walk back out. Home flips `dormant`. */
+  onExitUp?: () => void;
 }
 
-export function TheWall({ products, entering = false, handoff = false }: TheWallProps) {
-  const n = products.length;
-  const [store] = useState(createWallStore);
+export function TheWall({ designs, dormant = false, handoff = false, onExitUp }: TheWallProps) {
+  const n = designs.length;
+  const [store] = useState(() => createWallStore(n));
   const view = useSyncExternalStore(store.subscribe, store.get, store.get);
 
   const hydrated = useHydrated();
@@ -68,8 +73,9 @@ export function TheWall({ products, entering = false, handoff = false }: TheWall
 
   const api = useRef<WallApi | null>(null);
   // Entry handover: read inside the mount effect without re-running it.
-  const enteringRef = useRef(entering);
-  const lifecycle = useRef<{ start: () => void; reveal: () => void; held: boolean } | null>(null);
+  const dormantRef = useRef(dormant);
+  const exitRef = useRef(onExitUp);
+  const lifecycle = useRef<{ wake: (handoff: boolean) => void; sleep: () => void } | null>(null);
 
   const scrollerRef = useRef<HTMLDivElement>(null);
   const worldRef = useRef<HTMLDivElement>(null);
@@ -88,14 +94,14 @@ export function TheWall({ products, entering = false, handoff = false }: TheWall
   const countRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
+  useLayoutEffect(() => { exitRef.current = onExitUp; });
+
   useLayoutEffect(() => {
-    enteringRef.current = entering;
+    dormantRef.current = dormant;
     const lc = lifecycle.current;
-    if (!entering && lc?.held) {
-      lc.held = false;
-      if (handoff) lc.reveal(); else lc.start();
-    }
-  }, [entering, handoff]);
+    if (!lc) return; // the mount effect reads dormantRef itself
+    if (dormant) lc.sleep(); else lc.wake(handoff);
+  }, [dormant, handoff]);
 
   useLayoutEffect(() => {
     const world = worldRef.current, scroller = scrollerRef.current, bg = bgRef.current;
@@ -112,14 +118,15 @@ export function TheWall({ products, entering = false, handoff = false }: TheWall
 
     const rm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const D = (v: number) => (rm ? 0 : v);
-    const idle = () => enteringRef.current; // Entry on top → the Wall is a backdrop, not interactive
+    const idle = () => dormantRef.current; // Entry on top → the Wall is a backdrop, not interactive
 
     let mode: "wall" | "zoom" = "wall";
     let cur = 0;
     let busy = false;
     let dragged = false;
-    // per-product box aspect ratio (wall.ar) — falls back to the default 0.84
-    const ars = products.map((p) => p.wall.ar ?? AR);
+    // per-design box aspect ratio (wall.ar of its first colourway) — falls back to the default
+    const ars = designs.map((d) => d.products[0].wall.ar ?? AR);
+    const slugOf = (i: number) => designs[i].products[store.get().pick[i]].slug;
     let L: Layout = computeLayout(innerWidth, innerHeight, ars);
 
     const fitOf = (i: number) => items[i].querySelector<HTMLElement>("[data-fit]")!;
@@ -182,11 +189,30 @@ export function TheWall({ products, entering = false, handoff = false }: TheWall
       });
     };
 
+    /** Choose colourway j of the design on screen: crossfade the art + shadow (0.18s out, 0.35s in). */
+    const pickCw = (j: number) => {
+      if (mode !== "zoom") return;
+      const i = cur;
+      const st = store.get();
+      if (st.pick[i] === j) return;
+      const pick = st.pick.slice(); pick[i] = j;
+      store.set({ pick });                       // label, swatches, price, add-to-bag follow at once
+      setUrl(slugOf(i));
+      const swap = () => { const art = store.get().art.slice(); art[i] = j; flushSync(() => store.set({ art })); };
+      const f = fitOf(i), sh = shOf(i);
+      gsap.killTweensOf([f, sh]);
+      if (rm) { swap(); gsap.set(f, { opacity: 1 }); gsap.set(sh, { opacity: 0.75 }); return; }
+      gsap.to([f, sh], {
+        opacity: 0, duration: 0.18,
+        onComplete: () => { swap(); gsap.to(f, { opacity: 1, duration: 0.35 }); gsap.to(sh, { opacity: 0.75, duration: 0.35 }); },
+      });
+    };
+
     const open = (i: number) => {
       if (busy || idle()) return;
-      warmBacks();
+      warmFronts();
       busy = true; mode = "zoom"; cur = i;
-      store.set({ zoomed: true, cur: i, side: "front", hover: -1 });
+      store.set({ zoomed: true, cur: i, side: "back", hover: -1 });
       scroller.style.overflowY = "hidden";
       scroller.style.touchAction = "none";
       const t = cameraTarget(L, i, scroller.scrollTop);
@@ -194,13 +220,13 @@ export function TheWall({ products, entering = false, handoff = false }: TheWall
       gsap.to(bg, { scale: bgScale(t), duration: D(1.35), ease: "expo.inOut" });
       showPV(true, 0.75);
       isolate(true);
-      setUrl(products[i].slug);
+      setUrl(slugOf(i));
     };
 
     const go = (i: number) => {
       if (busy || i === cur) return;
       busy = true;
-      if (store.get().side === "back") swapSide("front", true);
+      if (store.get().side === "front") swapSide("back", true);
       const prev = cur;
       cur = (i + n) % n;
       const next = cur;
@@ -217,13 +243,13 @@ export function TheWall({ products, entering = false, handoff = false }: TheWall
         x: t.x, y: t.y, scale: t.s, duration: D(isRowJump(L, prev, next) ? 1.25 : 0.95), ease: "expo.inOut",
         onComplete: () => { busy = false; },
       });
-      setUrl(products[next].slug);
+      setUrl(slugOf(next));
     };
 
     const close = () => {
       if (busy || mode !== "zoom") return;
       busy = true;
-      if (store.get().side === "back") swapSide("front", true);
+      if (store.get().side === "front") swapSide("back", true);
       store.set({ zoomed: false });
       showPV(false);
       isolate(false);
@@ -243,10 +269,29 @@ export function TheWall({ products, entering = false, handoff = false }: TheWall
       setUrl(null);
     };
 
-    /** Deep link (/?fit=slug): land zoomed with no animation. */
-    const openInstant = (i: number) => {
+    /** Instant, un-animated close (going dormant, e.g. walking back out of the Wall). */
+    const closeInstant = () => {
+      gsap.killTweensOf([world, bg, ...pv, ...items, ...infoPanel]);
+      items.forEach((_, k) => { gsap.killTweensOf([fitOf(k), shOf(k)]); });
+      store.set({ zoomed: false, side: "back", art: store.get().pick.slice() });
+      gsap.set(pv, { autoAlpha: 0 });
+      gsap.set(items, { opacity: 1 });
+      gsap.set(world, { x: 0, y: 0, scale: 1 });
+      gsap.set(bg, { scale: 1, x: 0, y: 0 });
+      gsap.set(hello, { autoAlpha: 1 });
+      scroller.scrollTop = 0;
+      scroller.style.overflowY = L.scrollable ? "auto" : "hidden";
+      scroller.style.touchAction = "";
+      mode = "wall"; busy = false;
+      setUrl(null);
+    };
+
+    /** Deep link (/?fit=slug): land zoomed with no animation, on the colourway the slug names. */
+    const openInstant = (i: number, j: number) => {
       cur = i; mode = "zoom";
-      store.set({ zoomed: true, cur: i, side: "front", hover: -1 });
+      const pick = store.get().pick.slice(), art = store.get().art.slice();
+      pick[i] = j; art[i] = j;
+      store.set({ zoomed: true, cur: i, side: "back", hover: -1, pick, art });
       scroller.style.overflowY = "hidden";
       scroller.style.touchAction = "none";
       const t = cameraTarget(L, i, 0);
@@ -269,6 +314,7 @@ export function TheWall({ products, entering = false, handoff = false }: TheWall
 
     api.current = {
       open,
+      pick: pickCw,
       step: (d) => { if (mode === "zoom") go(cur + d); },
       goTo: (i) => { if (mode === "zoom") go(i); },
       close,
@@ -282,7 +328,31 @@ export function TheWall({ products, entering = false, handoff = false }: TheWall
     };
 
     // ── gestures ───────────────────────────────────────────────────────────
+    // Walking back out: only in wall mode (not zoomed), at the top of the Wall.
+    let exiting = false;
+    const exitUp = () => {
+      if (exiting || idle() || mode !== "wall" || busy || !exitRef.current) return;
+      exiting = true;
+      exitRef.current();
+    };
+    let uacc = 0, wt = 0;
+    const onWheel = (e: WheelEvent) => {
+      if (idle() || mode !== "wall" || busy) return;
+      clearTimeout(wt);
+      wt = window.setTimeout(() => { uacc = 0; }, 350);
+      if (e.deltaY < 0 && scroller.scrollTop <= 0) { uacc -= e.deltaY; if (uacc > 90) { uacc = 0; exitUp(); } }
+      else if (e.deltaY > 0) uacc = 0;
+    };
+    let ty0: number | null = null;
+    const onTouchStart = (e: TouchEvent) => { ty0 = scroller.scrollTop <= 0 ? e.touches[0].clientY : null; };
+    const onTouchMove = (e: TouchEvent) => {
+      if (ty0 === null || idle() || mode !== "wall") return;
+      if (e.touches[0].clientY - ty0 > 70) { ty0 = null; exitUp(); }
+    };
+    const onTouchEnd = () => { ty0 = null; };
+
     const onKey = (e: KeyboardEvent) => {
+      if (!idle() && mode === "wall" && (e.key === "ArrowUp" || e.key === "PageUp") && scroller.scrollTop <= 0) { exitUp(); return; }
       if (idle() || mode !== "zoom") return;
       // arrow keys inside the size select change the option, not the fit
       if ((e.target as HTMLElement | null)?.closest?.("select, input, textarea")) return;
@@ -307,20 +377,27 @@ export function TheWall({ products, entering = false, handoff = false }: TheWall
     let rt = 0;
     const onResize = () => { clearTimeout(rt); rt = window.setTimeout(applyLayout, 60); };
     addEventListener("keydown", onKey);
+    addEventListener("wheel", onWheel, { passive: true });
+    scroller.addEventListener("touchstart", onTouchStart, { passive: true });
+    scroller.addEventListener("touchmove", onTouchMove, { passive: true });
+    scroller.addEventListener("touchend", onTouchEnd, { passive: true });
     addEventListener("pointerdown", onDown);
     addEventListener("pointermove", onMove);
     addEventListener("pointerup", onUp);
     addEventListener("pointercancel", onCancel);
     addEventListener("resize", onResize);
 
-    // Back images are only seen after a flip, which needs the product view — so warm them
-    // (and their shadows) the first time a fit is opened, not on page load (~230KB).
+    // The wall shows backs; fronts are only seen after a flip, and the other colourway only after a
+    // swatch click — both need the product view, so warm them (and their shadows) the first time a
+    // fit is opened, not on page load.
     let warmed = false;
-    const warmBacks = () => {
+    const warmFronts = () => {
       if (warmed) return;
       warmed = true;
       const warm = new Set<string>();
-      products.forEach((p) => { warm.add(p.wall.back); warm.add(p.wall.backShadow); });
+      designs.forEach((d) => d.products.forEach((p) => {
+        warm.add(p.wall.front); warm.add(p.wall.frontShadow); warm.add(p.wall.back); warm.add(p.wall.backShadow);
+      }));
       warm.forEach((src) => { const im = new Image(); im.src = src; });
     };
 
@@ -339,10 +416,11 @@ export function TheWall({ products, entering = false, handoff = false }: TheWall
       // 0 → 0 and the header / tag / foot stay hidden for good. Zoomed deep links re-hide tag/foot below.
       gsap.set([header, tag, foot], { clearProps: "opacity,visibility,transform" });
       const fitParam = new URLSearchParams(window.location.search).get("fit");
-      const deep = fitParam ? products.findIndex((p) => p.slug === fitParam) : -1;
-      if (deep >= 0) {
+      const deep = fitParam ? findWallSlug(designs, fitParam) : null;
+      if (deep) {
         gsap.set(blackout, { autoAlpha: 0 });
-        openInstant(deep);
+        warmFronts();
+        openInstant(deep.design, deep.colourway);
       } else if (rm || lightsSeen()) {
         gsap.set(blackout, { autoAlpha: 0 });
       } else {
@@ -366,18 +444,37 @@ export function TheWall({ products, entering = false, handoff = false }: TheWall
       );
     };
 
-    lifecycle.current = { start, reveal: revealChrome, held: false };
-    if (enteringRef.current) {
-      // Entry is on top: no intro, no blackout, no chrome — just the Wall at rest.
-      lifecycle.current.held = true;
+    /** Hold: the Entry is on top (or the visitor walked back out). The Wall sits at rest, chrome hidden. */
+    const sleep = () => {
+      intro?.kill(); reveal?.kill(); intro = null; reveal = null;
+      if (mode === "zoom") closeInstant();
+      gsap.killTweensOf([header, tag, foot, blackout, toastEl]);
+      scroller.scrollTop = 0;
+      store.set({ hover: -1 });
+      // a lights-on intro killed mid-way must not leave fits dropped / invisible
+      gsap.set(items.map((_, i) => fitOf(i)), { opacity: 1, clearProps: "transform" });
+      gsap.set(items.map((_, i) => shOf(i)), { opacity: 0.75 });
       gsap.set(blackout, { autoAlpha: 0 });
       gsap.set([header, tag, foot], { autoAlpha: 0 });
-    } else {
-      start();
-    }
+    };
+    let woke = false;
+    const wake = (handoffNow: boolean) => {
+      exiting = false;
+      const first = !woke;
+      woke = true;
+      if (first && !handoffNow) start(); else revealChrome();
+    };
+
+    lifecycle.current = { wake, sleep };
+    if (dormantRef.current) sleep(); else wake(false);
 
     return () => {
       removeEventListener("keydown", onKey);
+      removeEventListener("wheel", onWheel);
+      scroller.removeEventListener("touchstart", onTouchStart);
+      scroller.removeEventListener("touchmove", onTouchMove);
+      scroller.removeEventListener("touchend", onTouchEnd);
+      clearTimeout(wt);
       removeEventListener("pointerdown", onDown);
       removeEventListener("pointermove", onMove);
       removeEventListener("pointerup", onUp);
@@ -390,13 +487,14 @@ export function TheWall({ products, entering = false, handoff = false }: TheWall
       gsap.killTweensOf([world, bg, toastEl, ...pv, ...items, hello, tag, foot]);
       api.current = null;
     };
-  }, [n, products, store]);
+  }, [n, designs, store]);
 
-  const current = products[view.cur] ?? products[0];
-  const lit = view.hover >= 0 ? products[view.hover] : null;
+  const currentDesign = designs[view.cur] ?? designs[0];
+  const current = currentDesign.products[view.pick[view.cur] ?? 0];
+  const lit = view.hover >= 0 ? designs[view.hover] : null;
 
   return (
-    <div className={s.app} data-entering={entering ? "" : undefined} inert={entering} style={entering ? { pointerEvents: "none" } : undefined}>
+    <div className={s.app} data-entering={dormant ? "" : undefined} inert={dormant} aria-hidden={dormant ? true : undefined} style={dormant ? { pointerEvents: "none" } : undefined}>
       <div ref={bgRef} className={s.bg} />
       <div ref={scrollerRef} className={s.scroller} data-wall-scroller>
         <div ref={worldRef} className={s.world}>
@@ -404,14 +502,14 @@ export function TheWall({ products, entering = false, handoff = false }: TheWall
             <div className={`${s.eb} ${s.mono}`}>{W.hello.eyebrow}</div>
             <h2>{W.hello.title}</h2>
           </div>
-          {products.map((p, i) => (
+          {designs.map((d, i) => (
             <WallItem
-              key={p.slug}
+              key={d.design}
               ref={(el) => { itemRefs.current[i] = el; }}
-              product={p}
+              product={d.products[view.art[i] ?? 0]}
               deferArt={i >= FIRST_SCREEN}
               on={view.hover === i}
-              showBack={view.side === "back" && view.cur === i}
+              showFront={view.side === "front" && view.cur === i}
               onEnter={() => api.current?.hover(i)}
               onLeave={() => api.current?.hover(-1)}
               onClick={() => {
@@ -436,14 +534,16 @@ export function TheWall({ products, entering = false, handoff = false }: TheWall
 
       <div ref={tagRef} className={s.tag}>
         <div className={s.n}>{lit ? W.tag.no(lit.code ?? "") : W.tag.pour}</div>
-        <div className={`${s.s} ${s.mono}`}>{lit ? lit.name : W.tag.sub(n, products[0]?.gsm ?? 0)}</div>
+        <div className={`${s.s} ${s.mono}`}>{lit ? lit.name : W.tag.sub(n, designs[0]?.gsm ?? 0)}</div>
       </div>
       <div ref={footRef} className={`${s.foot} ${s.mono}`}>{W.foot}</div>
 
-      <ProductInfo ref={infoRef} product={current} />
+      <ProductInfo ref={infoRef} product={currentDesign} />
       <BuyPanel
         ref={panelRef}
+        design={currentDesign}
         product={current}
+        onPick={(j) => api.current?.pick(j)}
         side={view.side}
         onSide={(sd) => api.current?.side(sd)}
         onToast={(t) => api.current?.toast(t)}
@@ -453,7 +553,7 @@ export function TheWall({ products, entering = false, handoff = false }: TheWall
         prevRef={prevRef}
         nextRef={nextRef}
         countRef={countRef}
-        code={current.code ?? ""}
+        code={currentDesign.code}
         index={view.cur + 1}
         total={n}
         onPrev={() => api.current?.step(-1)}

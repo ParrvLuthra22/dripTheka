@@ -8,15 +8,20 @@ export type Side = "front" | "back";
 export interface WallView {
   /** Product-view chrome on ("← Collection", overlays) — flips the moment a zoom starts/ends. */
   zoomed: boolean;
-  /** Fit the info/buy panels show (lags the camera by the .22s fade-out on a swap). */
+  /** Design the info/buy panels show (lags the camera by the .22s fade-out on a swap). */
   cur: number;
+  /** Back is the hero art, so it is the default everywhere; Front is the flip. */
   side: Side;
+  /** Chosen colourway index per design (stays chosen while you walk the aisle). */
+  pick: number[];
+  /** Colourway whose art is on the ledge — follows `pick` after the 0.18s crossfade-out. */
+  art: number[];
   /** Lit ledge (hover/focus on the wall), −1 = none. */
   hover: number;
 }
 
-export function createWallStore() {
-  let state: WallView = { zoomed: false, cur: 0, side: "front", hover: -1 };
+export function createWallStore(designs = 0) {
+  let state: WallView = { zoomed: false, cur: 0, side: "back", hover: -1, pick: Array.from({ length: designs }, () => 0), art: Array.from({ length: designs }, () => 0) };
   const subs = new Set<() => void>();
   return {
     get: (): WallView => state,

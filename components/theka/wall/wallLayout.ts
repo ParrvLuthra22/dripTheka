@@ -1,9 +1,11 @@
 // wallLayout — pure geometry for The Wall. Every number is copied from
-// wall-reference/index.html (layout() / target() / bgT()); no DOM, no GSAP, so it
+// pour001-reference/wall.html (layout() / target() / bgT()); no DOM, no GSAP, so it
 // can be unit-tested. TheWall applies the results imperatively.
+//
+// Desktop: rows of 4, short rows centred (7 fits → 4 + 3). Mobile: 2 per row, last row centred.
 
 /** Default aspect ratio (w/h) of a product box; a product can override it via `wall.ar`. */
-export const AR = 0.84;
+export const AR = 1.0;
 export const MOBILE_MAX = 820;
 
 export interface Box {
@@ -13,8 +15,12 @@ export interface Box {
   ly: number;
   w: number;
   h: number;
-  /** Camera centre: ledgeY − 0.46·h. */
+  /** Camera centre: ledgeY − 0.48·h. */
   cy: number;
+  /** Row index (0-based). Row jumps use this. */
+  row: number;
+  /** Number of fits in this item's row (short rows are centred). */
+  inRow: number;
 }
 
 export interface Layout {
@@ -22,10 +28,11 @@ export interface Layout {
   mob: boolean;
   vw: number;
   vh: number;
+  /** Fits per row: 4 desktop, 2 mobile. */
   cols: number;
   /** Height of #world in px. */
   worldHeight: number;
-  /** True when the scroller scrolls vertically in wall mode (mobile, or >2 desktop rows). */
+  /** True when the scroller scrolls vertically in wall mode (mobile). */
   scrollable: boolean;
   /** Intro copy position. */
   hello: { left: number; top: number };
@@ -39,62 +46,56 @@ export interface Camera {
 
 /**
  * `products` is either a count (every box uses the default AR) or one aspect
- * ratio (w/h) per product — hoodies and jackets can be wider than tees.
+ * ratio (w/h) per wall item.
  */
 export function computeLayout(vw: number, vh: number, products: number | readonly number[]): Layout {
   const ars: readonly number[] =
     typeof products === "number" ? Array.from({ length: products }, () => AR) : products;
-  const count = ars.length;
+  const n = ars.length;
   const mob = vw <= MOBILE_MAX;
+  const cols = mob ? 2 : 4;
+  const rows = Math.max(1, Math.ceil(n / cols));
   const items: Box[] = [];
 
   if (!mob) {
-    const cols = 5;
-    const mx = vw * 0.075;
+    const mx = vw * 0.1;
     const pitch = (vw - 2 * mx) / cols;
-    // rows 1 / 2 sit at .545 / .885 of the viewport; further rows keep the same pitch
-    const rowY = (r: number) => vh * 0.545 + r * vh * 0.34;
-    for (let i = 0; i < count; i++) {
-      const c = i % cols, r = Math.floor(i / cols);
-      const ly = rowY(r);
+    const ys = [vh * 0.545, vh * 0.885];
+    for (let i = 0; i < n; i++) {
+      const r = Math.floor(i / cols), c = i % cols;
+      const inRow = Math.min(cols, n - r * cols);
       const ar = ars[i];
-      const h = Math.min(vh * 0.205, (pitch * 0.62) / ar);
+      const h = Math.min(vh * 0.215, (pitch * 0.66) / ar);
       const w = h * ar;
-      items.push({ cx: mx + pitch * (c + 0.5), ly, w, h, cy: ly - h * 0.46 });
+      const x0 = vw / 2 - (pitch * inRow) / 2;
+      const ly = ys[r] ?? ys[1] + (r - 1) * vh * 0.34;
+      items.push({ cx: x0 + pitch * (c + 0.5), ly, w, h, cy: ly - h * 0.48, row: r, inRow });
     }
-    const rows = Math.max(1, Math.ceil(count / cols));
-    const scrollable = rows > 2;
     return {
       items, mob, vw, vh, cols,
-      worldHeight: scrollable ? rowY(rows - 1) + vh * 0.115 : vh,
-      scrollable,
+      worldHeight: vh,
+      scrollable: rows > 2,
       hello: { left: Math.max(16, vw * 0.026), top: vh * 0.17 },
     };
   }
 
-  const cols = 2;
   const mx = 16;
   const pitch = (vw - 2 * mx) / cols;
-  const w = pitch * 0.74;
+  const w = pitch * 0.84;
   const top = 150;
-  const boxH = (i: number) => w / ars[i];
-  const rows = Math.max(1, Math.ceil(count / cols));
-  // Each row is as tall as its tallest fit; fits sit on the row's ledge line.
-  let ly = top;
-  let lastLy = top;
-  for (let r = 0; r < rows; r++) {
-    let rowH = 0;
-    for (let c = 0; c < cols && r * cols + c < count; c++) rowH = Math.max(rowH, boxH(r * cols + c));
-    ly += (r === 0 ? 0 : 74) + rowH;
-    lastLy = ly;
-    for (let c = 0; c < cols && r * cols + c < count; c++) {
-      const i = r * cols + c, h = boxH(i);
-      items.push({ cx: mx + pitch * (c + 0.5), ly, w, h, cy: ly - h * 0.46 });
-    }
+  for (let i = 0; i < n; i++) {
+    const r = Math.floor(i / cols), c = i % cols;
+    const inRow = Math.min(cols, n - r * cols);
+    const h = w / ars[i];
+    const gap = h + 70;
+    const x0 = vw / 2 - (pitch * inRow) / 2;
+    const ly = top + h + r * gap;
+    items.push({ cx: x0 + pitch * (c + 0.5), ly, w, h, cy: ly - h * 0.48, row: r, inRow });
   }
+  const h0 = items[0]?.h ?? w / AR;
   return {
     items, mob, vw, vh, cols,
-    worldHeight: lastLy + 74 + 60,
+    worldHeight: top + rows * (h0 + 70) + 70,
     scrollable: true,
     hello: { left: 16, top: 74 },
   };
@@ -106,11 +107,11 @@ export function cameraTarget(layout: Layout, i: number, scrollTop: number): Came
   const { vw, vh, mob } = layout;
   let s: number, X: number, Y: number;
   if (!mob) {
-    s = Math.min((vh * 0.72) / it.h, (vw * 0.42) / it.w);
+    s = Math.min((vh * 0.7) / it.h, (vw * 0.4) / it.w);
     X = vw * 0.5;
     Y = vh * 0.55;
   } else {
-    s = Math.min((vw * 0.66) / it.w, (vh * 0.4) / it.h);
+    s = Math.min((vw * 0.8) / it.w, (vh * 0.4) / it.h);
     X = vw * 0.5;
     Y = vh * 0.4;
   }
@@ -132,4 +133,4 @@ export function scrollAfterClose(layout: Layout, i: number): number {
 
 /** True when going from item a to item b changes row (camera takes longer). */
 export const isRowJump = (layout: Layout, a: number, b: number): boolean =>
-  Math.floor(a / layout.cols) !== Math.floor(b / layout.cols);
+  layout.items[a].row !== layout.items[b].row;
