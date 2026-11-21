@@ -47,3 +47,8 @@ wall-port/
 # Pour #001 port bundle (zip) — reference lives in docs/reference/pour001/
 pour001-port/
 pour001-port.zip
+
+# Story + wall dressing port bundle — reference lives in docs/reference/story/
+story-wall-port/
+*-port.zip
+PROMPT_*.md

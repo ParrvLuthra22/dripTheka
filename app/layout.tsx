@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import {
   Fraunces,
   JetBrains_Mono,
+  Kalam,
   Rozha_One,
   Mukta,
 } from "next/font/google";
@@ -37,6 +38,16 @@ const rozha = Rozha_One({
   subsets:  ["latin", "devanagari"],
   weight:   "400",
   variable: "--font-rozha",
+  display:  "swap",
+  preload:  false,
+});
+
+// Kalam — the chalk / hand-written face: the Wall's rate-list board and the Story's chalkboard,
+// bill note. Not used anywhere else, so it is never preloaded (it only downloads where it paints).
+const kalam = Kalam({
+  subsets:  ["latin", "devanagari"],
+  weight:   ["400", "700"],
+  variable: "--font-kalam",
   display:  "swap",
   preload:  false,
 });
@@ -105,7 +116,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${fraunces.variable} ${jetbrains.variable} ${rozha.variable} ${mukta.variable}`}
+      className={`${fraunces.variable} ${jetbrains.variable} ${rozha.variable} ${kalam.variable} ${mukta.variable}`}
     >
       <body>
         {children}

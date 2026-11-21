@@ -93,6 +93,8 @@ export const lang = {
       back:       "← Collection",
       look:       "Try the Look",
       lookHref:   "/try-the-look",
+      story:      "Our Story",
+      storyHref:  "/story",
       bag:        "Bag",
       bagAria:    (n: number) => `Bag, ${n} item${n === 1 ? "" : "s"}`,
     },
@@ -135,6 +137,125 @@ export const lang = {
     toast: {
       pickSize: "Pick a size first, regular",
       poured:   (name: string, size: string) => `${name} · ${size} — poured into your glass`,
+    },
+    // What hangs on the wall besides the tees (story-wall-reference/wall.html). The rate list's
+    // price / GSM / deposit are read from the real product data, not typed here.
+    decor: {
+      rate: {
+        title:      "RATE LIST · रेट लिस्ट",
+        anyFit:     "Any fit",
+        fabric:     "Fabric",
+        gsm:        (gsm: number) => `${gsm} GSM`,
+        fit:        "Fit",
+        fitVal:     "oversized",
+        reserve:    "Reserve",
+        reserveVal: (pct: number) => `${pct}% now`,
+      },
+      enamel: { hi: "आज नकद, कल उधार", en: "CASH TODAY · CREDIT TOMORROW" },
+      teaser: {
+        aria:      "Pour #002, coming soon",
+        tag:       "POUR #002",
+        sub:       "brewing · soon",
+        toast:     "Pour #002 is brewing. Regulars hear first.",
+        action:    "Join the Regulars →",
+        actionHref: "/regulars",
+      },
+      storyLink: { label: "Our story", href: "/story" },
+    },
+  },
+
+  // ── The Story (/story) — the back wall. Copy verbatim from story-wall-reference/story.html;
+  //    founders edit the words here, components only lay them out. A `{ lead, accent }` pair is a
+  //    headline whose second half is set in cobalt-light.
+
+  story: {
+    meta: {
+      title:       "Our story",
+      description: "How the theka got its shutter. Two friends, one flop, a lot of questions, and a wine shop that sells clothes. The Drip Theka story, told along the back wall.",
+    },
+    header: {
+      logoAria: "Drip Theka — the wall",
+      wall:     "The Wall",
+      wallHref: "/",
+      story:    "Our Story",
+      look:     "Try the Look",
+      lookHref: "/try-the-look",
+      bag:      "Bag",
+      bagAria:  (n: number) => `Bag, ${n} item${n === 1 ? "" : "s"}`,
+      navAria:  "Story",
+    },
+    progress: "The back wall",
+    p0: {
+      eyebrow: "Our story · since April 2026",
+      title:   { lead: "How the theka got ", accent: "its shutter." },
+      go:      "Walk along the wall",
+    },
+    p1: {
+      chapter: { n: "01", label: "April 2026" },
+      bill: {
+        title:  "ATTEMPT #1",
+        sub:    "DRIP THEKA · NEW DELHI",
+        done:   [{ k: "The idea", v: "✓" }, { k: "The first try", v: "✓" }],
+        struck: { k: "It working", v: "✗" },
+        status: { k: "STATUS", v: "FLOP" },
+        giving: { k: "Giving up?", v: "almost" },
+        stamp:  "NOT YET",
+        note:   "one full try. ✍",
+      },
+      cap: { lead: "We tried something. ", accent: "It didn't work." },
+    },
+    p2: {
+      chapter: { n: "02", label: "The homework" },
+      title:   "RATE LIST · रेट लिस्ट",
+      sub:     "questions we asked before making a single tee",
+      rows: [
+        { q: "What's missing in the market?",           a: "the gap", big: false },
+        { q: "What does our generation want to wear?",  a: "asked them", big: false },
+        { q: "What's in trend right now?",              a: "tracked it", big: false },
+        { q: "Which GSM feels premium and lasts?",      a: "400", big: true },
+      ],
+    },
+    p3: {
+      chapter: { n: "03", label: "The people" },
+      cards: [
+        { k: "01", h: "Factory owners",    body: "Who can make it right, at our scale.", blue: false },
+        { k: "02", h: "Supply managers",   body: "Fabric, weight, timelines, the boring stuff that matters.", blue: false },
+        { k: "03", h: "DTF printing guys", body: "Prints that survive the wash and the weekend.", blue: false },
+        { k: "04", h: "The plan",          body: "The product, the marketing, the whole theka.", blue: true },
+      ],
+    },
+    p4: {
+      chapter: { n: "04", label: "One word" },
+      neon:    "ठेका",
+      dict: {
+        pr: "/ṭhekā/ · NOUN",
+        defs: [
+          { struck: "A wine shop." },
+          { lead: "A wine shop that sells ", em: "clothes", tail: "." },
+          { lead: "Something goofy and weird, on purpose. See also: ", em: "Drip Theka", tail: "." },
+        ],
+      },
+    },
+    p5: {
+      chapter: { n: "05", label: "Why it's different" },
+      paint:   { lead: "Alcohol tees are everywhere. ", accent: "A whole theka built on them isn't." },
+      sub:     "You've seen the beer-pun tee in every market. We didn't want one funny tee. We wanted an entire store, an entire brand, built around the theka: the language, the jokes, the feeling of walking in.",
+    },
+    p6: {
+      chapter: "House rule",
+      hq:      { lead: "दूध नहीं, ", accent: "beer", tail: " पीऊंगा" },
+      sub:     "HOUSE RULE · SINCE DAY ONE",
+    },
+    p7: {
+      chapter: { n: "06", label: "Last call" },
+      videoAria: "A reel from the next pour, playing on the wall-mounted TV",
+      cap:     { lead: "Soon ", accent: "in your wardrobes." },
+    },
+    p8: {
+      title: { lead: "Pull up a stool, ", accent: "regular." },
+      sig:   "Parrv & Ayaan · Delhi",
+      cta:   "Back to the wall",
+      ctaHref: "/",
     },
   },
 

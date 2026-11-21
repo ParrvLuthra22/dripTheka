@@ -14,6 +14,8 @@ interface WallHeaderProps {
   bagCount: number;
   bagNumRef?: Ref<HTMLElement>;
   onBack?: () => void;
+  /** The Wall fades to the story room itself; elsewhere "Our Story" is a plain link. */
+  onStory?: () => void;
   /** Product page: "← Collection" is a real link (works without JS). */
   backHref?: string;
 }
@@ -22,7 +24,7 @@ const H = lang.wall.header;
 
 // /cart and the try-the-look room live in the (site) shell (Lenis, motion, sound…): never
 // prefetch them from the Wall, or their JS rides along on every wall page.
-export function WallHeader({ ref, zoomed, total, bagCount, bagNumRef, onBack, backHref }: WallHeaderProps) {
+export function WallHeader({ ref, zoomed, total, bagCount, bagNumRef, onBack, onStory, backHref }: WallHeaderProps) {
   return (
     <header ref={ref} className={s.header} data-nodrag>
       <div className={s.logo} aria-label="Drip Theka">
@@ -38,6 +40,16 @@ export function WallHeader({ ref, zoomed, total, bagCount, bagNumRef, onBack, ba
         ) : (
           <button type="button" className={s.act} aria-current="page">{H.collection}<sup>{total}</sup></button>
         )}
+        <Link
+          href={H.storyHref}
+          prefetch={false}
+          className={s.tl}
+          onClick={(e) => {
+            if (!onStory || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+            e.preventDefault();
+            onStory();
+          }}
+        >{H.story}</Link>
         <Link href={H.lookHref} prefetch={false} className={s.tl}>{H.look}</Link>
       </nav>
       <Link href="/cart" prefetch={false} className={s.bag} aria-label={H.bagAria(bagCount)}>

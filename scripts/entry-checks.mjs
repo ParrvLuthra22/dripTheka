@@ -6,10 +6,15 @@
 // "dormant" = the Entry is on top and the Wall is a backdrop.
 import { chromium } from "playwright";
 import { mkdirSync } from "node:fs";
+import { computeLayout } from "../components/theka/wall/wallLayout.ts";
+import { computeDecor } from "../components/theka/wall/wallDecor.ts";
 
 const BASE = process.argv.find((a) => a.startsWith("http")) ?? "http://localhost:3100";
 const OUT = new URL("../docs/reference/pour001/checks/", import.meta.url).pathname;
 mkdirSync(OUT, { recursive: true });
+// Wall dressing + Story room frames (sections 7–9)
+const OUT2 = new URL("../docs/reference/story/checks/", import.meta.url).pathname;
+mkdirSync(OUT2, { recursive: true });
 
 const results = [];
 const check = (name, ok, detail = "") => { results.push({ name, ok }); console.log(`${ok ? "PASS" : "FAIL"}  ${name}${detail ? `  — ${detail}` : ""}`); };
@@ -25,7 +30,7 @@ const ONLY = process.argv.find((a) => a.startsWith("--only="))?.slice(7).split("
 const on = (n) => !ONLY || ONLY.includes(n);
 const browser = await chromium.launch();
 
-async function open(opts, { entered = false, throttle = false, url = "/", reduced = false, blockJs = false } = {}) {
+async function open(opts, { entered = false, throttle = false, url = "/", reduced = false, blockJs = false, init = null, lights = false } = {}) {
   const ctx = await browser.newContext(opts);
   const page = await ctx.newPage();
   const problems = [];
@@ -45,6 +50,8 @@ async function open(opts, { entered = false, throttle = false, url = "/", reduce
     };
     requestAnimationFrame(tick);
   }, entered);
+  if (lights) await page.addInitScript(() => { try { sessionStorage.setItem("dt-wall-lights", "1"); } catch {} });
+  if (init) await page.addInitScript(init);
   if (reduced) await page.emulateMedia({ reducedMotion: "reduce" });
   if (blockJs) await page.route("**/_next/static/**/*.js", (r) => r.abort());
   if (throttle) {
@@ -67,6 +74,7 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}${name}.jpg`, type: 
 
 // the walk back out: desktop wheel (> 90px) / mobile pull-down (> 70px from scrollTop 0)
 async function pullUp(page) {
+  await page.waitForTimeout(1800); // the Wall ignores wheel input for 1.6s after it goes live (momentum guard)
   await page.evaluate(() => { const sc = document.querySelector("[data-wall-scroller]"); if (sc) sc.scrollTop = 0; }); // "at the top of the Wall"
   if (!isMob(page)) {
     await page.mouse.move(720, 450);
@@ -226,7 +234,7 @@ for (const [tag, opts] of VIEWPORTS) {
   } else {
     const rows = {}; items.forEach((i) => { (rows[Math.round(i.y)] ??= []).push(i); });
     const rs = Object.values(rows);
-    check(`${tag}: mobile 2 per row, last row centred`, rs.length === 4 && rs.slice(0, 3).every((r) => r.length === 2) && rs[3].length === 1 && Math.abs(rs[3][0].x - 195) < 2, rs.map((r) => r.length).join("+"));
+    check(`${tag}: mobile 2 per row, last row stays LEFT (the Pour #002 teaser takes the free slot)`, rs.length === 4 && rs.slice(0, 3).every((r) => r.length === 2) && rs[3].length === 1 && Math.abs(rs[3][0].x - rs[2][0].x) < 2, rs.map((r) => r.length).join("+"));
     await shot(page, `${tag}-wall-7`);
   }
   await page.waitForTimeout(100);
@@ -445,6 +453,358 @@ for (const [tag, opts, h2] of [["1440x900", DESKTOP, 640], ["390x844", MOBILE, 7
   await page.waitForTimeout(900);
   const y = await page.evaluate(() => scrollY / (document.documentElement.scrollHeight - innerHeight));
   check(`${tag}: viewport resize mid-journey holds progress (≈.55, not past the end)`, Math.abs(y - 0.55) < 0.02 && !(await isLive(page)), `scroll progress ${y.toFixed(3)}, tl ${(await tlp(page))?.toFixed(3)}`);
+  await ctx.close();
+}
+}
+
+// ═════════════════════════════════════════════════════════════════════════════════════════
+// 7. the Wall's dressing: neon, lamps + cones, rate list, enamel sign, Pour #002 teaser
+// ═════════════════════════════════════════════════════════════════════════════════════════
+const shot2 = (page, name, opts = {}) => page.screenshot({ path: `${OUT2}${name}.jpg`, type: "jpeg", quality: 82, ...opts });
+const NEON_REC = () => {
+  window.__neon = [];
+  const go = () => {
+    const el = document.querySelector('[data-decor="neon"]');
+    if (!el) { requestAnimationFrame(go); return; }
+    window.__neon.push({ t: performance.now(), v: el.dataset.on });
+    // MutationObserver batches: rebuild every intermediate value from the records' old values
+    new MutationObserver((recs) => {
+      const t = performance.now();
+      recs.slice(1).forEach((r) => window.__neon.push({ t, v: r.attributeOldValue }));
+      window.__neon.push({ t, v: el.dataset.on });
+    }).observe(el, { attributes: true, attributeFilter: ["data-on"], attributeOldValue: true });
+  };
+  go();
+};
+const collapse = (vals) => vals.filter((v) => v === "true" || v === "false").filter((v, i, a) => i === 0 || v !== a[i - 1]);
+const neonLog = (page) => page.evaluate(() => window.__neon);
+const DRESS_SIZES = [["1440x900", DESKTOP], ["1280x720", { viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 }], ["390x844", MOBILE]];
+const rectOf = (page, sel) => page.evaluate((sel) => { const e = document.querySelector(sel); if (!e) return null; const r = e.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; }, sel);
+const near = (a, b, eps = 1.5) => Math.abs(a - b) <= eps;
+
+if (on(7)) {
+for (const [tag, opts] of DRESS_SIZES) {
+  const mob = opts.viewport.width <= 820;
+  const { vw, vh } = { vw: opts.viewport.width, vh: opts.viewport.height };
+  const { ctx, page, problems } = await open(opts, { entered: true, lights: true, init: NEON_REC });
+  await page.waitForSelector("[data-wall-scroller] button[data-slug]");
+  await waitLive(page);
+  await page.waitForTimeout(2500);
+
+  // positions = computeDecor(), measured on screen
+  const L = computeLayout(vw, vh, 7), D = computeDecor(L, vw, vh);
+  const scrollTop = 0;
+  const at = async (sel) => { const r = await rectOf(page, sel); return r && { ...r, y: r.y + scrollTop }; };
+  const neon = await at('[data-decor="neon"]');
+  check(`${tag}: neon wordmark at ${mob ? "top 182, w min(.62vw, 300)" : "50vw / .20vh, w min(.22vw, .40vh)"}`,
+    neon && near(neon.x + neon.w / 2, D.neon.cx) && near(neon.y + neon.h / 2, D.neon.cy) && near(neon.w, D.neon.w), JSON.stringify(neon));
+  const rate = await at('[data-decor="rate"]');
+  check(`${tag}: rate list at (${Math.round(D.rate.left)}, ${Math.round(D.rate.top)}) w ${Math.round(D.rate.width)}`, rate && near(rate.x + rate.w / 2, D.rate.left + D.rate.width / 2, 6) && near(rate.y + rate.h / 2, D.rate.top + rate.h / 2, 8), JSON.stringify(rate));
+  const teaser = await at('[data-decor="teaser"]');
+  check(`${tag}: Pour #002 teaser takes ${mob ? "the free slot (last row, col 2)" : "row 2's right outer slot"}`, teaser && D.teaser && near(teaser.x, D.teaser.left) && near(teaser.y, D.teaser.top) && near(teaser.w, D.teaser.width) && near(teaser.h, D.teaser.height), JSON.stringify(teaser));
+  const enamel = await at('[data-decor="enamel"]');
+  check(`${tag}: enamel sign in place`, enamel && near(enamel.x + enamel.w / 2, D.enamel.left + (D.enamel.width ?? enamel.w) / 2, 6), JSON.stringify(enamel));
+  const text = await page.evaluate(() => ({
+    rate: document.querySelector('[data-decor="rate"]').innerText.replace(/\s+/g, " "),
+    enamel: document.querySelector('[data-decor="enamel"]').innerText.replace(/\s+/g, " "),
+    lamps: document.querySelectorAll("[data-lamp]").length, cones: document.querySelectorAll("[data-cone]").length,
+    ff: getComputedStyle(document.querySelector('[data-decor="rate"]')).fontFamily,
+  }));
+  check(`${tag}: rate list reads the real price / GSM / deposit`, /RATE LIST · रेट लिस्ट/.test(text.rate) && /Any fit ₹1,299/.test(text.rate) && /Fabric 400 GSM/.test(text.rate) && /Fit oversized/.test(text.rate) && /Reserve 30% now/.test(text.rate), text.rate);
+  check(`${tag}: rate list is set in Kalam`, /kalam/i.test(text.ff), text.ff);
+  check(`${tag}: enamel sign reads आज नकद, कल उधार / CASH TODAY · CREDIT TOMORROW`, /आज नकद, कल उधार/.test(text.enamel) && /CASH TODAY · CREDIT TOMORROW/.test(text.enamel), text.enamel);
+  check(`${tag}: one lamp + one light cone per fit (7 + 7)`, text.lamps === 7 && text.cones === 7, JSON.stringify(text));
+  const lamps = await page.evaluate(() => [...document.querySelectorAll("[data-lamp]")].map((e) => { const r = e.getBoundingClientRect(); return [r.left + r.width / 2, r.top]; }));
+  check(`${tag}: lamps at the reference positions`, lamps.every(([x, y], i) => near(x, D.lamps[i].x) && near(y, D.lamps[i].top)), JSON.stringify(lamps.slice(0, 2)));
+
+  // the neon: off while dormant, flicked on after live
+  const log = await neonLog(page);
+  check(`${tag}: neon is on (glow) after the Wall is live`, (await page.evaluate(() => document.querySelector('[data-decor="neon"]').dataset.on)) === "true" && /drop-shadow/.test(await page.evaluate(() => getComputedStyle(document.querySelector('[data-decor="neon"] img')).filter)));
+  check(`${tag}: neon flicks on (returning-visitor landing: on·off·on(·off·on) — a hydration-jank frame can swallow the first 60ms)`, collapse(log.map((l) => l.v)).join(",").includes("true,false,true"), collapse(log.map((l) => l.v)).join(","));
+  await shot2(page, `wall-dressing-${tag}`);
+
+  if (!mob) {
+    // hover a fit → its cone turns cobalt, the ledge glows
+    const items = await wallItems(page);
+    await page.mouse.move(items[1].x, items[1].y - items[1].h / 2);
+    await page.waitForTimeout(900);
+    const cones = await page.evaluate(() => [...document.querySelectorAll("[data-cone]")].map((c) => ({ on: c.dataset.on, bg: getComputedStyle(c).backgroundImage.includes("150, 185, 255"), op: +getComputedStyle(c).opacity })));
+    check(`${tag}: hovering a fit turns ITS cone cobalt at full strength (others stay warm)`, cones[1].on === "true" && cones[1].bg && cones[1].op === 1 && cones.filter((_, i) => i !== 1).every((c) => c.on === "false" && !c.bg && c.op === 0.5), JSON.stringify(cones.map((c) => c.on)));
+    await shot2(page, `wall-hover-cone-${tag}`);
+    await page.mouse.move(5, vh - 5);
+  }
+
+  // the teaser: a toast with a Regulars link, never the product view
+  await page.click('[data-decor="teaser"]');
+  await page.waitForTimeout(700);
+  const toast = await page.evaluate(() => { const t = document.querySelector('[role="status"]'); const a = t.querySelector("a"); return { text: t.innerText.replace(/\s+/g, " "), vis: getComputedStyle(t).visibility, href: a?.getAttribute("href"), aVis: a && getComputedStyle(a).display }; });
+  check(`${tag}: teaser click → toast "Pour #002 is brewing. Regulars hear first." with a /regulars action`, toast.vis === "visible" && /Pour #002 is brewing\. Regulars hear first\./.test(toast.text) && toast.href === "/regulars" && toast.aVis !== "none", JSON.stringify(toast));
+  const nav = await backLabel(page);
+  check(`${tag}: teaser did not open the product view (header still "Collection7", no ?fit=)`, /^Collection/.test(nav ?? "") && !/fit=/.test(page.url()), `${nav} ${page.url()}`);
+  await page.waitForTimeout(3800);
+
+  // zoomed product view: framing intact; dressing doesn't cover the info / buy panels (mobile: it fades out)
+  await openItem(page, 2);
+  await page.waitForTimeout(2300);
+  const zoom = await page.evaluate(() => {
+    const vis = (e) => { const cs = getComputedStyle(e); let op = 1; for (let x = e; x; x = x.parentElement) op *= +getComputedStyle(x).opacity; return op > 0.05 && cs.display !== "none"; };
+    const R = (e) => { const r = e.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; };
+    const panels = [document.querySelector("aside[class*=panel]"), document.querySelector("section[class*=info]")].map(R);
+    const deco = [...document.querySelectorAll("[data-decor], [data-lamp], [data-cone]")].filter(vis).map((e) => ({ k: e.dataset.decor ?? (e.dataset.lamp != null ? "lamp" : "cone"), r: R(e) }));
+    const hit = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+    return { visible: deco.map((d) => d.k), over: deco.filter((d) => d.k !== "cone" && panels.some((p) => hit(d.r, p))).map((d) => d.k) };
+  });
+  if (mob) check(`${tag}: zoomed on mobile — dressing, lamps and cones fade out with the other tees`, zoom.visible.length === 0, zoom.visible.join(","));
+  else check(`${tag}: zoomed — no dressing piece (neon / sign / board / teaser / lamp) overlaps the info or buy panels`, zoom.over.length === 0, zoom.over.join(","));
+  await shot2(page, `wall-zoomed-${tag}`);
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(1900);
+  if (mob) {
+    const back = await page.evaluate(() => [...document.querySelectorAll("[data-decor]")].every((e) => +getComputedStyle(e).opacity > 0.95 || getComputedStyle(e).display === "none"));
+    check(`${tag}: closing the product view brings the dressing back`, back);
+  }
+  check(`${tag}: no hydration warnings`, problems.length === 0, problems[0]);
+  await ctx.close();
+}
+
+// neon: flicks on as you duck in under the shutter (Entry → Wall handoff); off when the Wall goes dormant; tired-tube blink; reduced motion
+{
+  const { ctx, page } = await open(DESKTOP, { init: NEON_REC });
+  await ready(page);
+  const pre = await page.evaluate(() => document.querySelector('[data-decor="neon"]').dataset.on);
+  check("neon: off while the Entry is on top", pre === "false");
+  await goTo(page, 1); await waitLive(page);
+  const tLive = await page.evaluate(() => performance.now());
+  await page.waitForTimeout(1500);
+  const log = await neonLog(page);
+  const after = collapse(log.filter((l) => l.t > tLive - 400).map((l) => l.v)).join(",");
+  const first = log.find((l) => l.t > tLive - 400 && l.v === "true");
+  check("neon: flicks on ~250ms after the Wall goes live (handoff)", after.includes("true,false,true,false,true") && first && first.t - tLive < 900, `${after} +${first ? Math.round(first.t - tLive) : "?"}ms`);
+  await pullUp(page);
+  await waitLive(page, false, 6000);
+  await page.waitForFunction(() => window.__dtEntry.tl.progress() < 0.9, null, { timeout: 8000 });
+  await page.waitForTimeout(1600);
+  check("neon: off again when the Wall goes dormant (walked back out)", (await page.evaluate(() => document.querySelector('[data-decor="neon"]').dataset.on)) === "false");
+  await goTo(page, 0.7); await settle(page, 0.7);
+  await goTo(page, 1); await waitLive(page, true, 20000); await page.waitForTimeout(1500);
+  check("neon: flicks on again when you walk back in", (await page.evaluate(() => document.querySelector('[data-decor="neon"]').dataset.on)) === "true");
+  // tired tube: off for ~70ms every 9s while on
+  const n0 = (await neonLog(page)).length;
+  await page.waitForTimeout(9500);
+  const l2 = (await neonLog(page)).slice(n0);
+  check("neon: a 'tired tube' blink (off ≈70ms) every 9s while on", l2.some((l, i) => l.v === "false" && l2[i + 1]?.v === "true" && l2[i + 1].t - l.t < 160), l2.map((l) => `${l.v}@${Math.round(l.t)}`).join(" "));
+  await ctx.close();
+}
+{
+  const { ctx, page } = await open(DESKTOP, { entered: true, reduced: true, init: NEON_REC });
+  await page.waitForSelector("[data-wall-scroller] button[data-slug]"); await waitLive(page); await page.waitForTimeout(1500);
+  const log = await neonLog(page);
+  check("neon: reduced motion → simply on, no flicker", collapse(log.map((l) => l.v)).join(",") === "false,true", collapse(log.map((l) => l.v)).join(","));
+  await ctx.close();
+}
+}
+
+// ═════════════════════════════════════════════════════════════════════════════════════════
+// 8. the Story room (/story): the walk, mobile, reduced motion, resize
+// ═════════════════════════════════════════════════════════════════════════════════════════
+const walkInfo = (page) => page.evaluate(() => {
+  const strip = document.querySelector("[data-panel='p0']").parentElement;
+  const dist = strip.scrollWidth - innerWidth;
+  const panels = Object.fromEntries([...document.querySelectorAll("[data-panel]")].map((p) => [p.dataset.panel, p.offsetLeft + p.offsetWidth / 2 - innerWidth / 2]));
+  return { dist, panels, max: document.documentElement.scrollHeight - innerHeight };
+});
+const stringsOff = (page) => page.evaluate(() => {
+  const svg = document.querySelector("[data-strings]"), r = svg.getBoundingClientRect();
+  const vb = svg.viewBox.baseVal;
+  const pins = [...document.querySelectorAll("[data-pin]")].map((p) => { const b = p.getBoundingClientRect(); return [b.left + b.width / 2, b.top + b.height / 2]; });
+  const ends = [...svg.querySelectorAll("path")].map((p) => {
+    const m = p.getAttribute("d").match(/M([-\d.]+),([-\d.]+) Q[-\d.]+,[-\d.]+ ([-\d.]+),([-\d.]+)/);
+    const map = (x, y) => [r.left + (x * r.width) / vb.width, r.top + (y * r.height) / vb.height];
+    return [map(+m[1], +m[2]), map(+m[3], +m[4])];
+  });
+  return ends.map(([a, b], i) => Math.max(Math.hypot(a[0] - pins[i][0], a[1] - pins[i][1]), Math.hypot(b[0] - pins[i + 1][0], b[1] - pins[i + 1][1])));
+});
+
+if (on(8)) {
+{
+  const errs = [];
+  const { ctx, page } = await open(DESKTOP, { url: "/story", init: () => {
+    window.__neonCls = [];
+    const go = () => { const el = document.querySelector("[data-story-neon]"); if (!el) { requestAnimationFrame(go); return; }
+      window.__neonCls.push({ t: performance.now(), off: el.dataset.lit !== "true" });
+      new MutationObserver((recs) => { const t = performance.now();
+        recs.slice(1).forEach((r) => window.__neonCls.push({ t, off: r.attributeOldValue !== "true" }));
+        window.__neonCls.push({ t, off: el.dataset.lit !== "true" }); }).observe(el, { attributes: true, attributeFilter: ["data-lit"], attributeOldValue: true }); };
+    go();
+  } });
+  page.on("pageerror", (e) => errs.push(String(e)));
+  await page.waitForSelector("[data-panel='p8']");
+  await page.waitForTimeout(1500);
+  const meta = await page.evaluate(() => ({ title: document.title, desc: document.querySelector('meta[name="description"]')?.content, h1: document.querySelector("h1")?.textContent }));
+  check("/story: title \"Our story — Drip Theka\" + a description", meta.title === "Our story — Drip Theka" && (meta.desc?.length ?? 0) > 40, JSON.stringify(meta));
+  const hdr = await page.evaluate(() => [...document.querySelectorAll("header nav a")].map((a) => a.textContent.trim() + "→" + a.getAttribute("href")));
+  check("/story: own header — logo, The Wall · Our Story · Try the Look, Bag; no site chrome", hdr.join("|") === "The Wall→/|Our Story→/story|Try the Look→/try-the-look" && !(await page.$("footer")) && !(await page.$("[class*=theka-cursor]")), hdr.join("|"));
+  const w = await walkInfo(page);
+  check("/story: ScrollTrigger pins the wall (pin-spacer) and the walk is scrollWidth − vw long", !!(await page.$(".pin-spacer")) && Math.abs(w.max - w.dist) < 3, `dist ${Math.round(w.dist)} max ${w.max}`);
+  // frames at walk progress 0 / .22 / .48 / .72 / 1
+  for (const p of [0, 0.22, 0.48, 0.72, 1]) {
+    await page.evaluate((y) => scrollTo(0, y), p * w.max); await page.waitForTimeout(2200);
+    await shot2(page, `story-p${String(Math.round(p * 100)).padStart(3, "0")}`);
+  }
+  const prog = await page.evaluate(() => document.querySelector("[data-progress]").style.width);
+  check("/story: progress line fills (100% at the end)", parseFloat(prog) > 99, prog);
+  // every lamp turns on as its object reaches the middle
+  await page.evaluate(() => scrollTo(0, 0)); await page.waitForTimeout(1500);
+  const lamp = [];
+  for (const [id, x] of Object.entries(w.panels)) {
+    const y = Math.max(0, Math.min(w.max, x));
+    await page.evaluate((y) => scrollTo(0, y), y); await page.waitForTimeout(1700);
+    const st = await page.evaluate((id) => {
+      const p = document.querySelector(`[data-panel='${id}']`), pool = p.querySelector("[data-pool]");
+      const rv = [...p.querySelectorAll("[data-rv]")].map((e) => +getComputedStyle(e).opacity);
+      return { pool: pool ? +getComputedStyle(pool).opacity : null, rv: Math.min(...rv, 1), video: id === "p7" ? !document.querySelector("video").paused : null,
+        neonOff: id === "p4" ? document.querySelector("[data-story-neon]").dataset.lit !== "true" : null };
+    }, id);
+    lamp.push([id, st.pool]);
+    check(`/story ${id}: lamp pool on (${st.pool?.toFixed(2)}) and objects risen (min opacity ${st.rv.toFixed(2)}) at the middle`, st.pool > 0.95 && st.rv > 0.95, JSON.stringify(st));
+    if (id === "p4") check("/story p4: neon ठेका is lit while its panel is active", st.neonOff === false);
+    if (id === "p7") check("/story p7: the TV plays while its panel is active", st.video === true);
+    if (id === "p3") {
+      const off = await stringsOff(page);
+      check(`/story p3: the strings meet the pins (max ${Math.max(...off).toFixed(1)}px off)`, Math.max(...off) < 3, off.map((o) => o.toFixed(1)).join(","));
+      await shot2(page, "story-strings");
+    }
+  }
+  check("/story: the TV is paused away from its panel", await page.evaluate(() => document.querySelector("video").paused));
+  const cls = await page.evaluate(() => window.__neonCls);
+  const flips = cls.slice(1).filter((c, i) => c.off !== cls[i].off).length;
+  check(`/story: the neon flickers on (≥ 4 toggles while its panel became active; saw ${flips})`, flips >= 4);
+  // resize mid-walk keeps working
+  await page.evaluate((y) => scrollTo(0, y), w.panels.p2); await page.waitForTimeout(1500);
+  await page.setViewportSize({ width: 1180, height: 760 });
+  await page.waitForTimeout(1200);
+  const w2 = await walkInfo(page);
+  check("/story: resize mid-walk re-measures the walk (new distance, still pinned)", Math.abs(w2.dist - w.dist) > 100 && Math.abs(w2.max - w2.dist) < 3 && !!(await page.$(".pin-spacer")), `${Math.round(w.dist)} → ${Math.round(w2.dist)}`);
+  await page.evaluate((y) => scrollTo(0, y), w2.panels.p3); await page.waitForTimeout(1800);
+  const off2 = await stringsOff(page);
+  check(`/story: …and the strings still meet the pins after the resize (max ${Math.max(...off2).toFixed(1)}px)`, Math.max(...off2) < 3, off2.map((o) => o.toFixed(1)).join(","));
+  const x1 = await page.evaluate(() => { const b = document.querySelector("[data-panel='p3']").getBoundingClientRect(); return b.left + b.width / 2; });
+  check("/story: …and the scrub still lands the panel in the middle", Math.abs(x1 - 590) < 40, `${Math.round(x1)} vs 590`);
+  check("/story: no page errors", errs.length === 0, errs[0]);
+  await ctx.close();
+}
+// mobile: a vertical wall
+{
+  const { ctx, page } = await open(MOBILE, { url: "/story" });
+  const errs = []; page.on("pageerror", (e) => errs.push(String(e)));
+  await page.waitForSelector("[data-panel='p8']"); await page.waitForTimeout(1200);
+  const m = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, bw: document.body.scrollWidth, iw: innerWidth, spacer: !!document.querySelector(".pin-spacer"),
+    panels: [...document.querySelectorAll("[data-panel]")].map((p) => Math.round(p.getBoundingClientRect().height)), nav: getComputedStyle(document.querySelector("header nav")).display, strings: getComputedStyle(document.querySelector("[data-strings]")).display }));
+  check("/story mobile 390×844: no horizontal scroll, no pin, panels ≥ 92svh stacked", m.sw <= m.iw && m.bw <= m.iw && !m.spacer && m.panels.every((h) => h >= 0.92 * 844 - 2), JSON.stringify(m));
+  // scroll down slowly (reveals, neon, TV), then capture
+  const total = await page.evaluate(() => document.documentElement.scrollHeight);
+  let sawNeon = false, sawVideo = false;
+  for (let y = 0; y < total; y += 300) {
+    await page.evaluate((y) => scrollTo(0, y), y); await page.waitForTimeout(260);
+    const st = await page.evaluate(() => ({ neon: document.querySelector("[data-story-neon]").dataset.lit === "true", video: !document.querySelector("video").paused,
+      r4: document.querySelector("[data-panel='p4']").getBoundingClientRect(), r7: document.querySelector("[data-panel='p7']").getBoundingClientRect() }));
+    if (st.r4.top < 844 * 0.4 && st.r4.bottom > 844 * 0.6) sawNeon ||= st.neon;
+    if (st.r7.top < 844 * 0.3 && st.r7.bottom > 844 * 0.7) sawVideo ||= st.video;
+  }
+  check("/story mobile: the neon lights and the TV plays while their panels are on screen", sawNeon && sawVideo, `neon ${sawNeon} tv ${sawVideo}`);
+  await page.evaluate(() => scrollTo(0, 0)); await page.waitForTimeout(600);
+  await shot2(page, "story-mobile-top");
+  await page.screenshot({ path: `${OUT2}story-mobile-full.jpg`, type: "jpeg", quality: 70, fullPage: true });
+  const fin = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, iw: innerWidth }));
+  check("/story mobile: still no horizontal scroll after the full read", fin.sw <= fin.iw, JSON.stringify(fin));
+  check("/story mobile: no page errors", errs.length === 0, errs[0]);
+  await ctx.close();
+}
+// reduced motion: the static vertical wall, at desktop width
+{
+  const { ctx, page } = await open(DESKTOP, { url: "/story", reduced: true });
+  await page.waitForSelector("[data-panel='p8']"); await page.waitForTimeout(1200);
+  const r = await page.evaluate(() => ({
+    spacer: !!document.querySelector(".pin-spacer"), strip: getComputedStyle(document.querySelector("[data-panel='p0']").parentElement).flexDirection,
+    neonOff: document.querySelector("[data-story-neon]").dataset.lit !== "true", neonColor: getComputedStyle(document.querySelector("[data-story-neon]")).color,
+    rv: Math.min(...[...document.querySelectorAll("[data-rv]")].map((e) => +getComputedStyle(e).opacity)), pools: Math.min(...[...document.querySelectorAll("[data-pool]")].map((e) => +getComputedStyle(e).opacity)),
+    sw: document.documentElement.scrollWidth, iw: innerWidth, video: document.querySelector("video").paused,
+  }));
+  check("/story reduced motion @1440: vertical stack, no pin", !r.spacer && r.strip === "column", JSON.stringify(r));
+  check("/story reduced motion: neon simply on, reveals static (opacity 1), lamps lit, TV not auto-playing", r.neonColor === "rgb(219, 230, 255)" && r.rv === 1 && r.pools === 1 && r.video, JSON.stringify(r));
+  await page.evaluate(() => scrollTo(0, 3000)); await page.waitForTimeout(500);
+  await shot2(page, "story-reduced-motion");
+  check("/story reduced motion: no horizontal scroll", r.sw <= r.iw);
+  await ctx.close();
+}
+}
+
+// ═════════════════════════════════════════════════════════════════════════════════════════
+// 9. getting there and back: the momentum guard, scroll down → /story, Back to the wall
+// ═════════════════════════════════════════════════════════════════════════════════════════
+if (on(9)) {
+{
+  // fresh visit, desktop: wheel hard through the end of the Entry and into the Wall
+  const { ctx, page } = await open(DESKTOP, { init: NEON_REC });
+  await ready(page);
+  await goTo(page, 0.97); await settle(page, 0.97).catch(() => {});
+  await page.mouse.move(720, 450);
+  const t0 = Date.now(); let liveAt = 0;
+  for (let i = 0; i < 70; i++) { // ~2.8s of "momentum": 120px every 40ms, well over 260px in total after the Wall is live
+    await page.mouse.wheel(0, 120); await page.waitForTimeout(40);
+    if (!liveAt && (await isLive(page))) liveAt = Date.now();
+  }
+  check("momentum guard: the wheel streamed past the Entry's end and the Wall went live", !!liveAt, `live after ${liveAt ? liveAt - t0 : "never"}ms`);
+  await page.waitForTimeout(900);
+  const stay = new URL(page.url()).pathname;
+  check("momentum guard: hard scroll into the Wall stays on the Wall (still /, no fade)", stay === "/" && (await isLive(page)) && (await page.evaluate(() => +getComputedStyle(document.querySelector("[class*=leave]")).opacity)) < 0.05, stay);
+  // the guard window needs 1.6s of quiet; then a fresh scroll down leads to the story
+  await page.waitForTimeout(2200);
+  const link0 = await page.evaluate(() => document.querySelector("[class*=storyLink]").getBoundingClientRect().top);
+  for (let i = 0; i < 4; i++) { await page.mouse.wheel(0, 90); await page.waitForTimeout(30); if (i === 1) await page.waitForTimeout(100); }
+  const link1 = await page.evaluate(() => document.querySelector("[class*=storyLink]").getBoundingClientRect().top);
+  await page.waitForURL("**/story", { timeout: 6000 }).catch(() => {});
+  check("a fresh scroll down (> 260px) on the live Wall goes to /story", new URL(page.url()).pathname === "/story", page.url());
+  check("the \"Our story ↓\" link nudged up as you scrolled", link1 < link0 - 4, `${link0.toFixed(1)} → ${link1.toFixed(1)}`);
+  // Back to the wall: lands live (session flag), neon flicks on, can still scroll up to the sky
+  await page.waitForSelector("[data-panel='p8']"); await page.waitForTimeout(800);
+  await page.evaluate(() => scrollTo(0, 1e6)); await page.waitForTimeout(2200);
+  await page.click("a:has-text('Back to the wall')");
+  await page.waitForURL((u) => u.pathname === "/", { timeout: 8000 });
+  await page.waitForSelector("[data-wall-scroller] button[data-slug]");
+  await waitLive(page, true, 20000);
+  await page.waitForTimeout(2200);
+  const lg = await page.evaluate(() => window.__neon ?? []);
+  await assertChrome("back-to-wall", "after the story", page, { wait: 200 });
+  check("Back to the wall: lands live on / (no Entry replay) with the neon on", (await isLive(page)) && (await page.evaluate(() => document.querySelector('[data-decor="neon"]').dataset.on)) === "true", String(lg.length));
+  await shot2(page, "back-to-wall-live");
+  await pullUp(page);
+  await waitLive(page, false, 6000);
+  await page.waitForFunction(() => window.__dtEntry.tl.progress() < 0.9, null, { timeout: 8000 });
+  await page.waitForTimeout(1600); // the 1.2s tween + the scrub catching up
+  for (const p of [0.7, 0.45, 0]) { await goTo(page, p); await settle(page, p); await page.waitForTimeout(200); }
+  const sky = await page.evaluate(() => +getComputedStyle(document.querySelector("[data-e=hero]")).opacity);
+  check("…and scrolling up from the Wall still reaches the sky", sky > 0.6, `hero ${sky}`);
+  await ctx.close();
+}
+// header "Our Story" + the link (and, on mobile, only those — no gesture)
+for (const [tag, opts] of [["1440x900", DESKTOP], ["390x844", MOBILE]]) {
+  const { ctx, page } = await open(opts, { entered: true, lights: true });
+  await page.waitForSelector("[data-wall-scroller] button[data-slug]"); await waitLive(page); await page.waitForTimeout(2200);
+  if (!isMob(page)) {
+    await page.click("header[data-nodrag] a:has-text('Our Story')");
+    await page.waitForURL("**/story", { timeout: 6000 });
+    check(`${tag}: header "Our Story" → /story (faded, then pushed)`, true);
+  } else {
+    // a long swipe/scroll on mobile must NOT leave the Wall
+    const cdp = await ctx.newCDPSession(page);
+    await cdp.send("Input.synthesizeScrollGesture", { x: 195, y: 600, yDistance: -500, speed: 1500 });
+    await page.waitForTimeout(1800);
+    check(`${tag}: mobile — scrolling the Wall never leaves it (no gesture)`, new URL(page.url()).pathname === "/");
+    await page.click("[class*=storyLink]");
+    await page.waitForURL("**/story", { timeout: 6000 });
+    check(`${tag}: mobile — the "Our story ↓" link goes to /story`, true);
+  }
   await ctx.close();
 }
 }

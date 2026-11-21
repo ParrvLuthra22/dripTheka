@@ -2,11 +2,15 @@
 // pour001-reference/wall.html (layout() / target() / bgT()); no DOM, no GSAP, so it
 // can be unit-tested. TheWall applies the results imperatively.
 //
-// Desktop: rows of 4, short rows centred (7 fits → 4 + 3). Mobile: 2 per row, last row centred.
+// Desktop: rows of 4, short rows centred (7 fits → 4 + 3). Mobile: 2 per row, the short last row
+// stays LEFT-aligned — the Pour #002 teaser (wallDecor.ts) takes the free slot beside it.
 
 /** Default aspect ratio (w/h) of a product box; a product can override it via `wall.ar`. */
 export const AR = 1.0;
 export const MOBILE_MAX = 820;
+/** Mobile: side margin and the y where the first row's tees start (room for the neon above). */
+export const MOBILE_MX = 16;
+export const MOBILE_TOP = 250;
 
 export interface Box {
   /** Horizontal centre. */
@@ -79,23 +83,24 @@ export function computeLayout(vw: number, vh: number, products: number | readonl
     };
   }
 
-  const mx = 16;
+  const mx = MOBILE_MX;
   const pitch = (vw - 2 * mx) / cols;
   const w = pitch * 0.84;
-  const top = 150;
+  const top = MOBILE_TOP;
   for (let i = 0; i < n; i++) {
     const r = Math.floor(i / cols), c = i % cols;
     const inRow = Math.min(cols, n - r * cols);
     const h = w / ars[i];
     const gap = h + 70;
-    const x0 = vw / 2 - (pitch * inRow) / 2;
     const ly = top + h + r * gap;
-    items.push({ cx: x0 + pitch * (c + 0.5), ly, w, h, cy: ly - h * 0.48, row: r, inRow });
+    items.push({ cx: mx + pitch * (c + 0.5), ly, w, h, cy: ly - h * 0.48, row: r, inRow });
   }
   const h0 = items[0]?.h ?? w / AR;
   return {
     items, mob, vw, vh, cols,
-    worldHeight: top + rows * (h0 + 70) + 70,
+    // rows end at top + rows·gap; the rate list sits 40px below (yb), the enamel sign 190px under that,
+    // and the world ends 300px under yb (wall.html layout())
+    worldHeight: top + rows * (h0 + 70) + 40 + 300,
     scrollable: true,
     hello: { left: 16, top: 74 },
   };

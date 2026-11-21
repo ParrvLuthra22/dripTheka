@@ -33,10 +33,12 @@ interface LightsOnTargets {
   shadows: HTMLElement[];
   /** hello · header · tag · foot */
   chrome: HTMLElement[];
+  /** The neon wordmark flicks on, half a second before the blackout has fully lifted. */
+  onNeon?: () => void;
   onDone?: () => void;
 }
 
-export function playLightsOn({ blackout, fits, shadows, chrome, onDone }: LightsOnTargets): gsap.core.Timeline {
+export function playLightsOn({ blackout, fits, shadows, chrome, onNeon, onDone }: LightsOnTargets): gsap.core.Timeline {
   gsap.set(blackout, { autoAlpha: 1, opacity: 1 });
   gsap.set(fits, { opacity: 0, y: -18 });
   gsap.set(shadows, { opacity: 0 });
@@ -47,6 +49,7 @@ export function playLightsOn({ blackout, fits, shadows, chrome, onDone }: Lights
     .to(blackout, { opacity: 0.35, duration: 0.06 })
     .to(blackout, { opacity: 0.9, duration: 0.1 })
     .to(blackout, { autoAlpha: 0, duration: 1.1, ease: "power2.out" })
+    .call(() => onNeon?.(), undefined, "-=.5")
     .to(fits, {
       opacity: 1, y: 0, duration: 0.9, ease: "power3.out",
       stagger: { each: 0.07, from: "start" },
