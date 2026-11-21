@@ -7,7 +7,7 @@ import { useRef, useEffect, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import { ChalkMark } from "@/components/ui/ChalkMark";
-import { DROP_DATE, POUR_001, POURING_PRODUCTS } from "@/data/pour-001";
+import { DROP_DATE, POUR_001, POURING_LISTING } from "@/data/pour-001";
 import { copy } from "@/data/copy";
 
 type TimeLeft = { days: number; hours: number; mins: number } | null;
@@ -157,7 +157,7 @@ export function PourHeroStrip() {
       {/* ── Bottom meta ──────────────────────────────────────────── */}
       <div className="flex items-end justify-between pb-6 md:pb-8">
         <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[#E4E2DD]/30">
-          {POURING_PRODUCTS.length}&nbsp;pieces&nbsp;·&nbsp;200 of each
+          {POURING_LISTING.length}&nbsp;pieces&nbsp;·&nbsp;200 of each
         </p>
         <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[#E4E2DD]/30 hidden sm:block">
           {POUR_001.subtitle}

@@ -1,14 +1,14 @@
 import type { MetadataRoute } from "next";
-import { POURING_PRODUCTS } from "@/data/pour-001";
+import { POURING_LISTING } from "@/data/pour-001";
 
-// Demo-art (placeholderArt) tees are deliberately absent: POURING_PRODUCTS already
-// excludes them, and their pages are noindex. They join once real designs land.
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://driptheka.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const pages = ["", "/pour/pour-001", "/story", "/regulars", "/building"];
   return [
     ...pages.map((path) => ({ url: `${SITE}${path}` })),
-    ...POURING_PRODUCTS.map((p) => ({ url: `${SITE}/product/${p.slug}` })),
+    // One URL per design (its first colourway); the other colourways are variants
+    // whose pages canonical-point back to it, so they are not listed separately.
+    ...POURING_LISTING.map((e) => ({ url: `${SITE}/product/${e.product.slug}` })),
   ];
 }

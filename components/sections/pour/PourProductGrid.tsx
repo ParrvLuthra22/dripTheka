@@ -11,7 +11,7 @@ import { ProductCard } from "@/components/ui/ProductCard";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Reveal } from "@/components/motion/Reveal";
 import { BottleCap } from "@/components/ui/BottleCap";
-import { POURING_PRODUCTS } from "@/data/pour-001";
+import { POURING_LISTING } from "@/data/pour-001";
 import type { GarmentType } from "@/data/pour-001";
 import { cn } from "@/lib/utils/cn";
 
@@ -107,20 +107,20 @@ export function PourProductGrid() {
   );
 
   const products = useMemo(() => {
-    let list = [...POURING_PRODUCTS];
+    let list = [...POURING_LISTING];
 
     // Filter
     if (activeFilter !== "all") {
-      list = list.filter((p) => p.type === activeFilter);
+      list = list.filter((e) => e.product.type === activeFilter);
     }
 
     // Sort
     switch (activeSort) {
       case "price-asc":
-        list.sort((a, b) => a.price - b.price);
+        list.sort((a, b) => a.product.price - b.product.price);
         break;
       case "price-desc":
-        list.sort((a, b) => b.price - a.price);
+        list.sort((a, b) => b.product.price - a.product.price);
         break;
       // newest = original data order
     }
@@ -207,10 +207,11 @@ export function PourProductGrid() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
               {/* First half — products 1–5 */}
-              {firstHalf.map((product, i) => (
+              {firstHalf.map((entry, i) => (
                 <ProductCard
-                  key={product.id}
-                  product={product}
+                  key={entry.key}
+                  product={entry.product}
+                  variants={entry.variants}
                   aspectRatio="aspect-[3/4]"
                   animDelay={i * 0.06}
                 />
@@ -222,10 +223,11 @@ export function PourProductGrid() {
               )}
 
               {/* Second half — product 6+ */}
-              {secondHalf.map((product, i) => (
+              {secondHalf.map((entry, i) => (
                 <ProductCard
-                  key={product.id}
-                  product={product}
+                  key={entry.key}
+                  product={entry.product}
+                  variants={entry.variants}
                   aspectRatio="aspect-[3/4]"
                   animDelay={i * 0.06 + 0.1}
                 />

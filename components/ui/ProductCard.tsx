@@ -51,6 +51,11 @@ interface ProductCardProps {
   animDelay?: number;
   /** Show the "anything else?" upsell modal after a quick-add. Default true. */
   triggerUpsell?: boolean;
+  /**
+   * Every colourway of this design (first = the one the card links to). When it holds
+   * more than one product the card shows colourway dots; hovering a dot swaps the art.
+   */
+  variants?: Product[];
 }
 
 export function ProductCard({
@@ -58,8 +63,13 @@ export function ProductCard({
   aspectRatio = "aspect-[3/4]",
   animDelay   = 0,
   triggerUpsell = true,
+  variants,
 }: ProductCardProps) {
   const router     = useRouter();
+  const colourways = variants && variants.length > 0 ? variants : [product];
+  const [cwIndex, setCwIndex] = useState(0);
+  const shown      = colourways[cwIndex] ?? product;
+  const hasArt     = !!product.wall;
   const tappedOut  = isTappedOut(product.sizes);
   const tagKey: ThekaKey = TAGS[product.id] ?? "freshlyPoured";
   const primary    = product.colors[0];
@@ -119,17 +129,17 @@ export function ProductCard({
   const pushToast = useToastStore((s) => s.push);
 
   const quickAdd = useCallback((size: Size) => {
-    addItem(product, size, product.colorNames[0]);
+    addItem(shown, size, shown.colorNames[0]);
     if (!muted) play("pour");
     flyToCart(addBtnRef.current);
-    pushToast(`${pickRandom(copy.cart.addedToast)} · ${product.name} (${size})`, "blue");
+    pushToast(`${pickRandom(copy.cart.addedToast)} · ${shown.name}${shown.colourway ? ` ${shown.colourway}` : ""} (${size})`, "blue");
     setPickerOpen(false);
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1500);
     if (triggerUpsell) {
-      setTimeout(() => useUpsellStore.getState().show(product.slug), 900);
+      setTimeout(() => useUpsellStore.getState().show(shown.slug), 900);
     }
-  }, [addItem, product, muted, play, pushToast, triggerUpsell]);
+  }, [addItem, shown, muted, play, pushToast, triggerUpsell]);
 
   const handleAddHover = useCallback(() => {
     const now = Date.now();
@@ -195,13 +205,31 @@ export function ProductCard({
             tappedOut && "[filter:grayscale(1)_brightness(0.8)]"
           )}
           style={{
-            backgroundColor: primary,
+            backgroundColor: hasArt ? "#E4E2DD" : primary,
             transformStyle: "preserve-3d",
             transition: "transform 0.45s cubic-bezier(.2,.9,.3,1)",
             willChange: "transform",
           }}
         >
           {/* Garment — cross-fade flip */}
+          {hasArt ? (
+            <div className="absolute inset-0" data-card-art>
+              {colourways.map((v, i) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={v.slug}
+                  src={v.wall!.back}
+                  alt={i === cwIndex ? v.imageAlt : ""}
+                  aria-hidden={i === cwIndex ? undefined : true}
+                  data-cw={v.slug}
+                  draggable={false}
+                  loading="lazy"
+                  className="absolute inset-0 h-full w-full object-contain p-[6%] transition-opacity duration-200"
+                  style={{ opacity: i === cwIndex ? 1 : 0 }}
+                />
+              ))}
+            </div>
+          ) : (
           <div className="absolute inset-0 flex items-center justify-center p-[8%]">
             <GarmentFlip
               front={
@@ -228,6 +256,7 @@ export function ProductCard({
               className="w-full h-full"
             />
           </div>
+          )}
 
           {/* Tapped Out watermark — typographic stamp */}
           {tappedOut && <TappedOutStamp />}
@@ -274,7 +303,7 @@ export function ProductCard({
         {/* ── Metadata ──────────────────────────────────────────── */}
         <div className="pt-2.5 space-y-1">
           <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-(--ink)/35">
-            {String(productNum).padStart(2, "0")}&nbsp;/&nbsp;
+            {(product.code ?? String(productNum).padStart(2, "0"))}&nbsp;/&nbsp;
             {product.type}s&nbsp;·&nbsp;
             {isTappedOut(product.sizes)
               ? "Tapped Out"
@@ -298,6 +327,37 @@ export function ProductCard({
           >
             {product.name}
           </p>
+
+          {colourways.length > 1 && (
+            <div
+              role="radiogroup"
+              aria-label={`${product.name} colourways`}
+              className="flex items-center gap-1.5 pt-1"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {colourways.map((v, i) => (
+                <button
+                  key={v.slug}
+                  type="button"
+                  role="radio"
+                  aria-checked={i === cwIndex}
+                  aria-label={v.colourway ?? v.colorNames[0]}
+                  data-dot={v.slug}
+                  onMouseEnter={() => setCwIndex(i)}
+                  onFocus={() => setCwIndex(i)}
+                  onClick={(e) => { e.stopPropagation(); setCwIndex(i); }}
+                  className={cn(
+                    "h-3.5 w-3.5 rounded-full border transition-transform duration-150 hover:scale-125",
+                    i === cwIndex ? "border-(--ink) scale-110" : "border-(--ink)/25"
+                  )}
+                  style={{ backgroundColor: v.swatch ?? v.colors[0] }}
+                />
+              ))}
+              <span className="ml-1 font-mono text-[9px] uppercase tracking-[0.1em] text-(--ink)/45">
+                {shown.colourway}
+              </span>
+            </div>
+          )}
 
           <p className="font-mono text-[9px] text-(--ink)/28 tracking-[0.06em] mt-1">
             available in {availableSizes.length} sizes&nbsp;·&nbsp;in {slugHash(product.slug)} glasses

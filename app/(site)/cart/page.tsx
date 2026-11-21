@@ -7,6 +7,7 @@
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCartStore } from "@/lib/store/cart";
+import { useHasHydrated } from "@/lib/store/useHasHydrated";
 import { formatPrice } from "@/lib/utils/format";
 import { CountUp }     from "@/components/motion/CountUp";
 import { DROP_DATE } from "@/data/pour-001";
@@ -114,7 +115,7 @@ function fmtDate(d: Date) {
 
 // ── Cart page ─────────────────────────────────────────────────────────────────
 
-export default function CartPage() {
+function CartView() {
   const { items, removeItem, updateQuantity, totalItems, totalFull, totalDeposit } =
     useCartStore();
   const pushToast = useToastStore((s) => s.push);
@@ -351,4 +352,22 @@ export default function CartPage() {
       )}
     </div>
   );
+}
+
+// ── Skeleton — the server render and first client frame, before the persisted cart is read ──
+
+function CartSkeleton() {
+  return (
+    <div data-nav-tone="dark" className="bg-(--cream) min-h-screen" aria-busy="true" aria-label="Loading your glass">
+      <div className="flex flex-col items-center justify-center py-10 bg-(--cream) border-b border-(--ink)/8">
+        <div className="bg-(--ink)/5" style={{ width: "min(180px, 28vw)", height: "40vh", maxHeight: 380 }} />
+        <div className="mt-6 h-10 w-[min(420px,70vw)] bg-(--ink)/5" />
+      </div>
+    </div>
+  );
+}
+
+export default function CartPage() {
+  const hydrated = useHasHydrated(useCartStore);
+  return hydrated ? <CartView /> : <CartSkeleton />;
 }

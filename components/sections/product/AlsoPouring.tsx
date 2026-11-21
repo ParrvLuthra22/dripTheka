@@ -6,15 +6,15 @@
 import Link from "next/link";
 import { Reveal } from "@/components/motion/Reveal";
 import { ProductCard } from "@/components/ui/ProductCard";
-import { POURING_PRODUCTS } from "@/data/pour-001";
+import { POURING_LISTING } from "@/data/pour-001";
 
 interface AlsoPouring {
   currentSlug: string;
 }
 
 export function AlsoPouring({ currentSlug }: AlsoPouring) {
-  const related = POURING_PRODUCTS
-    .filter((p) => p.slug !== currentSlug)
+  const related = POURING_LISTING
+    .filter((e) => !e.variants.some((v) => v.slug === currentSlug))
     .slice(0, 3);
 
   if (!related.length) return null;
@@ -41,10 +41,11 @@ export function AlsoPouring({ currentSlug }: AlsoPouring) {
 
         {/* 3-column grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
-          {related.map((product, i) => (
+          {related.map((entry, i) => (
             <ProductCard
-              key={product.id}
-              product={product}
+              key={entry.key}
+              product={entry.product}
+              variants={entry.variants}
               aspectRatio="aspect-[3/4]"
               animDelay={i * 0.08}
             />

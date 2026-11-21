@@ -14,11 +14,15 @@ export function productMetadata(slug: string): Metadata {
     ? (product.blurb ?? product.tagline)
     : `${product.tagline} ${getPriceDisplay(product.price)} · Pour #${product.dropNumber}`;
   const url = `/product/${product.slug}`;
+  // Colourways of one design are variants of a single listing: the page for the
+  // first colourway is canonical for all of them (it is the one in the sitemap).
+  const first = product.design ? POUR_001.products.find((p) => p.design === product.design) : undefined;
+  const canonical = first ? `/product/${first.slug}` : url;
 
   return {
     title: { absolute: title },
     description,
-    alternates: { canonical: url },
+    alternates: { canonical },
     // Demo-art tees are not for sale yet: keep them out of search until real designs land.
     ...(product.placeholderArt ? { robots: { index: false, follow: true } } : {}),
     openGraph: { type: "website", url, title, description, siteName: "Drip Theka" },

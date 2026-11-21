@@ -435,6 +435,30 @@ export const POUR_001: Pour = {
 export const isPouring = (p: Product): boolean => !p.placeholderArt;
 export const POURING_PRODUCTS: Product[] = POUR_001.products.filter(isPouring);
 
+/** One shop-listing card: a design (or a lone product) and its colourways. */
+export interface ListingEntry {
+  key: string;
+  /** The first colourway — the card links to its /product/ page. */
+  product: Product;
+  /** Every colourway of the design, first = `product`. A lone product has just itself. */
+  variants: Product[];
+}
+
+/** Group colourway products by design for listings, keeping first-seen order. */
+export function groupListing(products: readonly Product[]): ListingEntry[] {
+  const map = new Map<string, ListingEntry>();
+  for (const p of products) {
+    const key = p.design ?? p.slug;
+    const hit = map.get(key);
+    if (hit) hit.variants.push(p);
+    else map.set(key, { key, product: p, variants: [p] });
+  }
+  return [...map.values()];
+}
+
+/** Shop listings: 7 design cards for Pour #001 + the 6 single products. */
+export const POURING_LISTING: ListingEntry[] = groupListing(POURING_PRODUCTS);
+
 // Opening Night date — drives the countdown in the pour page hero.
 // Change this to a real date when you set the drop.
 export const DROP_DATE = new Date("2026-09-01T18:00:00+05:30");

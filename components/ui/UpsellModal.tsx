@@ -13,7 +13,7 @@ import { useCartStore } from "@/lib/store/cart";
 import { useKhataStore } from "@/lib/store/khata";
 import { useFoamStore } from "@/lib/store/foam";
 import { useSound } from "@/components/sound/SoundProvider";
-import { POURING_PRODUCTS, isTappedOut, getAvailableSizes } from "@/data/pour-001";
+import { POURING_LISTING, isTappedOut, getAvailableSizes } from "@/data/pour-001";
 import type { Product } from "@/data/pour-001";
 import { copy } from "@/data/copy";
 import { DripCloseIcon } from "@/components/icons/DripCloseIcon";
@@ -182,9 +182,11 @@ export function UpsellModal() {
   const panelRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
 
-  const related = POURING_PRODUCTS
-    .filter((p) => p.slug !== excludeSlug && !isTappedOut(p.sizes))
-    .slice(0, 3);
+  // One suggestion per design — never two colourways of the same tee.
+  const related = POURING_LISTING
+    .filter((e) => !e.variants.some((v) => v.slug === excludeSlug) && !isTappedOut(e.product.sizes))
+    .slice(0, 3)
+    .map((e) => e.product);
 
   // Escape key, body scroll lock, initial focus on close button
   useEffect(() => {
