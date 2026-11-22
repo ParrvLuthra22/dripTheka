@@ -20,12 +20,14 @@ import { findWallSlug, type WallDesign } from "@/data/pour-001";
 import { useCartStore } from "@/lib/store/cart";
 import { useHydrated } from "@/lib/theka/hooks";
 import { lang } from "@/lib/theka/lang";
+import { useGlasses } from "@/lib/theka/glasses";
 import { AisleControls } from "./AisleControls";
 import { BuyPanel } from "./BuyPanel";
 import { Blackout, lightsSeen, playLightsOn } from "./LightsOn";
 import { ProductInfo } from "./ProductInfo";
 import { WallDressing } from "./WallDressing";
 import { WallHeader } from "./WallHeader";
+import { WallGlasses } from "./WallGlasses";
 import { WallItem } from "./WallItem";
 import { computeDecor } from "./wallDecor";
 import { applyDecor, createNeon, decorAll, findDecor } from "./wallDecorDom";
@@ -79,6 +81,8 @@ export function TheWall({ designs, dormant = false, handoff = false, onExitUp, l
   const [store] = useState(() => createWallStore(n));
   const view = useSyncExternalStore(store.subscribe, store.get, store.get);
 
+  // The glasses: fetched when the Wall goes live (not while it sits under the Entry), refreshed every 60 s while visible.
+  const glasses = useGlasses({ live: !dormant });
   const hydrated = useHydrated();
   const count = useCartStore((st) => st.items.reduce((t, i) => t + i.quantity, 0));
   const bagCount = hydrated ? count : 0;
@@ -607,7 +611,10 @@ export function TheWall({ designs, dormant = false, handoff = false, onExitUp, l
             onStory={() => api.current?.story()}
             neonLoad={load.neon}
           />
-          {designs.map((d, i) => (
+          <WallGlasses designs={designs} glasses={glasses} hover={view.hover} zoomed={view.zoomed} />
+          {designs.map((d, i) => {
+            const g = glasses?.get(d.design);
+            return (
             <WallItem
               key={d.design}
               ref={(el) => { itemRefs.current[i] = el; }}
@@ -616,6 +623,8 @@ export function TheWall({ designs, dormant = false, handoff = false, onExitUp, l
               hold={!load.art}
               on={view.hover === i}
               showFront={view.side === "front" && view.cur === i}
+              tapped={g?.state === "tapped"}
+              glassAria={g ? (g.state === "tapped" ? lang.glass.item.tapped : lang.glass.item.poured(g.poured, g.cap)) : null}
               onEnter={() => api.current?.hover(i)}
               onLeave={() => api.current?.hover(-1)}
               onClick={() => {
@@ -624,7 +633,8 @@ export function TheWall({ designs, dormant = false, handoff = false, onExitUp, l
                 if (view.zoomed) a.goTo(i); else a.open(i);
               }}
             />
-          ))}
+            );
+          })}
         </div>
       </div>
       <div className={s.light} />

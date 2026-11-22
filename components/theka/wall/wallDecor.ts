@@ -21,8 +21,20 @@ export interface Decor {
   cones: { left: number; top: number; width: number; height: number }[];
   /** Mobile only: the in-flow "Our story ↓" row under the enamel sign (desktop keeps the fixed link). */
   storyRow: { left: number; top: number; width: number; height: number } | null;
+  /**
+   * One per fit: the box of its ledge glass (wall.html `.lg`: right of the tee, 15% × 27% of the tee's box), or null
+   * when no clear spot exists (the glass is then simply not drawn). It never overlaps another fit's lamp cone, the
+   * rate list, the teaser, the enamel sign, the neon, the story row or another tee. Where the reference's cones
+   * would cover it (phones: a cone is 1.9 tees wide on a 1.2-tee pitch) the neighbouring CONE is narrowed instead.
+   */
+  glasses: ({ left: number; top: number; width: number; height: number } | null)[];
   /** Estimated painted boxes of the dressing (neon, enamel, rate, teaser, story row) — for overlap checks only. */
-  rects: { neon: Rect; enamel: Rect; rate: Rect; teaser: Rect | null; storyRow: Rect | null };
+  rects: {
+    neon: Rect; enamel: Rect; rate: Rect; teaser: Rect | null; storyRow: Rect | null;
+    glasses: (Rect | null)[];
+    /** The cones' bounding boxes as laid out (after any narrowing). */
+    cones: Rect[];
+  };
 }
 
 /** logo_neon.png is 1200 × 416. */
@@ -32,6 +44,12 @@ export const LAMP = { w: 30, h: 15 };
 /** Estimated sizes of the text-driven pieces (padding + type in wall.html), used for `rects` only. */
 export const ENAMEL_EST = { w: 236, h: 64 };
 export const RATE_EST_H = 145;
+/**
+ * The ledge glass, as fractions of its tee's box — wall.html `.lg { right:-12%; bottom:0; width:15%; height:27% }`.
+ * `ownOverlap`: how far it may slide back over its own tee's box to find a clear spot; `minScale`: how much narrower
+ * than the reference it may get; `minCone`: a cone is never narrowed below this many tee-widths (it must still light its tee).
+ */
+export const GLASS = { w: 0.15, h: 0.27, overhang: 0.12, ownOverlap: 0.08, minScale: 0.6, minCone: 1.2 };
 /** Mobile story row: gap under the enamel sign, and its height (a comfortable tap target). */
 export const STORY_ROW = { gap: 28, h: 56, maxW: 320 };
 
@@ -85,14 +103,84 @@ export function computeDecor(layout: Layout, vw: number, vh: number): Decor {
   }
 
   const ew = enamel.width ?? ENAMEL_EST.w;
+  const rects = {
+    neon: { x: neon.cx - neon.w / 2, y: neon.cy - neon.h / 2, w: neon.w, h: neon.h },
+    enamel: { x: enamel.left, y: enamel.top, w: ew, h: ENAMEL_EST.h },
+    rate: { x: rate.left, y: rate.top, w: rate.width, h: RATE_EST_H },
+    teaser: teaser && { x: teaser.left, y: teaser.top, w: teaser.width, h: teaser.height },
+    storyRow: storyRow && { x: storyRow.left, y: storyRow.top, w: storyRow.width, h: storyRow.height },
+  };
+
+  const glasses = placeGlasses(items, cones, [rects.neon, rects.enamel, rects.rate, rects.teaser, rects.storyRow], vw);
+
   return {
-    neon, enamel, rate, teaser, lamps, cones, storyRow,
+    neon, enamel, rate, teaser, lamps, cones, storyRow, glasses,
     rects: {
-      neon: { x: neon.cx - neon.w / 2, y: neon.cy - neon.h / 2, w: neon.w, h: neon.h },
-      enamel: { x: enamel.left, y: enamel.top, w: ew, h: ENAMEL_EST.h },
-      rate: { x: rate.left, y: rate.top, w: rate.width, h: RATE_EST_H },
-      teaser: teaser && { x: teaser.left, y: teaser.top, w: teaser.width, h: teaser.height },
-      storyRow: storyRow && { x: storyRow.left, y: storyRow.top, w: storyRow.width, h: storyRow.height },
+      glasses: glasses.map((g) => g && { x: g.left, y: g.top, w: g.width, h: g.height }),
+      cones: cones.map((c) => ({ x: c.left, y: c.top, w: c.width, h: c.height })),
+      neon: rects.neon, enamel: rects.enamel, rate: rects.rate, teaser: rects.teaser, storyRow: rects.storyRow,
     },
   };
+}
+
+const hit = (a: Rect, b: Rect) => a.x < b.x + b.w - 1e-6 && b.x < a.x + a.w - 1e-6 && a.y < b.y + b.h - 1e-6 && b.y < a.y + a.h - 1e-6;
+
+/**
+ * Glass i sits right of tee i. Preference order: the reference spot → slid back over its own tee (≤ ownOverlap) →
+ * narrower (≥ minScale). The first spot that clears every blocker AND every other fit's cone wins; if none does, take
+ * the first one that clears the hard blockers and narrow the cones it touches (never below minCone tee-widths); if
+ * even that fails the glass is dropped (null) rather than drawn on top of something.
+ * Mutates `cones` (narrowing is symmetric about the lamp, so the cone keeps its shape).
+ */
+function placeGlasses(items: Layout["items"], cones: Decor["cones"], fixed: (Rect | null)[], vw: number): Decor["glasses"] {
+  const hard = fixed.filter((r): r is Rect => !!r);
+  const tee = (b: Layout["items"][number]): Rect => ({ x: b.cx - b.w / 2, y: b.ly - b.h, w: b.w, h: b.h });
+  const coneBox = (c: Decor["cones"][number]): Rect => ({ x: c.left, y: c.top, w: c.width, h: c.height });
+  const tees = items.map(tee);
+
+  /** Cones narrowed so none of them covers `r` (symmetric about their lamp), or null if one would get too thin. */
+  const narrowed = (r: Rect, i: number): Decor["cones"] | null => {
+    const next = cones.map((c) => ({ ...c }));
+    for (let j = 0; j < next.length; j++) {
+      const c = next[j];
+      if (j === i || !hit(r, coneBox(c))) continue;
+      const cx = c.left + c.width / 2;
+      const half = r.x + r.w <= cx ? cx - (r.x + r.w) : r.x - cx;
+      if (half < items[j].w * GLASS.minCone / 2) return null;
+      c.left = cx - half; c.width = half * 2;
+    }
+    return next;
+  };
+
+  /** First spot (reference → slid back → narrower) that clears the hard blockers and the other tees, and passes `accept`. */
+  const find = (i: number, accept: (r: Rect) => boolean): Rect | null => {
+    const b = items[i];
+    const gh = b.h * GLASS.h, top = b.ly - gh;
+    const right0 = b.cx + b.w / 2 + b.w * GLASS.overhang;
+    const minLeft = b.cx + b.w / 2 - b.w * GLASS.ownOverlap;
+    for (const scale of [1, 0.9, 0.8, 0.7, GLASS.minScale]) {
+      const gw = b.w * GLASS.w * scale;
+      for (let right = right0; right - gw >= minLeft - 1e-9; right -= 1) {
+        const r: Rect = { x: right - gw, y: top, w: gw, h: gh };
+        if (r.x < 0 || r.x + r.w > vw) continue;
+        if (hard.some((h) => hit(r, h))) continue;
+        if (tees.some((t, j) => j !== i && hit(r, t))) continue;
+        if (accept(r)) return r;
+      }
+    }
+    return null;
+  };
+
+  const out: Decor["glasses"] = [];
+  items.forEach((_, i) => {
+    // 1) a spot no cone covers; 2) else a spot whose covering cones can be narrowed (they are, in place)
+    let r = find(i, (g) => !cones.some((c, j) => j !== i && hit(g, coneBox(c))));
+    if (!r) {
+      r = find(i, (g) => narrowed(g, i) !== null);
+      const next = r && narrowed(r, i);
+      if (next) next.forEach((c, j) => { cones[j].left = c.left; cones[j].width = c.width; });
+    }
+    out.push(r && { left: r.x, top: r.y, width: r.w, height: r.h });
+  });
+  return out;
 }

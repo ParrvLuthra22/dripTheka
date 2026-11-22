@@ -49,6 +49,7 @@ const post = async (over: Record<string, unknown> = {}) => {
   const { POST } = await import("@/app/api/reserve/route");
   return POST(new Request("http://localhost/api/reserve", { method: "POST", body: JSON.stringify({ ...base, ...over }) }));
 };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- response bodies are poked at freely in tests
 const json = async (r: Response) => (await r.json()) as Record<string, any>;
 
 test("reserve answers with everything the drawer needs", async () => {

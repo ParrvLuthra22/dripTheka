@@ -7,6 +7,10 @@
 // same call the product page makes. With no size: the select underline goes
 // amber, the select shakes (elastic) and a toast nudges. On success: the pill
 // reads "Poured ✓", the bag count bounces (onAdded) and a toast confirms.
+//
+// The glass meter (#gm) sits between the swatches and the size picker. A tapped-out design hides the picker, the
+// button becomes "Join the refill list" and opens the inline refill form; after POUR.closesAt every button reads
+// "Pour closed". No glasses data → no meter, and buying works as before.
 
 import { useRef, useState, type Ref } from "react";
 import { gsap } from "gsap";
@@ -15,12 +19,17 @@ import { useCartStore } from "@/lib/store/cart";
 import { depositPaiseFor } from "@/lib/config";
 import { formatPaise, formatPrice } from "@/lib/utils/format";
 import { lang } from "@/lib/theka/lang";
+import { useGlasses } from "@/lib/theka/glasses";
+import { usePourClosed } from "@/lib/theka/pour";
+import { GlassMeter } from "./GlassMeter";
+import { RefillForm } from "./RefillForm";
 import { prefersReducedMotion } from "./motion";
 import type { Side } from "./wallStore";
 import s from "./wall.module.css";
 
 const P = lang.wall.panel;
 const D = lang.wall.details;
+const B = lang.glass.buy;
 
 interface BuyPanelProps {
   ref?: Ref<HTMLElement>;
@@ -44,6 +53,11 @@ export function BuyPanel({ ref, design, product, onPick, side, onSide, onToast, 
   const [need, setNeed] = useState(false);
   const [poured, setPoured] = useState(false);
   const [open, setOpen] = useState(false);
+  const [refillOpen, setRefillOpen] = useState(false);
+
+  const glass = useGlasses({ live: false })?.get(design.design) ?? null;
+  const closed = usePourClosed();
+  const mode: "closed" | "tapped" | "buy" = closed ? "closed" : glass?.state === "tapped" ? "tapped" : "buy";
 
   // New fit on screen → clear the "need a size" / "Poured ✓" state (the chosen size stays)
   const [lastSlug, setLastSlug] = useState(product.slug);
@@ -52,8 +66,16 @@ export function BuyPanel({ ref, design, product, onPick, side, onSide, onToast, 
     setNeed(false);
     setPoured(false);
   }
+  // …and the refill form belongs to a design, not a colourway
+  const [lastDesign, setLastDesign] = useState(design.design);
+  if (design.design !== lastDesign) {
+    setLastDesign(design.design);
+    setRefillOpen(false);
+  }
 
   const add = () => {
+    if (mode === "closed") return;
+    if (mode === "tapped") { setRefillOpen((o) => !o); return; }
     if (!size) {
       setNeed(true);
       gsap.fromTo(selwRef.current, { x: -6 }, { x: 0, duration: prefersReducedMotion() ? 0 : 0.5, ease: "elastic.out(1,.3)" });
@@ -94,26 +116,37 @@ export function BuyPanel({ ref, design, product, onPick, side, onSide, onToast, 
           />
         ))}
       </div>
-      <div className={s.lab}>
-        <span>{P.chooseSize}</span>
-        <span className={s.mono}>{P.fit}</span>
-      </div>
-      <div ref={selwRef} className={`${s.sel} ${need ? s.need : ""}`}>
-        <select
-          value={size}
-          aria-label={P.sizeAria}
-          onChange={(e) => { setSize(e.target.value); setNeed(false); }}
-        >
-          <option value="">{P.selectSize}</option>
-          {product.sizes.map((v) => (
-            <option key={v.size} value={v.size} disabled={v.stock === 0}>{v.size}</option>
-          ))}
-        </select>
-      </div>
-      <button type="button" className={s.add} aria-label={poured ? P.poured : P.add} onClick={add}>
+      <GlassMeter glass={glass} closed={closed} />
+      {mode === "buy" && (
+        <>
+          <div className={s.lab}>
+            <span>{P.chooseSize}</span>
+            <span className={s.mono}>{P.fit}</span>
+          </div>
+          <div ref={selwRef} className={`${s.sel} ${need ? s.need : ""}`}>
+            <select
+              value={size}
+              aria-label={P.sizeAria}
+              onChange={(e) => { setSize(e.target.value); setNeed(false); }}
+            >
+              <option value="">{P.selectSize}</option>
+              {product.sizes.map((v) => (
+                <option key={v.size} value={v.size} disabled={v.stock === 0}>{v.size}</option>
+              ))}
+            </select>
+          </div>
+        </>
+      )}
+      <button
+        type="button"
+        className={s.add}
+        disabled={mode === "closed"}
+        aria-expanded={mode === "tapped" ? refillOpen : undefined}
+        onClick={add}
+      >
         <span className={s.t}>
-          <b>{poured ? P.poured : P.add}</b>
-          <small>{lang.glass.buy.sub(formatPaise(depositPaiseFor(product.price)))}</small>
+          <b>{mode === "closed" ? B.closed : mode === "tapped" ? B.refill : poured ? P.poured : B.add}</b>
+          <small>{mode === "closed" ? B.closedSub : mode === "tapped" ? B.refillSub : B.sub(formatPaise(depositPaiseFor(product.price)))}</small>
         </span>
         <span className={s.ic}>
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
@@ -121,6 +154,15 @@ export function BuyPanel({ ref, design, product, onPick, side, onSide, onToast, 
           </svg>
         </span>
       </button>
+      {mode === "tapped" && refillOpen && (
+        <RefillForm
+          design={design.design}
+          name={design.name}
+          onToast={onToast}
+          onDone={() => setRefillOpen(false)}
+          onCancel={() => setRefillOpen(false)}
+        />
+      )}
       <div className={s.pvrow}>
         <div className={`${s.flip} ${s.mono}`} role="group" aria-label={P.viewAria}>
           <button type="button" aria-pressed={side === "back"} onClick={() => onSide("back")}>{P.back}</button>

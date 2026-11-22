@@ -39,9 +39,13 @@ interface WallItemProps {
   deferArt?: boolean;
   /** Wall only: the Entry is still playing — render no `src` at all (the box stays sized, so no layout shift). */
   hold?: boolean;
+  /** The design's glass is tapped out: desaturate the tee and stamp it TAPPED OUT (the tee stays clickable). */
+  tapped?: boolean;
+  /** Live glass read-out for the accessible name ("tapped out" / "18 of 50 poured"); null = unknown, say nothing. */
+  glassAria?: string | null;
 }
 
-export function WallItem({ ref, product, on, showFront, onEnter, onLeave, onClick, style, priority, lazy, tabIndex, main, deferArt, hold }: WallItemProps) {
+export function WallItem({ ref, product, on, showFront, onEnter, onLeave, onClick, style, priority, lazy, tabIndex, main, deferArt, hold, tapped, glassAria }: WallItemProps) {
   const { wall } = product;
   const own = useRef<HTMLButtonElement | null>(null);
   const [armed, setArmed] = useState(!deferArt);
@@ -77,8 +81,9 @@ export function WallItem({ ref, product, on, showFront, onEnter, onLeave, onClic
       data-slug={product.slug}
       style={style}
       data-main={main ? "" : undefined}
+      data-tapped={tapped ? "" : undefined}
       tabIndex={tabIndex}
-      aria-label={lang.wall.itemAria(product.name, formatPrice(product.price))}
+      aria-label={lang.wall.itemAria(product.name, formatPrice(product.price), glassAria)}
       onMouseEnter={onEnter}
       onMouseLeave={onLeave}
       onFocus={onEnter}
@@ -98,6 +103,7 @@ export function WallItem({ ref, product, on, showFront, onEnter, onLeave, onClic
         draggable={false}
         {...(priority ? { fetchPriority: "high" as const, loading: "eager" as const } : lazy ? { loading: "lazy" as const, fetchPriority: "low" as const } : {})}
       />
+      {tapped && <div className={s.stampT} aria-hidden="true">{lang.glass.stamp}</div>}
     </button>
   );
 }

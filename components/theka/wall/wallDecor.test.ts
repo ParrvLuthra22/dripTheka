@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { computeLayout, MOBILE_TAIL } from "./wallLayout.ts";
-import { computeDecor, ENAMEL_EST, LAMP, NEON_AR, STORY_ROW, type Rect } from "./wallDecor.ts";
+import { computeDecor, ENAMEL_EST, GLASS, LAMP, NEON_AR, STORY_ROW, type Rect } from "./wallDecor.ts";
 
 const close = (a: number, b: number, eps = 1e-6) =>
   assert.ok(Math.abs(a - b) < eps, `${a} ≉ ${b}`);
@@ -121,3 +121,55 @@ for (const [vw, vh] of SIZES) {
     for (const [name, r] of pieces) if (r) assert.ok(r.x >= 0 && r.x + r.w <= worldW + 0.5, `${name} leaves the wall horizontally`);
   });
 }
+
+// ── the ledge glasses ──────────────────────────────────────────────────────────────────────────────
+for (const [vw, vh] of SIZES) {
+  test(`glasses at ${vw}×${vh}: one per fit, right of its tee, clear of every cone, the rate list, the teaser and the other dressing`, () => {
+    const L = computeLayout(vw, vh, 7);
+    const D = computeDecor(L, vw, vh);
+    assert.equal(D.glasses.length, 7);
+    const tees: Rect[] = L.items.map((b) => ({ x: b.cx - b.w / 2, y: b.ly - b.h, w: b.w, h: b.h }));
+    D.rects.glasses.forEach((g, i) => {
+      assert.ok(g, `glass ${i} was dropped at ${vw}×${vh}`);
+      const b = L.items[i];
+      assert.ok(g.x >= b.cx, `glass ${i} is not to the right of its tee's centre`);
+      assert.ok(g.x + g.w <= vw && g.x >= 0, `glass ${i} leaves the wall`);
+      close(g.y + g.h, b.ly);                                                  // stands on its ledge line
+      close(g.h, b.h * GLASS.h);
+      assert.ok(g.w >= b.w * GLASS.w * GLASS.minScale - 1e-6 && g.w <= b.w * GLASS.w + 1e-6, `glass ${i} width out of range`);
+      D.rects.cones.forEach((c, j) => { if (j !== i) assert.ok(!hit(g, c), `glass ${i} overlaps lamp cone ${j}`); });
+      for (const [name, r] of [["neon", D.rects.neon], ["enamel", D.rects.enamel], ["rate list", D.rects.rate], ["teaser", D.rects.teaser], ["story row", D.rects.storyRow]] as const) {
+        if (r) assert.ok(!hit(g, r), `glass ${i} overlaps the ${name}`);
+      }
+      tees.forEach((t, j) => { if (j !== i) assert.ok(!hit(g, t), `glass ${i} overlaps tee ${j}`); });
+      // it may tuck back over its OWN tee's box by at most `ownOverlap` of the tee's width
+      assert.ok(g.x >= b.cx + b.w / 2 - b.w * GLASS.ownOverlap - 1e-6, `glass ${i} slid too far back over its tee`);
+    });
+    // every cone still lights its own tee (never narrower than minCone tee-widths) and stays centred on its lamp
+    D.cones.forEach((c, i) => {
+      assert.ok(c.width >= L.items[i].w * GLASS.minCone - 1e-6, `cone ${i} was narrowed too far`);
+      close(c.left + c.width / 2, L.items[i].cx);
+    });
+  });
+}
+
+test("desktop: the reference cones are untouched (the glass finds its spot without narrowing them)", () => {
+  for (const [vw, vh] of [[1440, 900], [1280, 720]] as const) {
+    const L = computeLayout(vw, vh, 7), D = computeDecor(L, vw, vh);
+    D.cones.forEach((c, i) => { close(c.width, L.items[i].w * 1.9); close(c.left, L.items[i].cx - L.items[i].w * 0.95); });
+  }
+});
+
+test("phones: where the reference cone (1.9 tees wide on a 1.2-tee pitch) would cover a glass, the cone is narrowed, symmetric about its lamp", () => {
+  const L = computeLayout(390, 844, 7), D = computeDecor(L, 390, 844);
+  const narrowed = D.cones.filter((c, i) => c.width < L.items[i].w * 1.9 - 1e-6);
+  assert.ok(narrowed.length > 0, "expected the second column's cones to be narrowed");
+  assert.ok(D.glasses.every(Boolean));
+});
+
+test("glass geometry is the reference's: 15% × 27% of the tee box, 12% past its right edge, when nothing is in the way (1280×720)", () => {
+  const L = computeLayout(1280, 720, 7), D = computeDecor(L, 1280, 720);
+  const b = L.items[0], g = D.glasses[0]!;
+  close(g.width, b.w * 0.15); close(g.height, b.h * 0.27);
+  close(g.left + g.width, b.cx + b.w / 2 + b.w * 0.12);
+});

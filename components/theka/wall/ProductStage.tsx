@@ -17,6 +17,8 @@ import { gsap } from "gsap";
 import type { WallDesign, WallProduct } from "@/data/pour-001";
 import { useCartStore } from "@/lib/store/cart";
 import { useHydrated } from "@/lib/theka/hooks";
+import { useGlasses } from "@/lib/theka/glasses";
+import { lang } from "@/lib/theka/lang";
 import { AR, cameraTarget, computeLayout } from "./wallLayout";
 import { prefersReducedMotion } from "./motion";
 import type { Side } from "./wallStore";
@@ -60,6 +62,7 @@ const cellStyle = (c: StageCell): CSSProperties =>
 export function ProductStage({ design, product: initial, index, total, cells, ars, prevHref, nextHref, backHref }: ProductStageProps) {
   const router = useRouter();
   const hydrated = useHydrated();
+  const glasses = useGlasses();
   const count = useCartStore((st) => st.items.reduce((t, i) => t + i.quantity, 0));
   const bagCount = hydrated ? count : 0;
 
@@ -167,6 +170,7 @@ export function ProductStage({ design, product: initial, index, total, cells, ar
         <div className={s.world} style={cellStyle(main)}>
           {cells.map((c) => {
             const isMain = c.design === design;
+            const g = glasses?.get(c.design.design);
             return (
               <WallItem
                 key={c.design.design}
@@ -174,6 +178,8 @@ export function ProductStage({ design, product: initial, index, total, cells, ar
                 product={isMain ? design.products[art] : c.product}
                 on={false}
                 showFront={isMain && side === "front"}
+                tapped={g?.state === "tapped"}
+                glassAria={g ? (g.state === "tapped" ? lang.glass.item.tapped : lang.glass.item.poured(g.poured, g.cap)) : null}
                 onEnter={() => {}}
                 onLeave={() => {}}
                 onClick={() => { if (!isMain) router.push(`/product/${c.design.products[0].slug}`); }}

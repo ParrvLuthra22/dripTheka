@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "tsc": "tsc --noEmit",
-    "test": "node --test components/theka/wall/*.test.ts components/theka/entry/*.test.ts",
+    "test": "node --test components/theka/wall/*.test.ts components/theka/entry/*.test.ts lib/theka/*.test.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",

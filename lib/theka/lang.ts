@@ -106,7 +106,8 @@ export const lang = {
     },
     foot:     "Est. MMXXVI · New Delhi",
     blackout: "lights on",
-    itemAria: (name: string, price: string) => `${name} — ${price}`,
+    /** `status`: the live glass read-out ("tapped out", "18 of 50 poured"), or null when unknown. */
+    itemAria: (name: string, price: string, status?: string | null) => (status ? `${name} — ${price} — ${status}` : `${name} — ${price}`),
     info: {
       eyebrow: (code: string) => `Drip Theka / ${code}`,
     },
@@ -553,6 +554,8 @@ export const lang = {
       tappedSub: "Join the refill list below",
       closed:    "This pour is closed. Next one's brewing.",
     },
+    /** The tee's accessible-name tail, wall.html: "tapped out" / "n of cap poured". */
+    item: { tapped: "tapped out", poured: (poured: number, cap: number) => `${poured} of ${cap} poured` },
     /** Screen-reader text for the glass drawings (they are decoration; this is the content). */
     aria: {
       open:   (name: string, poured: number, cap: number) => `${name}: ${poured} of ${cap} poured`,

@@ -15,6 +15,8 @@ export interface DecorEls {
   story: HTMLElement;
   lamps: HTMLElement[];
   cones: HTMLElement[];
+  /** One slot per fit for its ledge glass (always in the DOM; empty when there is no glasses data). */
+  glasses: HTMLElement[];
 }
 
 export function findDecor(root: HTMLElement, n: number): DecorEls | null {
@@ -22,12 +24,13 @@ export function findDecor(root: HTMLElement, n: number): DecorEls | null {
   const rate = q(root, '[data-decor="rate"]'), teaser = q(root, '[data-decor="teaser"]'), story = q(root, '[data-decor="story"]');
   const lamps = Array.from({ length: n }, (_, i) => q(root, `[data-lamp="${i}"]`));
   const cones = Array.from({ length: n }, (_, i) => q(root, `[data-cone="${i}"]`));
-  if (!neon || !enamel || !rate || !teaser || !story || lamps.some((e) => !e) || cones.some((e) => !e)) return null;
-  return { neon, enamel, rate, teaser, story, lamps: lamps as HTMLElement[], cones: cones as HTMLElement[] };
+  const glasses = Array.from({ length: n }, (_, i) => q(root, `[data-glass="${i}"]`));
+  if (!neon || !enamel || !rate || !teaser || !story || lamps.some((e) => !e) || cones.some((e) => !e) || glasses.some((e) => !e)) return null;
+  return { neon, enamel, rate, teaser, story, lamps: lamps as HTMLElement[], cones: cones as HTMLElement[], glasses: glasses as HTMLElement[] };
 }
 
 /** Everything the camera should fade out with the other tees when a fit is isolated (mobile). */
-export const decorAll = (e: DecorEls): HTMLElement[] => [e.neon, e.enamel, e.rate, e.teaser, e.story, ...e.cones, ...e.lamps];
+export const decorAll = (e: DecorEls): HTMLElement[] => [e.neon, e.enamel, e.rate, e.teaser, e.story, ...e.cones, ...e.lamps, ...e.glasses];
 
 const px = (v: number) => `${v}px`;
 
@@ -45,6 +48,9 @@ export function applyDecor(e: DecorEls, d: Decor): void {
     e.lamps[i].style.setProperty("--stem", px(l.stem));
     const c = d.cones[i];
     Object.assign(e.cones[i].style, { left: px(c.left), top: px(c.top), width: px(c.width), height: px(c.height) });
+    const g = d.glasses[i];
+    if (g) Object.assign(e.glasses[i].style, { display: "", left: px(g.left), top: px(g.top), width: px(g.width), height: px(g.height) });
+    else e.glasses[i].style.display = "none";
   });
 }
 
