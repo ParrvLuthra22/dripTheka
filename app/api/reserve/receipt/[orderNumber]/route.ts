@@ -6,13 +6,18 @@
 //   • a signed-in session that owns the order (user_id, or the same email).
 // Anything else gets the same 404 as a non-existent order.
 //
-// Returns: { order, items } or 404.
+// Returns JSON: { order, items } or 404. (It was always JSON — there is no HTML variant to add.)
+//   order.balanceMethod / order.waOptIn / order.referralCodeUsed — what the buyer chose at checkout
+//   order.friendCode — the buyer's OWN referral code (their Regulars row, matched by email), or null
+//   items[].designId — the glass each line pours into (so /tab can draw its live glass bar)
 
 import { NextResponse } from "next/server";
 
 import { eq }                   from "drizzle-orm";
 import { db, dbReady }          from "@/lib/db/client";
-import { reservations, reservationItems } from "@/lib/db/schema";
+import { reservations, reservationItems, regulars } from "@/lib/db/schema";
+import { sql }                  from "drizzle-orm";
+import { designOf }             from "@/lib/pour/designs";
 import { verifyReceiptToken }   from "@/lib/orders/receiptToken";
 import { getAccount }            from "@/lib/accounts/session";
 
@@ -60,6 +65,9 @@ export async function GET(
       .from(reservationItems)
       .where(eq(reservationItems.reservationId, order.id));
 
+    const [mine] = await db.select({ code: regulars.referralCode }).from(regulars)
+      .where(sql`lower(${regulars.email}) = ${order.email.trim().toLowerCase()}`).limit(1);
+
     return NextResponse.json({
       order: {
         id:           order.id,
@@ -71,9 +79,14 @@ export async function GET(
         depositPaise:  order.depositPaise,
         balancePaise:  order.balancePaise,
         createdAt:    order.createdAt,
+        balanceMethod: order.balanceMethod,
+        waOptIn:      order.waOptIn,
+        referralCodeUsed: order.referralCode,
+        friendCode:   mine?.code ?? null,
       },
       items: items.map((i) => ({
         productSlug:    i.productSlug,
+        designId:       designOf(i.productSlug),
         productName:    i.productName,
         size:           i.size,
         qty:            i.qty,

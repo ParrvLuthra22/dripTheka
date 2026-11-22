@@ -123,14 +123,8 @@ export async function POST(request: Request) {
           if (!row) return false;
 
           await tx.insert(referrals).values({ code: referralCode, ownerEmail: email, redemptions: 0 });
-
-          if (referrerCode) {
-            // Atomic increment — never `count`, never read-modify-write.
-            await tx
-              .update(referrals)
-              .set({ redemptions: sql`${referrals.redemptions} + 1` })
-              .where(eq(referrals.code, referrerCode));
-          }
+          // `referredBy` above keeps the code as ATTRIBUTION. It is NOT a redemption: referrals.redemptions
+          // counts only paid deposits (lib/payments/settle.ts → redeemReferral), so signing up adds nothing.
           return true;
         });
 

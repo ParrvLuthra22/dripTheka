@@ -73,7 +73,8 @@ export async function POST(request: Request) {
     } catch (e) {
       console.error("[confirm] receipt token unavailable:", e);
     }
-    return NextResponse.json({ ok: true, orderNumber: outcome.reservation.orderNumber, receiptToken });
+    const { orderNumber, depositPaise, balancePaise } = outcome.reservation;
+    return NextResponse.json({ ok: true, orderNumber, receiptToken, depositPaise, balancePaise });
 
   } catch (err) {
     // Razorpay or the DB is unreachable. The payment is safe at Razorpay; the webhook records it.

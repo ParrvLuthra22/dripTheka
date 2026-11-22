@@ -7,12 +7,17 @@
 //      (unique 10-char order number, retried on collision) → insert items
 //   4. Create the Razorpay order for the deposit; patch its id onto the row
 //      (if Razorpay fails the hold is released: row → cancelled)
-//   5. Return { reservationId, razorpayOrderId, depositPaise, keyId }
+//   5. Return { reservationId, razorpayOrderId, depositPaise, balancePaise, orderNumber, holdExpiresAt,
+//               lines: [{ slug, designId, size, qty }], keyId }
+//
+// Errors the drawer maps: 400 { error, field? } (field = the offending body path, e.g. "address.pincode"),
+// 409 { code: "TAPPED_OUT", error: "tapped_out", slug, design }, 410 { code: "POUR_CLOSED" }, 503.
 
 import { NextResponse }  from "next/server";
 import { z }             from "zod";
 import { eq, sql }       from "drizzle-orm";
 import { POUR_001, isPouring } from "@/data/pour-001";
+import { designOf }      from "@/lib/pour/designs";
 import { POUR, depositPaiseFor, isPourClosed } from "@/lib/config";
 import { createRazorpayOrder, getPublicKeyId } from "@/lib/razorpay/client";
 import { db, dbReady }                    from "@/lib/db/client";
@@ -34,7 +39,7 @@ const bodySchema = z.object({
     state:   z.string().min(2),
     pincode: z.string().regex(/^\d{6}$/, "Invalid pincode"),
   }),
-  referralCode: z.string().trim().length(8).optional(),
+  referralCode: z.string().trim().length(8, "That referral code doesn't exist.").optional(),
   waOptIn:       z.boolean().optional(),
   balanceMethod: z.enum(["online", "cod"]).optional(),
   items: z
@@ -56,7 +61,11 @@ export async function POST(request: Request) {
   }
   const parsed = bodySchema.safeParse(raw);
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid request" }, { status: 400 });
+    const issue = parsed.error.issues[0];
+    return NextResponse.json(
+      { error: issue?.message ?? "Invalid request", ...(issue?.path.length ? { field: issue.path.join(".") } : {}) },
+      { status: 400 },
+    );
   }
   const { name, phone, address, items, waOptIn, balanceMethod } = parsed.data;
   if (balanceMethod && !POUR.balance[balanceMethod]) {
@@ -83,7 +92,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: `Invalid size: ${item.size}` }, { status: 400 });
     }
     if (variant.stock <= 0) {
-      return NextResponse.json({ error: "tapped_out", slug: product.slug }, { status: 409 });
+      return NextResponse.json({ code: "TAPPED_OUT", error: "tapped_out", slug: product.slug, design: designOf(product.slug) }, { status: 409 });
     }
     const lineTotalPaise = product.price * item.qty;
     subtotalPaise += lineTotalPaise;
@@ -110,7 +119,7 @@ export async function POST(request: Request) {
     if (!verdict.ok) {
       return NextResponse.json(
         { error: verdict.reason === "self_referral" ? "You can't use your own referral code." : "That referral code doesn't exist.",
-          code: verdict.reason === "self_referral" ? "SELF_REFERRAL" : "UNKNOWN_REFERRAL" },
+          code: verdict.reason === "self_referral" ? "SELF_REFERRAL" : "UNKNOWN_REFERRAL", field: "referralCode" },
         { status: 400 },
       );
     }
@@ -130,7 +139,7 @@ export async function POST(request: Request) {
     ));
   } catch (err) {
     if (err instanceof TappedOutError) {
-      return NextResponse.json({ error: "tapped_out", slug: err.slug, design: err.design }, { status: 409 });
+      return NextResponse.json({ code: "TAPPED_OUT", error: "tapped_out", slug: err.slug, design: err.design }, { status: 409 });
     }
     console.error("[reserve] Error:", err);
     return NextResponse.json({ error: "Failed to create reservation. Please try again." }, { status: 500 });
@@ -142,7 +151,13 @@ export async function POST(request: Request) {
     await db.update(reservations)
       .set({ razorpayOrderId: rpOrder.id, updatedAt: sql`now()` })
       .where(eq(reservations.id, reservationId));
-    return NextResponse.json({ reservationId, razorpayOrderId: rpOrder.id, depositPaise, keyId: getPublicKeyId() });
+    return NextResponse.json({
+      reservationId, razorpayOrderId: rpOrder.id, keyId: getPublicKeyId(),
+      orderNumber, depositPaise, balancePaise,
+      // the hold started a few ms ago (reservations.created_at is a tz-less timestamp, so it is not read back here)
+      holdExpiresAt: new Date(Date.now() + POUR.holdMinutes * 60_000).toISOString(),
+      lines: lines.map((l) => ({ slug: l.productSlug, designId: designOf(l.productSlug), size: l.size, qty: l.qty })),
+    });
   } catch (err) {
     console.error("[reserve] Razorpay order failed:", err);
     // Release the hold right away instead of leaving it for 30 minutes.
