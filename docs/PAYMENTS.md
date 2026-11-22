@@ -75,6 +75,10 @@ Razorpay can't reach `localhost`. To test webhooks locally use a tunnel (`ngrok`
 - **Late payment edge:** a customer who pays *after* their 30-minute hold expired is still recorded as paid (we never discard money). If that pushes a design past its cap, the same transaction writes an `ops_alerts` row (`kind='overfill'`), the server logs `[ops] OVERFILL …` at error level, and `GET /api/admin/stats` lists it under `opsAlerts.open` — **a human must refund the excess**. Mark it handled with `UPDATE ops_alerts SET resolved_at = now() WHERE id = …`.
 - Per-size `stock` in the product data is still static (only `0` blocks a size). Per-size inventory is not tracked.
 
+## Glasses API and the refill list
+- `GET /api/pour/001/glasses` → `{ pourId, closesAt, glasses: [{ design, cap, poured, left, state }] }`, one entry per wall design. `poured` = paid units; `left` = `cap − poured − fresh holds` (0 once tapped); `state` = `tapped` (cap reached, or the row is `tapped`/`refilling`), `last` (poured ≥ `POUR.lastCallAt` × cap — 45 of 50), else `open`. Served with `Cache-Control: public, s-maxage=30`. With the database unavailable it answers `503` (`no-store`); it never invents a number.
+- `POST /api/pour/refill { design, email, phone?, waOptIn? }` joins `refill_requests` (unique `(design_id, email)`). `400 INVALID` (bad email / mobile `^[6-9]\d{9}$` / unknown design / WhatsApp opt-in without a phone), `409 ALREADY_ON_LIST`, `429 RATE_LIMITED` (10 per 10 min per IP and 3 per hour per email, Postgres-backed `rate_limits`, IPs/emails stored hashed), `503`. Nothing is *sent* to the list yet.
+
 ## Config
 `lib/config.ts` exports `POUR` (`id`, `closesAt`, `depositPct`, `capPerDesign`, `capOverrides`, `lastCallAt`, `holdMinutes`, `balance`) plus `depositPaiseFor()`, `capFor()`, `isPourClosed()`. `closesAt` and `capPerDesign` are placeholders (`TODO founders`). After `closesAt`, `POST /api/reserve` answers `410 {code:"POUR_CLOSED"}`; payments already in flight still settle.
 

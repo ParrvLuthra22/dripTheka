@@ -204,6 +204,31 @@ export const pourDesigns = pgTable("pour_designs", {
   check("pour_designs_cap_check", sql`${t.cap} >= 0`),
 ]);
 
+// ── refill_requests ───────────────────────────────────────────────────────
+// "Tell me when it's poured again": the refill list for a tapped design. One signup per
+// (design, email). Nothing is sent from here yet — the founders' WhatsApp / email send comes later.
+
+export const refillRequests = pgTable("refill_requests", {
+  id:        uuid("id").primaryKey().defaultRandom(),
+  designId:  text("design_id").notNull(),
+  email:     text("email").notNull(),                       // stored lower-cased
+  phone:     text("phone"),                                 // Indian mobile, optional
+  waOptIn:   boolean("wa_opt_in").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("refill_requests_design_email_unique").on(t.designId, t.email),
+]);
+
+// ── rate_limits ───────────────────────────────────────────────────────────
+// Fixed-window counters keyed by an opaque string (hashed IP / email). Postgres-backed so the limit
+// holds across serverless instances. See lib/ratelimit.ts.
+
+export const rateLimits = pgTable("rate_limits", {
+  key:         text("key").primaryKey(),
+  windowStart: timestamp("window_start", { withTimezone: true }).defaultNow().notNull(),
+  count:       integer("count").notNull().default(0),
+});
+
 // ── ops_alerts ────────────────────────────────────────────────────────────
 // Things a human must act on. Today: 'overfill' — a payment landed after its hold expired
 // and pushed a design past its cap, so someone has to refund. Surfaced in /api/admin/stats.
