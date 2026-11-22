@@ -92,6 +92,11 @@ Razorpay can't reach `localhost`. To test webhooks locally use a tunnel (`ngrok`
 ## Receipts
 The success redirect carries `?t=<token>`, an HMAC of the order number + email (`lib/orders/receiptToken.ts`). `GET /api/reserve/receipt/:orderNumber` returns the order only with a valid token **or** a signed-in owner (same `user_id` or email). Otherwise it answers `404`, same as a nonexistent order.
 
+## The Tab drawer (v2) and the local Razorpay stub
+The Wall's Bag opens a right-side drawer (`components/theka/tab/`): bill → details → balance → deposit → receipt, and `/tab` lists orders. It talks to `POST /api/reserve` → Razorpay Standard Checkout → `POST /api/reserve/confirm`; if confirm doesn't answer (timeout / 5xx) it polls `GET /api/reserve/status/:orderId?r=<reservationId>` until the webhook settles the deposit (that route hands the receipt token to the holder of the reservation id, once paid). The cart is cleared only after a confirmed deposit; `{orderNumber, token}` is saved to `localStorage['dt_tabs']`.
+
+No Razorpay test keys? Run everything against a local stand-in: `node scripts/razorpay-stub.mjs 4599`, then start the app with `RAZORPAY_API_BASE=http://127.0.0.1:4599 RAZORPAY_KEY_ID=rzp_test_stub RAZORPAY_KEY_SECRET=stub-secret NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_test_stub RAZORPAY_WEBHOOK_SECRET=<any>` and run `E2E_DATABASE_URL=… E2E_RZP_SECRET=stub-secret E2E_WEBHOOK_SECRET=<same> node scripts/entry-checks.mjs --only=11` (screenshots land in `docs/reference/tab/checks/`). `entry-checks` swaps checkout.js for a stand-in that reports a paid order signed with `E2E_RZP_SECRET`; real Checkout (UPI `success@razorpay`) still has to be exercised once with real test keys.
+
 ## Tests
 `pnpm test:payments` runs the payment unit + database tests (`lib/**/*.test.ts`) with `tsx`. They **drop and recreate the `public` schema** of `TEST_DATABASE_URL` and apply the real migrations, so `lib/test/setupDb.ts` refuses to run unless the database name contains `test` and the host is local (or `ALLOW_REMOTE_TEST_DB=1`, for a throwaway Neon branch). They never read `DATABASE_URL`.
 

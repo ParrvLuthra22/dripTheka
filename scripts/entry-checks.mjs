@@ -16,6 +16,10 @@ mkdirSync(OUT, { recursive: true });
 const OUT2 = new URL("../docs/reference/story/checks/", import.meta.url).pathname;
 mkdirSync(OUT2, { recursive: true });
 
+// Tab drawer, glasses and /tab frames (section 11)
+const OUT3 = new URL("../docs/reference/tab/checks/", import.meta.url).pathname;
+mkdirSync(OUT3, { recursive: true });
+
 const results = [];
 const check = (name, ok, detail = "") => { results.push({ name, ok }); console.log(`${ok ? "PASS" : "FAIL"}  ${name}${detail ? `  — ${detail}` : ""}`); };
 const HYDRATION = /hydrat|#418|#419|#422|#423|#425|did not match|mismatch/i;
@@ -926,6 +930,219 @@ for (const [tag, vw, vh] of [["390x844", 390, 844], ["375x812", 375, 812]]) {
   check(`${tag}: no hydration warnings`, problems.length === 0, problems[0]);
   await ctx.close();
 }
+}
+
+
+// ── 11 · glasses, the Tab drawer and /tab ────────────────────────────────────────────────────────────
+// Needs a database with the demo fill and (without real Razorpay test keys) the local stub:
+//   node scripts/razorpay-stub.mjs 4599 &
+//   RAZORPAY_API_BASE=http://127.0.0.1:4599 RAZORPAY_KEY_ID=rzp_test_stub RAZORPAY_KEY_SECRET=stub-secret NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_test_stub \
+//   DATABASE_URL=… pnpm exec next start -p 3100
+//   E2E_DATABASE_URL=… E2E_RZP_SECRET=stub-secret node scripts/entry-checks.mjs --only=11
+// Checkout.js is replaced by a stand-in that reports a paid order (signed with E2E_RZP_SECRET), so the whole money
+// flow — reserve → Checkout → confirm → receipt → /tab — runs end to end without leaving the machine.
+if (on(11)) {
+  const { createHmac } = await import("node:crypto");
+  const FAKE_RZP = `window.__rz={opened:[],mode:"pay"};window.Razorpay=function(o){this.on=function(){};this.open=function(){window.__rz.opened.push(o);
+    if(window.__rz.mode==="dismiss"){setTimeout(function(){o.modal&&o.modal.ondismiss&&o.modal.ondismiss()},50);return}
+    var pid="pay_e2e_"+Math.random().toString(36).slice(2,10);
+    fetch("/__rzsig?order="+o.order_id+"&pay="+pid).then(function(r){return r.json()}).then(function(s){window.__rz.paid={pid:pid,order:o.order_id,amount:o.amount};setTimeout(function(){o.handler({razorpay_payment_id:pid,razorpay_order_id:o.order_id,razorpay_signature:s.sig})},50)})}};`;
+  const SECRET = process.env.E2E_RZP_SECRET ?? "stub-secret";
+  const SIZES = [["1440x900", DESKTOP], ["1280x720", { viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 }], ["390x844", MOBILE]];
+  const shot3 = (page, name) => page.screenshot({ path: `${OUT3}${name}.jpg`, type: "jpeg", quality: 82 });
+  const wireRzp = async (page) => {
+    await page.route("https://checkout.razorpay.com/**", (r) => r.fulfill({ contentType: "text/javascript", body: FAKE_RZP }));
+    await page.route("**/__rzsig*", (r) => { const q = new URL(r.request().url()).searchParams;
+      r.fulfill({ contentType: "application/json", body: JSON.stringify({ sig: createHmac("sha256", SECRET).update(`${q.get("order")}|${q.get("pay")}`).digest("hex") }) }); });
+  };
+  const bagBtn = (page) => page.getByRole("button", { name: /^Your glass/i }).first();
+  const dlg = (page) => page.locator('[role="dialog"][aria-modal="true"]');
+  const addToBag = async (page, i, sizeIdx = 2) => {
+    await openItem(page, i); await page.waitForTimeout(2600);
+    await page.locator("aside[class*=panel] select").first().selectOption({ index: sizeIdx });
+    await page.locator("aside[class*=panel] button[class*=add]").first().click(); await page.waitForTimeout(400);
+  };
+  const fillDetails = async (page) => {
+    await page.getByLabel("Name").fill("Asha Rao"); await page.getByLabel("Phone").fill("9876543210"); await page.getByLabel("Email").fill("asha@example.com");
+    await page.getByLabel("Delivery address").fill("12 Test Street, Hauz Khas"); await page.getByLabel("PIN code").fill("110016"); await page.getByLabel("City").fill("New Delhi"); await page.getByLabel("State").fill("Delhi");
+  };
+  const glassesState = async () => { try { return (await (await fetch(`${BASE}/api/pour/001/glasses`)).json()).glasses; } catch { return null; } };
+  const overlap = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+
+  for (const [tag, opts] of SIZES) {
+    const { ctx, page, problems } = await open(opts, { entered: true, lights: true });
+    await wireRzp(page);
+    const errors = []; page.on("pageerror", (e) => errors.push(String(e).slice(0, 200)));
+    await page.waitForSelector("[data-wall-scroller] button[data-slug]", { timeout: 60000 }); await page.waitForTimeout(3500);
+    const mob = isMob(page);
+
+    // — the Wall with its glasses —
+    const glasses = await page.evaluate(() => [...document.querySelectorAll("[data-glass]")].map((g) => { const r = g.getBoundingClientRect(), lg = g.querySelector("[data-state]"); return { x: r.left, y: r.top, w: r.width, h: r.height, shown: getComputedStyle(g).display !== "none" && r.width > 0, state: lg?.getAttribute("data-state") ?? null, text: g.innerText.trim() }; }));
+    check(`${tag}: one ledge glass per design (7), states from the API`, glasses.length === 7 && glasses.every((g) => g.state), JSON.stringify(glasses.map((g) => g.state)));
+    const decor = await page.evaluate(() => [...document.querySelectorAll("[data-decor=rate],[data-decor=teaser],[data-decor=enamel]")].map((e) => { const r = e.getBoundingClientRect(); return { k: e.dataset.decor, x: r.left, y: r.top, w: r.width, h: r.height }; }));
+    const clash = glasses.filter((g) => g.shown).flatMap((g, i) => decor.filter((d) => overlap(g, d)).map((d) => `glass${i}×${d.k}`));
+    check(`${tag}: no glass overlaps the rate list, the enamel sign or the teaser`, clash.length === 0, clash.join(","));
+    check(`${tag}: LAST CALL / TAPPED OUT labels are always visible`, glasses.some((g) => /LAST CALL · \d+ left/i.test(g.text)) && glasses.some((g) => /TAPPED OUT/i.test(g.text)));
+    await shot3(page, `wall-glasses-${tag}`);
+
+    // — zoomed: open, last call, tapped (+ refill form) —
+    const metas = [];
+    for (const [i, name] of [[0, "open"], [1, "last"], [3, "tapped"]]) {
+      await openItem(page, i); await page.waitForTimeout(2800);
+      const m = await page.evaluate(() => ({ gm: document.querySelector("#gm")?.innerText.replace(/\s+/g, " ").trim() ?? null, ledgeHidden: [...document.querySelectorAll("[data-glass] [data-state]")].every((e) => getComputedStyle(e).opacity === "0"),
+        btn: document.querySelector("aside[class*=panel] button[class*=add]")?.innerText.replace(/\s+/g, " ").trim(), size: !!document.querySelector("aside[class*=panel] select") }));
+      metas.push(m);
+      if (name === "open") check(`${tag}: open meter reads "n of 50 poured" + "Pour closes … · 30% reserves it"; sub-line is the deposit, not "Ships in 5–7 days"`, /\d+ of 50 poured/.test(m.gm) && /Pour closes 2 Dec · 30% reserves it/i.test(m.gm) && /now · rest when it's poured/.test(m.btn) && !/Ships in/.test(m.btn), `${m.gm} | ${m.btn}`);
+      if (name === "last") check(`${tag}: last-call meter reads "Last call · only n left"`, /Last call · only \d+ left/.test(m.gm), m.gm);
+      if (name === "tapped") {
+        check(`${tag}: tapped → "Tapped out · refill coming", size picker hidden, button "Join the refill list"`, /Tapped out · refill coming/i.test(m.gm) && /Join the refill list/i.test(m.gm) && !m.size && /Join the refill list/.test(m.btn), `${m.gm} | ${m.btn} | size=${m.size}`);
+        await page.locator("aside[class*=panel] button[class*=add]").first().click(); await page.waitForTimeout(500);
+      }
+      check(`${tag}: ledge glasses fade out while a tee is zoomed (${name})`, m.ledgeHidden);
+      await shot3(page, `zoom-${name}-${tag}`);
+      await page.evaluate(() => (document.querySelector("header a[href='/'], header [class*=back]") ?? document.body).click?.()); await page.keyboard.press("Escape"); await page.waitForTimeout(1500);
+    }
+    check(`${tag}: nothing in the Wall links to the v1 cart or checkout`, await page.evaluate(() => document.querySelectorAll('a[href^="/cart"],a[href^="/checkout"]').length === 0));
+
+    // — the drawer: bill → details → balance → deposit → receipt —
+    await addToBag(page, 0);
+    const opener = bagBtn(page); await opener.click(); await page.waitForTimeout(1000);
+    check(`${tag}: drawer is a modal dialog`, await dlg(page).count() === 1 && (await dlg(page).getAttribute("aria-labelledby")) === "dt-tab-title");
+    const bill = await dlg(page).innerText();
+    check(`${tag}: bill shows the line, Total, Pay now (30%), Balance when ready, Shipping and "How a pour works"`, /Total/.test(bill) && /Pay now \(30%\)/.test(bill) && /Balance when ready/.test(bill) && /Shipping/.test(bill) && /How a pour works/.test(bill) && /Got a friend's code\?/.test(bill), bill.slice(0, 120));
+    // focus trap
+    let escaped = 0;
+    for (let n = 0; n < 40; n++) { await page.keyboard.press("Tab"); if (!(await page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]')))) escaped++; }
+    check(`${tag}: Tab never leaves the drawer (40 presses)`, escaped === 0, `${escaped} escapes`);
+    await shot3(page, `drawer-bill-${tag}`);
+    await page.getByText("Got a friend's code?").click(); await page.waitForTimeout(200);
+    await page.getByLabel("Friend's code").fill("NOSUCH99"); 
+    await page.getByRole("button", { name: /Settle the deposit/ }).click(); await page.waitForTimeout(400);
+    await page.getByRole("button", { name: /Next: the balance/ }).click(); await page.waitForTimeout(300);
+    const errs = await dlg(page).locator("em").allInnerTexts();
+    check(`${tag}: empty details show the v1-voice field errors`, errs.length >= 6 && errs.some((e) => /not an email/.test(e)), errs.join(" | "));
+    await shot3(page, `drawer-details-errors-${tag}`);
+    await fillDetails(page); await shot3(page, `drawer-details-${tag}`);
+    await page.getByRole("button", { name: /Next: the balance/ }).click(); await page.waitForTimeout(400);
+    const radios = await page.locator('input[type="radio"][name="dt-balance"]').count();
+    await page.locator('input[type="radio"][value="online"]').focus(); await page.keyboard.press("ArrowDown");
+    check(`${tag}: balance options are two real radios, arrow keys move between them`, radios === 2 && await page.locator('input[type="radio"][value="cod"]').isChecked(), `${radios} radios`);
+    await page.locator('input[type="radio"][value="online"]').check(); await shot3(page, `drawer-balance-${tag}`);
+    await page.getByRole("button", { name: /Next: pay the deposit/ }).click(); await page.waitForTimeout(400);
+    await shot3(page, `drawer-deposit-${tag}`);
+    // a bad friend's code is shown inline on the bill, nothing is charged
+    await page.getByRole("button", { name: /Pay .* and reserve/ }).click(); await page.waitForTimeout(1500);
+    const back = await dlg(page).innerText();
+    check(`${tag}: a code the server rejects is shown inline under "Got a friend's code?"`, /referral code doesn't exist/i.test(back) && /Total/.test(back), back.slice(0, 160));
+    await shot3(page, `drawer-friend-rejected-${tag}`);
+    await page.getByLabel("Friend's code").fill("");
+    // dismiss Checkout midway
+    await page.evaluate(() => { window.__rz.mode = "dismiss"; });
+    await page.getByRole("button", { name: /Settle the deposit/ }).click(); await page.getByRole("button", { name: /Next: the balance/ }).click(); await page.getByRole("button", { name: /Next: pay the deposit/ }).click(); await page.waitForTimeout(300);
+    await page.getByRole("button", { name: /Pay .* and reserve/ }).click(); await page.waitForTimeout(1500);
+    const dismissed = await dlg(page).innerText();
+    check(`${tag}: closing Checkout midway keeps the step and says "No stress, your glass is still here." + "held for 30 min"`, /No stress, your glass is still here\./.test(dismissed) && /held for 30 min/.test(dismissed), dismissed.slice(0, 200));
+    await shot3(page, `drawer-dismissed-${tag}`);
+    // pay for real (against the stub): confirm → receipt → cart cleared → dt_tabs saved
+    await page.evaluate(() => { window.__rz.mode = "pay"; });
+    await page.getByRole("button", { name: /Pay .* and reserve/ }).click(); await page.waitForSelector("text=STOOL RESERVED >> nth=1", { timeout: 20000 }).catch(() => {});
+    await page.waitForTimeout(1500);
+    const rc = await dlg(page).innerText();
+    const store = await page.evaluate(() => ({ tabs: JSON.parse(localStorage.getItem("dt_tabs") || "[]"), cart: JSON.parse(localStorage.getItem("drip-theka-cart") || "{}").state?.items?.length }));
+    const opened = await page.evaluate(() => window.__rz.opened.at(-1));
+    check(`${tag}: receipt: STOOL RESERVED, real order number, deposit, balance + method, timeline; cart cleared; dt_tabs saved`,
+      /STOOL RESERVED/.test(rc) && /DT-[A-Z0-9]{10}/.test(rc) && /Deposit paid/.test(rc) && /online link/.test(rc) && /Reserved today/.test(rc) && store.cart === 0 && store.tabs.length === 1 && !!store.tabs[0].token, `${JSON.stringify(store)} ${rc.slice(0, 80)}`);
+    check(`${tag}: Checkout opened with prefill, notes.order_number, theme #004AAD and UPI first`, !!opened && opened.prefill.contact === "9876543210" && opened.prefill.email === "asha@example.com" && /^DT-/.test(opened.notes.order_number) && opened.theme.color === "#004AAD" && opened.config.display.sequence[0] === "block.upi", JSON.stringify(opened?.config?.display?.sequence));
+    await shot3(page, `drawer-receipt-${tag}`);
+    // Esc closes and returns focus to the Bag button
+    await page.keyboard.press("Escape"); await page.waitForTimeout(900);
+    check(`${tag}: Esc closes the drawer and focus goes back to the Bag button`, (await page.locator('[class*="wrap"][data-open]').first().getAttribute("data-open")) === "false" && /^Your glass/i.test((await page.evaluate(() => document.activeElement?.getAttribute("aria-label"))) ?? ""));
+
+    // — /tab —
+    await page.goto(BASE + "/tab", { waitUntil: "networkidle" }); await page.waitForTimeout(2000);
+    const tabTxt = await page.evaluate(() => document.body.innerText);
+    check(`${tag}: /tab shows the greeting, the order card, a live glass bar, the timeline and the disabled balance button`,
+      /YOUR TAB,\s*ASHA\./i.test(tabTxt) && /DT-[A-Z0-9]{10}/.test(tabTxt) && /of 50 poured|LAST CALL|TAPPED OUT/i.test(tabTxt) && /Pour closes · 2 Dec/.test(tabTxt) && (await page.locator("button[disabled]", { hasText: /balance/ }).count()) === 1, tabTxt.slice(0, 160));
+    check(`${tag}: /tab is noindex`, (await page.locator('meta[name="robots"]').getAttribute("content"))?.includes("noindex") === true && /Your tab — Drip Theka/.test(await page.title()), await page.title());
+    check(`${tag}: no horizontal overflow on /tab`, await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+    await shot3(page, `tab-${tag}`);
+    check(`${tag}: no hydration warnings or page errors`, problems.length === 0 && errors.length === 0, problems[0] ?? errors[0]);
+    await ctx.close();
+  }
+
+  // — a tapped design while the visitor was deciding: 409 TAPPED_OUT puts them back on the bill —
+  if (process.env.E2E_DATABASE_URL) {
+    const { default: pg } = await import("pg");
+    const db = new pg.Client({ connectionString: process.env.E2E_DATABASE_URL }); await db.connect();
+    const before = (await glassesState())?.find((g) => g.design === "richer-than-my-teacher");
+    for (const [tag, opts] of SIZES) {
+      const { ctx, page } = await open(opts, { entered: true, lights: true }); await wireRzp(page);
+      await page.waitForSelector("[data-wall-scroller] button[data-slug]", { timeout: 60000 }); await page.waitForTimeout(3000);
+      await addToBag(page, 2);                                        // Richer Than My Teacher — still looks open to this page
+      await db.query("UPDATE pour_designs SET cap = $1 WHERE design_id = 'richer-than-my-teacher'", [before.poured]);   // …now cap = paid count
+      await bagBtn(page).click(); await page.waitForTimeout(900);
+      await page.getByRole("button", { name: /Settle the deposit/ }).click(); await fillDetails(page);
+      await page.getByRole("button", { name: /Next: the balance/ }).click(); await page.getByRole("button", { name: /Next: pay the deposit/ }).click(); await page.waitForTimeout(300);
+      await page.getByRole("button", { name: /Pay .* and reserve/ }).click(); await page.waitForTimeout(1800);
+      const t = await dlg(page).innerText();
+      const flags = { line: /Tapped out while you were deciding/.test(t), remove: /Remove it/i.test(t), refill: /Join the refill list/i.test(t), disabled: await page.getByRole("button", { name: /Settle the deposit/ }).isDisabled() };
+      check(`${tag}: 409 TAPPED_OUT → back on the bill, line marked "Tapped out while you were deciding", remove / refill offered, CTA disabled`, Object.values(flags).every(Boolean), JSON.stringify(flags));
+      await shot3(page, `drawer-tapped-409-${tag}`);
+      await page.getByRole("button", { name: /Join the refill list/ }).click(); await page.waitForTimeout(500); await shot3(page, `drawer-tapped-refill-${tag}`);
+      await page.getByRole("button", { name: /Remove it/ }).click(); await page.waitForTimeout(400);
+      check(`${tag}: removing the tapped line empties the glass`, /Empty glass, regular/.test(await dlg(page).innerText()));
+      await db.query("UPDATE pour_designs SET cap = $1 WHERE design_id = 'richer-than-my-teacher'", [before.cap]);
+      await ctx.close();
+    }
+    await db.end();
+  } else console.log("SKIP  409 TAPPED_OUT checks (set E2E_DATABASE_URL)");
+
+
+  // — confirm never answers (timeout / 502): "Still confirming your payment…", then the WEBHOOK settles it and the drawer reaches the receipt —
+  if (process.env.E2E_WEBHOOK_SECRET) {
+    const { ctx, page } = await open(DESKTOP, { entered: true, lights: true }); await wireRzp(page);
+    await page.route("**/api/reserve/confirm", (r) => r.fulfill({ status: 502, contentType: "application/json", body: JSON.stringify({ error: "Payment verification failed. Try again." }) }));
+    await page.waitForSelector("[data-wall-scroller] button[data-slug]", { timeout: 60000 }); await page.waitForTimeout(3000);
+    await addToBag(page, 4); await bagBtn(page).click(); await page.waitForTimeout(900);
+    await page.getByRole("button", { name: /Settle the deposit/ }).click(); await fillDetails(page);
+    await page.getByRole("button", { name: /Next: the balance/ }).click(); await page.getByRole("button", { name: /Next: pay the deposit/ }).click(); await page.waitForTimeout(300);
+    await page.getByRole("button", { name: /Pay .* and reserve/ }).click();
+    await page.waitForSelector("text=Still confirming your payment", { timeout: 15000 });
+    const conf = await dlg(page).innerText();
+    check("confirm timeout: drawer says \"Still confirming your payment…\" and \"don't pay twice\"; the cart is NOT cleared yet", /Still confirming your payment/.test(conf) && /don't pay twice/i.test(conf) && (await page.evaluate(() => JSON.parse(localStorage.getItem("drip-theka-cart") || "{}").state?.items?.length)) === 1);
+    await shot3(page, "drawer-confirming-1440x900");
+    const paid = await page.evaluate(() => window.__rz.paid);
+    const raw = JSON.stringify({ event: "payment.captured", payload: { payment: { entity: { id: paid.pid, order_id: paid.order, amount: paid.amount, currency: "INR", status: "captured" } } } });
+    const sig = createHmac("sha256", process.env.E2E_WEBHOOK_SECRET).update(raw).digest("hex");
+    const hook = await fetch(BASE + "/api/razorpay/webhook", { method: "POST", headers: { "x-razorpay-signature": sig, "x-razorpay-event-id": `evt_e2e_${Date.now()}`, "content-type": "application/json" }, body: raw });
+    check("webhook (signed, local): accepted", hook.status === 200, `status ${hook.status}`);
+    await page.waitForSelector("text=STOOL RESERVED >> nth=1", { timeout: 20000 }).catch(() => {});
+    const done = await dlg(page).innerText();
+    check("confirm timeout: polling reserve/status picks up the webhook's settlement and shows the receipt (cart cleared, dt_tabs saved)", /STOOL RESERVED/.test(done) && /DT-[A-Z0-9]{10}/.test(done)
+      && (await page.evaluate(() => JSON.parse(localStorage.getItem("drip-theka-cart") || "{}").state?.items?.length)) === 0 && (await page.evaluate(() => JSON.parse(localStorage.getItem("dt_tabs") || "[]").length)) === 1, done.slice(0, 100));
+    await ctx.close();
+  } else console.log("SKIP  confirm-timeout → webhook checks (set E2E_WEBHOOK_SECRET and run the server with the same RAZORPAY_WEBHOOK_SECRET)");
+
+  // — the glasses API is down: no glasses, no meter, no numbers — and buying still works —
+  for (const [tag, opts] of SIZES) {
+    const { ctx, page } = await open(opts, { entered: true, lights: true }); await wireRzp(page);
+    await page.route("**/api/pour/*/glasses", (r) => r.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ error: "down" }) }));
+    await page.waitForSelector("[data-wall-scroller] button[data-slug]", { timeout: 60000 }); await page.waitForTimeout(3500);
+    const wall = await page.evaluate(() => ({ lg: document.querySelectorAll("[data-glass] [data-state]").length, txt: document.querySelector("[data-wall-scroller]").innerText }));
+    check(`${tag}: glasses API down → no ledge glasses, no numbers on the Wall`, wall.lg === 0 && !/poured|LAST CALL|TAPPED OUT/i.test(wall.txt), JSON.stringify(wall).slice(0, 160));
+    await shot3(page, `glasses-down-wall-${tag}`);
+    await openItem(page, 1); await page.waitForTimeout(2800);
+    const pn = await page.evaluate(() => ({ gm: !!document.querySelector("#gm"), t: document.querySelector("aside[class*=panel]").innerText }));
+    check(`${tag}: …no meter in the panel, no "poured" anywhere, the size picker and Add to bag are there`, !pn.gm && !/\d+ of \d+ poured|LAST CALL|TAPPED OUT/i.test(pn.t) && /Add to bag/.test(pn.t), pn.t.slice(0, 120));
+    await shot3(page, `glasses-down-zoom-${tag}`);
+    await page.locator("aside[class*=panel] select").first().selectOption({ index: 2 }); await page.locator("aside[class*=panel] button[class*=add]").first().click(); await page.waitForTimeout(400);
+    await bagBtn(page).click(); await page.waitForTimeout(900);
+    await page.getByRole("button", { name: /Settle the deposit/ }).click(); await fillDetails(page);
+    await page.getByRole("button", { name: /Next: the balance/ }).click(); await page.getByRole("button", { name: /Next: pay the deposit/ }).click(); await page.waitForTimeout(300);
+    await page.getByRole("button", { name: /Pay .* and reserve/ }).click(); await page.waitForTimeout(3500);
+    check(`${tag}: …and buying still works (receipt reached)`, /STOOL RESERVED/.test(await dlg(page).innerText()));
+    await ctx.close();
+  }
 }
 
 await browser.close();
