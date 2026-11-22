@@ -12,7 +12,8 @@ import { useRef, useState, type Ref } from "react";
 import { gsap } from "gsap";
 import type { Size, WallDesign, WallProduct } from "@/data/pour-001";
 import { useCartStore } from "@/lib/store/cart";
-import { formatPrice } from "@/lib/utils/format";
+import { depositPaiseFor } from "@/lib/config";
+import { formatPaise, formatPrice } from "@/lib/utils/format";
 import { lang } from "@/lib/theka/lang";
 import { prefersReducedMotion } from "./motion";
 import type { Side } from "./wallStore";
@@ -62,7 +63,7 @@ export function BuyPanel({ ref, design, product, onPick, side, onSide, onToast, 
     addItem(product, size as Size, product.colourway ?? product.colorNames[0] ?? "");
     setPoured(true);
     onAdded();
-    onToast(lang.wall.toast.poured(product.name, size));
+    onToast(lang.wall.toast.poured(product.name, product.colourway ?? product.colorNames[0] ?? "", size));
   };
 
   const toggleDetails = () => {
@@ -112,7 +113,7 @@ export function BuyPanel({ ref, design, product, onPick, side, onSide, onToast, 
       <button type="button" className={s.add} aria-label={poured ? P.poured : P.add} onClick={add}>
         <span className={s.t}>
           <b>{poured ? P.poured : P.add}</b>
-          <small>{P.ships}</small>
+          <small>{lang.glass.buy.sub(formatPaise(depositPaiseFor(product.price)))}</small>
         </span>
         <span className={s.ic}>
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">

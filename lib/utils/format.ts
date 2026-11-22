@@ -12,3 +12,12 @@ export function depositAmount(paise: number): number {
 export function formatDeposit(paise: number): string {
   return formatPrice(depositAmount(paise));
 }
+
+/**
+ * Exact money for the deposit flow: whole rupees stay "₹1,299", a deposit with paise shows them
+ * ("₹389.70") — so the panel, the bill and Razorpay Checkout always read the same amount.
+ */
+export function formatPaise(paise: number): string {
+  const whole = paise % 100 === 0;
+  return `₹${(paise / 100).toLocaleString("en-IN", whole ? {} : { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}

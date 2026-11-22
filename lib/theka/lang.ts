@@ -96,7 +96,8 @@ export const lang = {
       story:      "Our Story",
       storyHref:  "/story",
       bag:        "Bag",
-      bagAria:    (n: number) => `Bag, ${n} item${n === 1 ? "" : "s"}`,
+      // v1 theka wording (nav.inGlass): the bag IS the glass
+      bagAria:    (n: number) => (n === 0 ? "Your glass, empty" : `Your glass, ${n} in glass`),
     },
     tag: {
       pour: "POUR #001",
@@ -117,7 +118,6 @@ export const lang = {
       selectSize: "Select a size",
       sizeAria:   "Size",
       add:        "Add to bag",
-      ships:      "Ships in 5–7 days",
       poured:     "Poured ✓",
       viewAria:   "View",
       front:      "Front",
@@ -136,7 +136,9 @@ export const lang = {
     },
     toast: {
       pickSize: "Pick a size first, regular",
-      poured:   (name: string, size: string) => `${name} · ${size} — poured into your glass`,
+      poured:   (name: string, colourway: string, size: string) => `${name} · ${colourway} · ${size} — poured into your glass`,
+      /** v1 cart.capReached — a line can't go past what /api/reserve accepts (10). */
+      glassFull: "Glass is full. Bartender's cut you off.",
     },
     // What hangs on the wall besides the tees (story-wall-reference/wall.html). The rate list's
     // price / GSM / deposit are read from the real product data, not typed here.
@@ -181,7 +183,7 @@ export const lang = {
       look:     "Try the Look",
       lookHref: "/try-the-look",
       bag:      "Bag",
-      bagAria:  (n: number) => `Bag, ${n} item${n === 1 ? "" : "s"}`,
+      bagAria:  (n: number) => (n === 0 ? "Your glass, empty" : `Your glass, ${n} in glass`),
       navAria:  "Story",
     },
     progress: "The back wall",
@@ -528,6 +530,249 @@ export const lang = {
     freshPour:        { en: "Fresh Pour",         hi: "naya maal"               },
     mostPoured:       { en: "Most Poured",        hi: "sabse zyada chala"       },
     recentlyViewed:   { en: "Recently Viewed",    hi: "tumne dekha tha"         },
+  },
+
+  // ── Glasses: how full each design's glass is (wall.html .lg / #gm). Every NUMBER comes from
+  //    /api/pour/001/glasses and lib/config POUR — never typed here. ────────────────────────
+
+  glass: {
+    /** The ledge glass beside each tee. */
+    ledge: {
+      poured:   (poured: number, cap: number) => `${poured}/${cap} poured`,
+      lastCall: (left: number) => `LAST CALL · ${left} left`,
+      tapped:   "TAPPED OUT",
+    },
+    /** The red rotated stamp over a tapped-out tee. */
+    stamp: "TAPPED OUT",
+    /** Panel meter (#gm): main line + mono sub-line. */
+    meter: {
+      open:      (poured: number, cap: number) => `${poured} of ${cap} poured`,
+      openSub:   (closes: string, pct: number) => `Pour closes ${closes} · ${pct}% reserves it`,
+      last:      (left: number) => `Last call · only ${left} left`,
+      tapped:    "Tapped out · refill coming",
+      tappedSub: "Join the refill list below",
+      closed:    "This pour is closed. Next one's brewing.",
+    },
+    /** Screen-reader text for the glass drawings (they are decoration; this is the content). */
+    aria: {
+      open:   (name: string, poured: number, cap: number) => `${name}: ${poured} of ${cap} poured`,
+      last:   (name: string, left: number) => `${name}: last call, only ${left} left`,
+      tapped: (name: string) => `${name}: tapped out`,
+    },
+    /** The buy button in the panel. */
+    buy: {
+      add:        "Add to bag",
+      sub:        (deposit: string) => `${deposit} now · rest when it's poured`,
+      refill:     "Join the refill list",
+      refillSub:  "Free · first dibs on the refill",
+      closed:     "Pour closed",
+      closedSub:  "Next one's brewing",
+    },
+    /** The inline refill form in the panel (a tapped design). */
+    refill: {
+      title:      "Join the refill list",
+      email:      "Email",
+      emailPh:    "you@yourcoolemail.com",
+      phone:      "Phone (optional)",
+      phonePh:    "10-digit mobile",
+      wa:         "Ping me on WhatsApp",
+      submit:     "Put me on the list",
+      sending:    "Filing the paperwork...",
+      cancel:     "Never mind",
+      badEmail:   "that's not an email. that's a vibe.",
+      badPhone:   "10 digits. Indian number. don't test us.",
+      waNeedsPhone: "WhatsApp needs a number, regular.",
+      /** Success — and also what a duplicate signup says (they ARE on the list). */
+      joined:     (name: string) => `You're on the refill list for ${name}. We'll ping you first.`,
+      rateLimited: "Easy, regular. Too many tries. Give it a few minutes.",
+      closedRefill: "The refill list is jammed. Try again in a bit.",
+    },
+  },
+
+  // ── Your tab: the right-side drawer (wall.html #tab) and the /tab page (tab.html). ───────
+
+  tab: {
+    meta: { title: "Your tab — Drip Theka", description: "Everything you've reserved, how full each glass is, and what's left to pay." },
+    drawer: {
+      aria:    "Your tab",
+      eyebrow: "Drip Theka · your tab",
+      close:   "Close",
+      titles:  { bill: "What's in your glass", settle: "Settle the tab", receipt: "Stool reserved" },
+      steps:   ["Glass", "Details", "Balance", "Deposit"],
+      stepsAria: "Steps",
+      stepOf:  (n: number, name: string) => `Step ${n} of 4: ${name}`,
+    },
+    bill: {
+      title:    "YOUR GLASS",
+      sub:      "DRIP THEKA · POUR #001 · NEW DELHI",
+      empty:    ["Empty glass, regular.", "Pick a fit off the wall."],
+      total:    "Total",
+      payNow:   (pct: number) => `Pay now (${pct}%)`,
+      balance:  "Balance when ready",
+      shipping: "Shipping",
+      shippingVal: "free · ships ~3–4 wks after close",
+      less:     "One less",
+      more:     "One more",
+      remove:   "Remove",
+      howTitle: "How a pour works",
+      /** [text, bold, text] — the bold bit is rendered <b>. */
+      how: (pct: number, closes: string): [string, string, string][] => [
+        ["Reserve now with ", `${pct}%`, ". Your glass fills with everyone else's."],
+        ["The pour closes on ", closes, ". Every design with orders gets made."],
+        ["When yours is ready, pay the rest ", "", "online or in cash on delivery."],
+      ],
+      cta:      "Settle the deposit",
+      ctaClosed: "Pour closed",
+      closedNote: "This pour is closed. Next one's brewing.",
+      friend: {
+        toggle:   "Got a friend's code?",
+        label:    "Friend's code",
+        placeholder: "8 characters",
+        hint:     "Your friend's referral code, if they gave you one.",
+      },
+      tappedLine: "Tapped out while you were deciding",
+      tappedRemove: "Remove it",
+      tappedRefill: "Join the refill list",
+      /** v1 theka: the pour-closed / glass-full wording where the drawer has a matching spot. */
+      glassFull: "Glass is full. Bartender's cut you off.",
+    },
+    details: {
+      name:   { label: "Name", ph: "What do the regulars call you?" },
+      phone:  { label: "Phone", ph: "10-digit mobile" },
+      wa:     ["Send order and drop updates on ", "WhatsApp"] as [string, string],
+      email:  { label: "Email", ph: "for your receipt" },
+      addr:   { label: "Delivery address", ph: "House, street, area" },
+      pin:    { label: "PIN code", ph: "110001" },
+      city:   { label: "City", ph: "New Delhi" },
+      state:  { label: "State", ph: "Delhi" },
+      cta:    "Next: the balance",
+      missing: "A few details missing, regular",
+      // v1 theka voice (forms.errors)
+      err: {
+        name:  "this bit's empty. we need it.",
+        phone: "10 digits. Indian number. don't test us.",
+        email: "that's not an email. that's a vibe.",
+        addr:  "this bit's empty. we need it.",
+        pin:   "pincode has 6 digits. yours doesn't.",
+        city:  "this bit's empty. we need it.",
+        state: "this bit's empty. we need it.",
+      },
+    },
+    balance: {
+      lede: (dep: string, bal: string): [string, string, string, string, string] =>
+        ["You pay ", dep, " now. How do you want to pay the rest, ", bal, ", when your order is ready?"],
+      online: { title: "Pay online before dispatch", body: "We send a UPI payment link on WhatsApp/email when it's ready. Ships as soon as it's paid." },
+      cod:    { title: "Cash on delivery", body: "Pay the delivery partner in cash or UPI at your door." },
+      cta:    "Next: pay the deposit",
+      groupAria: "How to pay the balance",
+    },
+    pay: {
+      deposit:  (pct: number) => `Deposit (${pct}%)`,
+      upiHead:  "Pay with UPI",
+      /** A hint only: real UPI app choice happens inside Razorpay Checkout. Generic words, no brand marks. */
+      upiHint:  ["UPI apps", "QR", "UPI ID"],
+      upiHintAria: "Razorpay opens with UPI first: pick an app, scan a QR or enter a UPI ID.",
+      more:     "Cards, net banking, wallets",
+      moreBody: "Opens the secure Razorpay window.",
+      cta:      (dep: string): [string, string, string] => ["Pay ", dep, " and reserve"],
+      fine:     "Secured by Razorpay",
+      fineTest: "Secured by Razorpay · test mode in this demo",
+      /** v1 loading.checkout lines, shown on the button while we set the order up. */
+      busy:     ["Waking up Razorpay...", "Calling the keg...", "Authorising your drip...", "Checking the vault...", "Making it official..."],
+      dismissed: "No stress, your glass is still here.",
+      held:     (min: number) => `held for ${min} min`,
+      confirming: "Still confirming your payment…",
+      confirmingSub: "don't pay twice. check your email in a minute.",
+      failed:   "the tap's jammed. try again.",
+      network:  "we're not online. neither are you, apparently.",
+      generic:  "something broke. wasn't us. okay maybe it was.",
+      unavailable: "Reservations are on a break. Try again in a minute.",
+      closed:   "This pour is closed. Next one's brewing.",
+      notPouring: "This one isn't pouring yet, coming soon, regular.",
+      tapped:   "Tapped out while you were deciding",
+      sdk:      "Couldn't reach Razorpay. Check your connection and try again.",
+      back:     "Back",
+    },
+    receipt: {
+      title:   "STOOL RESERVED",
+      sub:     "DRIP THEKA · POUR #001",
+      order:   "Order",
+      regular: "Regular",
+      depositPaid: "Deposit paid",
+      balance: "Balance",
+      balanceOnline: "online link",
+      balanceCod:    "cash on delivery",
+      stamp:   (pct: number): [string, string] => ["PAID", `${pct}%`],
+      timeline: {
+        reserved: "Reserved today",
+        closes:   (date: string) => `Pour closes ${date}`,
+        pour:     "We pour your fit (production)",
+        shipOnline: "Balance link · then ships",
+        shipCod:    "Ships · pay on delivery",
+      },
+      friend: {
+        lead: "Bring a friend: code ",
+        /** The ₹ figure is lib/config REFERRAL_REWARD_PAISE. */
+        sub:  (reward: string) => `they get ${reward} off, you get ${reward} off the balance`,
+      },
+      /** v1 forms.success.reservation */
+      locked:  "locked in. drop incoming. check your inbox.",
+      openTab: "Open your tab",
+      backToWall: "Back to the wall",
+    },
+    // ── /tab ──
+    page: {
+      navAria: "Primary",
+      wall:  "The Wall",
+      story: "Our Story",
+      tab:   "Your Tab",
+      eyebrow: "Your tab · Pour #001",
+      title:   (name: string): [string, string, string] => ["Your tab, ", name, "."],
+      fallbackName: "regular",
+      lede:    "Everything you've reserved, how full each glass is, and what's left to pay. We'll ping you on WhatsApp at every step.",
+      pill:    (pct: number) => `Reserved · ${pct}% paid`,
+      pillBalance: "Balance open",
+      pillShipped: "Poured & shipped",
+      pillRefunded: "Refunded",
+      line:    (colourway: string, size: string, qty: number) => `${colourway} · ${size} · ×${qty}`,
+      glass: {
+        open:   (poured: number, cap: number) => `${poured} of ${cap} poured`,
+        last:   (left: number) => `LAST CALL · ${left} left`,
+        tapped: "TAPPED OUT · yours is safe",
+      },
+      money: {
+        deposit: "Deposit paid",
+        balanceOnline: "Balance (online)",
+        balanceCod:    "Balance (cash on delivery)",
+      },
+      timeline: {
+        reserved: { t: "Reserved", d: (pct: number) => `Your ${pct}% is in. Your stool is saved.` },
+        closes:   { t: (date: string) => `Pour closes · ${date}`, d: "Every design with orders gets made." },
+        pour:     { t: "We pour your fit", d: "Printing and stitching in Delhi." },
+        balanceOnline: { t: "Balance due", d: "A UPI link lands on WhatsApp. Ships once it's paid." },
+        ready:    { t: "Ready to ship", d: "You pay the rest at your door." },
+        done:     { t: "Poured & on its way", d: "Tracking on WhatsApp. About 3–4 weeks after the close." },
+      },
+      pay:     (bal: string) => `Pay ${bal} balance`,
+      payNote: "Unlocks when your fit is ready. We'll message you.",
+      codNote: "Cash or UPI to the delivery partner when it arrives.",
+      side: {
+        friendTitle: "Buy a friend a round",
+        friendBody:  (reward: string) => `Your friend gets ${reward} off their first fit. You get ${reward} off your balance for every friend who reserves.`,
+        copy:   "Copy code",
+        copied: "Copied ✓",
+        waOn:   "WhatsApp updates on",
+        waBody: "Pour closing, production, balance link and tracking all come to your phone.",
+      },
+      empty: {
+        title: "No tab open yet, regular.",
+        cta:   "Pick a fit off the wall →",
+        signIn: "Sign in with Google to see every order",
+      },
+      loading: "Checking the vault...",
+      loadFailed: "We couldn't read your tab just now. Try again in a minute.",
+      retry:   "Try again",
+    },
   },
 
   // ── Upsell modal ─────────────────────────────────────────────────────────

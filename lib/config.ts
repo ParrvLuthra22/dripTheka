@@ -14,6 +14,12 @@ export const POUR = {
   balance: { online: true, cod: true },
 } as const;
 
+/**
+ * The "buy a friend a round" reward shown on the receipt and /tab copy, in paise. Display only for now:
+ * nothing applies it at settlement yet. TODO founders: confirm the amount and when it is applied.
+ */
+export const REFERRAL_REWARD_PAISE = 10000;
+
 /** Whole-number deposit percentage, for display / product data. */
 export const DEPOSIT_PERCENT = Math.round(POUR.depositPct * 100);
 
