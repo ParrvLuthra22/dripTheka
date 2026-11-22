@@ -128,3 +128,43 @@ test("details validation: the reference's rules, plus city and state for the ser
   assert.deepEqual(invalidFields({ ...details, phone: "+91 98765-43210" }), []);        // +91, spaces and dashes are fine
   assert.deepEqual(invalidFields({ ...details, phone: "5876543210" }), ["phone"]);      // must start 6-9
 });
+
+// ── /tab ──
+import { firstName, glassBar, mergeOrders, parseReceipt, pillOf, timelineStates, type TabOrder } from "./tabOrders.ts";
+const receipt = (over: Record<string, unknown> = {}) => ({
+  order: { orderNumber: "DT-1", name: "Asha Rao", status: "deposit_paid", depositPaise: 38970, balancePaise: 90930, balanceMethod: "cod", waOptIn: true, friendCode: "ASHA1234", createdAt: "2026-11-20T10:00:00Z", ...over },
+  items: [{ productSlug: "janwar-ink", designId: "janwar", productName: "Janwar", size: "M", qty: 1, lineTotalPaise: 129900 }, { nope: 1 }],
+});
+test("receipt → order: paid statuses only, junk items dropped", () => {
+  const o = parseReceipt(receipt())!;
+  assert.deepEqual([o.orderNumber, o.balanceMethod, o.waOptIn, o.friendCode, o.items.length], ["DT-1", "cod", true, "ASHA1234", 1]);
+  assert.equal(parseReceipt(receipt({ status: "pending" })), null);
+  assert.equal(parseReceipt(receipt({ status: "failed" })), null);
+  assert.equal(parseReceipt({ order: {} }), null);
+  assert.equal(parseReceipt(null), null);
+  assert.equal(parseReceipt(receipt({ balanceMethod: "weird", friendCode: "" }))!.balanceMethod, null);
+});
+test("merge de-duplicates by order number (session copy wins), newest first", () => {
+  const a = parseReceipt(receipt({ orderNumber: "DT-A", createdAt: "2026-11-01T00:00:00Z" }))!;
+  const b = parseReceipt(receipt({ orderNumber: "DT-B", createdAt: "2026-11-10T00:00:00Z" }))!;
+  const aGuest: TabOrder = { ...a, name: "guest copy" };
+  const m = mergeOrders([a], [b, aGuest]);
+  assert.deepEqual(m.map((o) => o.orderNumber), ["DT-B", "DT-A"]);
+  assert.equal(m[1].name, "Asha Rao");
+});
+test("timeline: reserved ✓, then the amber ring walks pour-closes → we pour → balance/ready → poured", () => {
+  assert.deepEqual(timelineStates("deposit_paid", false), ["done", "now", "todo", "todo", "todo"]);
+  assert.deepEqual(timelineStates("deposit_paid", true), ["done", "done", "now", "todo", "todo"]);
+  assert.deepEqual(timelineStates("drop_unlocked", true), ["done", "done", "done", "now", "todo"]);
+  assert.deepEqual(timelineStates("fulfilled", true), ["done", "done", "done", "done", "done"]);
+  assert.deepEqual(["deposit_paid", "drop_unlocked", "fulfilled", "refunded"].map(pillOf), ["reserved", "balance", "shipped", "refunded"]);
+});
+test("glass bar: from the live glass, or nothing at all (never an invented number)", () => {
+  const m = new Map([["janwar", { design: "janwar", cap: 50, poured: 46, left: 4, state: "last" as const }], ["x", { design: "x", cap: 50, poured: 50, left: 0, state: "tapped" as const }]]);
+  assert.deepEqual(glassBar(m, "janwar"), { pct: 92, last: true, tapped: false, poured: 46, cap: 50, left: 4 });
+  assert.equal(glassBar(m, "x")!.tapped, true);
+  assert.equal(glassBar(null, "janwar"), null);
+  assert.equal(glassBar(m, "unknown"), null);
+  assert.equal(glassBar(m, null), null);
+});
+test("first name", () => { assert.equal(firstName("  Asha  Rao "), "Asha"); assert.equal(firstName(null), ""); });
