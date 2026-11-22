@@ -60,17 +60,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth(async () => {
     },
 
     events: {
-      // Link guest orders placed with this (Google-verified) email to the account.
-      async signIn({ user }) {
+      // Guest orders are linked to the account only through an email the provider has VERIFIED.
+      // Auth.js stores email_verified = NULL for OAuth users, so stamp it from Google's claim here.
+      async signIn({ user, account, profile }) {
         if (!dbReady() || !user?.id || !user.email) return;
+        const verified = account?.provider === "google" &&
+          (profile as { email_verified?: boolean } | undefined)?.email_verified === true;
+        if (!verified) return;
         try {
-          const { db }           = await import("@/lib/db/client");
-          const { reservations } = await import("@/lib/db/schema");
-          const { and, isNull, sql } = await import("drizzle-orm");
-          await db
-            .update(reservations)
-            .set({ userId: user.id })
-            .where(and(isNull(reservations.userId), sql`lower(${reservations.email}) = ${user.email.toLowerCase()}`));
+          const { db } = await import("@/lib/db/client");
+          const { markEmailVerified, backfillUserId } = await import("@/lib/accounts/link");
+          await markEmailVerified(db, user.id);
+          await backfillUserId(db, user.id);
         } catch (e) {
           console.error("[auth] could not link orders to account:", e);
         }

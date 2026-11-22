@@ -1,7 +1,7 @@
 // GET /api/account/referrals — returns the signed-in user's referral code,
 // how many people redeemed it, and who they were (first name + city).
 import { NextResponse } from "next/server";
-import { auth }         from "@/auth";
+import { getAccount }   from "@/lib/accounts/session";
 
 const dbReady = () =>
   !!(process.env.DATABASE_URL &&
@@ -17,9 +17,13 @@ type ReferralResponse = {
 const EMPTY: ReferralResponse = { code: null, redemptions: 0, redeemedBy: [] };
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.email) {
+  const account = await getAccount();
+  if (!account) {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+  }
+  // Referral data is keyed by email — only hand it to the holder of a VERIFIED one.
+  if (!account.emailVerified || !account.email) {
+    return NextResponse.json(EMPTY);
   }
 
   if (!dbReady()) {
@@ -34,7 +38,7 @@ export async function GET() {
     const [regular] = await db
       .select({ referralCode: regulars.referralCode })
       .from(regulars)
-      .where(eq(regulars.email, session.user.email))
+      .where(eq(regulars.email, account.email))
       .limit(1);
 
     if (!regular) {

@@ -31,6 +31,8 @@ export interface CreateReservationInput {
   balancePaise:  number;
   /** Already validated by checkReferral(). */
   referralCode?: string | null;
+  waOptIn?:      boolean;
+  balanceMethod?: "online" | "cod" | null;
 }
 
 export interface CreateReservationOptions {
@@ -90,6 +92,8 @@ export async function createReservation(
       {
         userId:        input.userId,
         referralCode:  input.referralCode ?? null,
+        waOptIn:       input.waOptIn ?? false,
+        balanceMethod: input.balanceMethod ?? null,
         email:         input.email,
         name:          input.name,
         phone:         input.phone,

@@ -14,16 +14,14 @@ import { eq }                   from "drizzle-orm";
 import { db, dbReady }          from "@/lib/db/client";
 import { reservations, reservationItems } from "@/lib/db/schema";
 import { verifyReceiptToken }   from "@/lib/orders/receiptToken";
-import { auth }                 from "@/auth";
+import { getAccount }            from "@/lib/accounts/session";
 
 async function sessionOwns(order: { userId: string | null; email: string }): Promise<boolean> {
-  try {
-    const session = await auth();
-    const u = session?.user;
-    if (!u) return false;
-    if (u.id && order.userId && u.id === order.userId) return true;
-    return !!u.email && u.email.toLowerCase() === order.email.toLowerCase();
-  } catch { return false; }
+  const account = await getAccount();
+  if (!account) return false;
+  if (order.userId) return order.userId === account.userId;
+  // Unclaimed guest order: only the holder of the VERIFIED email may see it.
+  return account.emailVerified && !!account.email && account.email === order.email.trim().toLowerCase();
 }
 
 export async function GET(

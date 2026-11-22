@@ -4,11 +4,12 @@ import { auth }         from "@/auth";
 
 import { db, dbReady } from "@/lib/db/client";
 import { reservations } from "@/lib/db/schema";
-import { desc, or, eq, sql } from "drizzle-orm";
+import { desc } from "drizzle-orm";
+import { getAccount, ownedBy } from "@/lib/accounts/session";
 
 export async function GET() {
   const session = await auth();
-  if (!session?.user?.email) {
+  if (!session?.user?.id && !session?.user?.email) {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   }
 
@@ -17,6 +18,8 @@ export async function GET() {
   }
 
   try {
+    const account = await getAccount();
+    if (!account) return NextResponse.json([]); // signed in, but no such user row yet → nothing to show
     const orders = await db
       .select({
         id:           reservations.id,
@@ -27,11 +30,8 @@ export async function GET() {
         createdAt:    reservations.createdAt,
       })
       .from(reservations)
-      // Linked to the account by user_id, or (older / guest orders) by email.
-      .where(or(
-        session.user.id ? eq(reservations.userId, session.user.id) : undefined,
-        sql`lower(${reservations.email}) = ${session.user.email.toLowerCase()}`,
-      ))
+      // By user_id, falling back to the account's VERIFIED email (older / guest orders).
+      .where(ownedBy(account))
       .orderBy(desc(reservations.createdAt))
       .limit(20);
 

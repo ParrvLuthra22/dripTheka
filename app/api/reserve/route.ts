@@ -13,20 +13,20 @@ import { NextResponse }  from "next/server";
 import { z }             from "zod";
 import { eq, sql }       from "drizzle-orm";
 import { POUR_001, isPouring } from "@/data/pour-001";
-import { depositPaiseFor, isPourClosed } from "@/lib/config";
+import { POUR, depositPaiseFor, isPourClosed } from "@/lib/config";
 import { createRazorpayOrder, getPublicKeyId } from "@/lib/razorpay/client";
 import { db, dbReady }                    from "@/lib/db/client";
-import { reservations, users }            from "@/lib/db/schema";
+import { reservations }                   from "@/lib/db/schema";
 import type { ShippingAddress }           from "@/lib/db/schema";
 import { createReservation, type ReservationLine } from "@/lib/reservations/create";
 import { TappedOutError }                 from "@/lib/reservations/capacity";
 import { checkReferral }                  from "@/lib/referrals/check";
-import { auth }                           from "@/auth";
+import { getAccount }                     from "@/lib/accounts/session";
 
 const bodySchema = z.object({
   email:   z.string().email(),
   name:    z.string().min(2),
-  phone:   z.string().regex(/^[6-9]\d{9}$/, "Invalid mobile number"),
+  phone:   z.string().regex(/^[6-9]\d{9}$/, "Invalid mobile number"),   // Indian mobile
   address: z.object({
     line1:   z.string().min(5),
     line2:   z.string().optional(),
@@ -35,29 +35,13 @@ const bodySchema = z.object({
     pincode: z.string().regex(/^\d{6}$/, "Invalid pincode"),
   }),
   referralCode: z.string().trim().length(8).optional(),
+  waOptIn:       z.boolean().optional(),
+  balanceMethod: z.enum(["online", "cod"]).optional(),
   items: z
     .array(z.object({ slug: z.string(), size: z.string(), qty: z.number().int().positive().max(10) }))
     .min(1)
     .max(20),
 });
-
-/** The signed-in user's id (must exist in `users`), or null for guests. */
-async function currentUserId(): Promise<string | null> {
-  try {
-    const session = await auth();
-    const id = session?.user?.id;
-    const email = session?.user?.email?.toLowerCase();
-    if (id) {
-      const [u] = await db.select({ id: users.id }).from(users).where(eq(users.id, id)).limit(1);
-      if (u) return u.id;
-    }
-    if (email) {
-      const [u] = await db.select({ id: users.id }).from(users).where(sql`lower(${users.email}) = ${email}`).limit(1);
-      if (u) return u.id;
-    }
-  } catch { /* no session / auth not configured → guest */ }
-  return null;
-}
 
 export async function POST(request: Request) {
   // 0. The pour closes at POUR.closesAt. (Payments for existing holds still settle — only NEW reservations stop.)
@@ -74,7 +58,13 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid request" }, { status: 400 });
   }
-  const { name, phone, address, items } = parsed.data;
+  const { name, phone, address, items, waOptIn, balanceMethod } = parsed.data;
+  if (balanceMethod && !POUR.balance[balanceMethod]) {
+    return NextResponse.json(
+      { code: "BALANCE_METHOD_UNAVAILABLE", error: `Paying the balance by ${balanceMethod} isn't available for this pour.` },
+      { status: 400 },
+    );
+  }
   const email = parsed.data.email.trim().toLowerCase();
 
   // 2. Resolve products + price (server-side prices only)
@@ -113,7 +103,7 @@ export async function POST(request: Request) {
   }
 
   // Referral: must exist and must not be the buyer's own (email, phone or account).
-  const userId = await currentUserId();
+  const userId = (await getAccount())?.userId ?? null;   // set when the visitor is signed in
   let referralCode: string | null = null;
   if (parsed.data.referralCode) {
     const verdict = await checkReferral(db, parsed.data.referralCode, { email, phone, userId });
@@ -133,7 +123,7 @@ export async function POST(request: Request) {
   try {
     ({ reservationId, orderNumber } = await createReservation(
       {
-        userId, referralCode,
+        userId, referralCode, waOptIn, balanceMethod,
         email, name, phone, address: address as ShippingAddress,
         lines, subtotalPaise, depositPaise, balancePaise,
       },

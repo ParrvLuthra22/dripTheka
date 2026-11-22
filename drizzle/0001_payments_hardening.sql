@@ -67,8 +67,8 @@ CREATE INDEX IF NOT EXISTS "reservation_items_reservation_idx" ON "reservation_i
 -- Data fixes (idempotent), before the unique indexes below.
 -- 1. Old rows used the literal 'pending' as the placeholder order id; make them unique.
 UPDATE "reservations" SET "razorpay_order_id" = 'pending:' || "id" WHERE "razorpay_order_id" = 'pending';--> statement-breakpoint
--- 2. Link existing orders to accounts where the email matches a user.
-UPDATE "reservations" r SET "user_id" = u."id" FROM "users" u WHERE r."user_id" IS NULL AND lower(u."email") = lower(r."email");--> statement-breakpoint
+-- 2. Link existing orders to accounts ONLY through a verified email (users.email_verified IS NOT NULL).
+UPDATE "reservations" r SET "user_id" = u."id" FROM "users" u WHERE r."user_id" IS NULL AND u."email_verified" IS NOT NULL AND lower(u."email") = lower(r."email");--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "reservations_razorpay_order_id_unique" ON "reservations" USING btree ("razorpay_order_id");--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "reservations_razorpay_payment_id_unique" ON "reservations" USING btree ("razorpay_payment_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "reservations_email_idx" ON "reservations" USING btree ("email");--> statement-breakpoint

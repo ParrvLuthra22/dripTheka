@@ -130,6 +130,8 @@ export const reservations = pgTable("reservations", {
   razorpayOrderId:    text("razorpay_order_id").notNull(),
   razorpayPaymentId:  text("razorpay_payment_id"),              // set after payment
   referralCode:       text("referral_code"),                     // referrer's code, validated at reserve time
+  waOptIn:            boolean("wa_opt_in").notNull().default(false), // OK to message about this order on WhatsApp
+  balanceMethod:      text("balance_method").$type<"online" | "cod">(), // how they'll pay the balance; null = not chosen
   status:             reservationStatusEnum("status").notNull().default("pending"),
   createdAt:          timestamp("created_at").defaultNow().notNull(),
   updatedAt:          timestamp("updated_at").defaultNow().notNull(),
@@ -139,6 +141,7 @@ export const reservations = pgTable("reservations", {
   index("reservations_email_idx").on(t.email),
   index("reservations_user_id_idx").on(t.userId),
   index("reservations_status_created_idx").on(t.status, t.createdAt),
+  check("reservations_balance_method_check", sql`${t.balanceMethod} IS NULL OR ${t.balanceMethod} IN ('online', 'cod')`),
 ]);
 
 // ── reservation_items ─────────────────────────────────────────────────────
