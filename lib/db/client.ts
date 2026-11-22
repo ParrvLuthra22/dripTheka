@@ -1,32 +1,32 @@
 // Drip Theka — Postgres + Drizzle ORM client.
 //
-// Pooled, transaction-capable driver (the old neon-http driver could not run
-// interactive transactions, which the payment + capacity logic needs):
-//   • Neon hosts (*.neon.tech)  → @neondatabase/serverless Pool over WebSocket
-//   • anything else (local dev, test DB, CI) → node-postgres
+// node-postgres (`pg`) Pool over TCP, for every host — local, CI and Neon.
+// Transaction-capable (the payment + capacity logic needs real interactive transactions).
+//
+// Why not Neon's WebSocket Pool: Neon's current guidance for Vercel *Fluid compute* is
+// "use a standard Postgres TCP driver (node-postgres) and a connection pool", created at
+// module scope and registered with `attachDatabasePool` from @vercel/functions, which
+// closes idle clients before the instance is suspended so they can't leak across
+// invocations. (https://neon.com/docs/guides/vercel-connection-methods) The serverless
+// driver is for runtimes that can't keep a pool between requests. Use Neon's POOLED
+// connection string (host contains "-pooler") so many instances share a few server connections.
 //
 // MODULE SAFETY: constructing a Pool opens no connection, so importing this
 // during `next build` without DATABASE_URL is safe. With no usable URL every
 // query fails with a network error at runtime — deliberately loud.
 
-import { Pool as NeonPool, neonConfig } from "@neondatabase/serverless";
-import { drizzle as drizzleNeon }       from "drizzle-orm/neon-serverless";
-import { drizzle as drizzlePg }         from "drizzle-orm/node-postgres";
-import type { NodePgDatabase }          from "drizzle-orm/node-postgres";
-import { Pool as PgPool }               from "pg";
-import ws                               from "ws";
-import * as schema                      from "./schema";
-import { randomInt }                    from "node:crypto";
+import { drizzle }          from "drizzle-orm/node-postgres";
+import type { NodePgDatabase } from "drizzle-orm/node-postgres";
+import { Pool }             from "pg";
+import { attachDatabasePool } from "@vercel/functions";
+import * as schema          from "./schema";
+import { randomInt }        from "node:crypto";
 
 const FALLBACK_URL = "postgresql://noop:noop@127.0.0.1:1/noop";
 
 const rawUrl = process.env.DATABASE_URL;
 const DATABASE_URL: string =
   rawUrl && rawUrl !== "REPLACE_ME" && !rawUrl.includes("placeholder") ? rawUrl : FALLBACK_URL;
-
-function isNeonHost(url: string): boolean {
-  try { return new URL(url).hostname.endsWith(".neon.tech"); } catch { return false; }
-}
 
 /** Drizzle client. Use `db.transaction(async (tx) => …)` for anything multi-statement. */
 export type Db = NodePgDatabase<typeof schema>;
@@ -36,16 +36,18 @@ export type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 const g = globalThis as unknown as { __dtDb?: Db; __dtDbUrl?: string };
 
 function build(): Db {
-  if (isNeonHost(DATABASE_URL)) {
-    neonConfig.webSocketConstructor = (globalThis as { WebSocket?: typeof WebSocket }).WebSocket ?? (ws as unknown as typeof WebSocket);
-    const pool = new NeonPool({ connectionString: DATABASE_URL, max: 5 });
-    return drizzleNeon(pool, { schema }) as unknown as Db;
-  }
-  const pool = new PgPool({ connectionString: DATABASE_URL, max: 10 });
-  return drizzlePg(pool, { schema });
+  const pool = new Pool({
+    connectionString:        DATABASE_URL,
+    max:                     8,
+    connectionTimeoutMillis: 10_000,
+    idleTimeoutMillis:       10_000,
+  });
+  // On Vercel, hand the pool to the platform so idle connections are released before suspension.
+  if (process.env.VERCEL) attachDatabasePool(pool);
+  return drizzle(pool, { schema });
 }
 
-// Reuse across dev HMR reloads / warm serverless invocations.
+// One pool per instance: reused across warm invocations and dev HMR reloads.
 export const db: Db =
   g.__dtDb && g.__dtDbUrl === DATABASE_URL ? g.__dtDb : (g.__dtDb = build(), g.__dtDbUrl = DATABASE_URL, g.__dtDb);
 

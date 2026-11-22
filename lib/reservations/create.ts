@@ -27,6 +27,8 @@ export interface CreateReservationInput {
   subtotalPaise: number;
   depositPaise:  number;
   balancePaise:  number;
+  /** Already validated by checkReferral(). */
+  referralCode?: string | null;
 }
 
 export interface CreateReservationOptions {
@@ -76,6 +78,7 @@ export async function createReservation(
       tx,
       {
         userId:        input.userId,
+        referralCode:  input.referralCode ?? null,
         email:         input.email,
         name:          input.name,
         phone:         input.phone,

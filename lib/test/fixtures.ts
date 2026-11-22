@@ -9,14 +9,16 @@ export async function seedReservation(o: {
   slug?: string; qty?: number; status?: typeof reservations.$inferInsert["status"];
   depositPaise?: number; orderId?: string; paymentId?: string | null;
   orderNumber?: string; ageMinutes?: number; email?: string;
+  phone?: string; referralCode?: string | null; userId?: string | null;
 } = {}) {
   n++;
   const depositPaise = o.depositPaise ?? 38970;
   const qty = o.qty ?? 1;
   const [r] = await db.insert(reservations).values({
-    orderNumber:       o.orderNumber ?? `DT-2026-SEED${String(n).padStart(6, "0")}`,
+    orderNumber:       o.orderNumber ?? `DT-SEED${String(n).padStart(6, "0")}`,
     email:             o.email ?? `buyer${n}@example.com`,
-    name: "Test Buyer", phone: "9876543210",
+    name: "Test Buyer", phone: o.phone ?? "9876543210",
+    referralCode: o.referralCode ?? null, userId: o.userId ?? null,
     address: { line1: "12 Test Street", city: "Delhi", state: "Delhi", pincode: "110001" },
     subtotalPaise:     Math.round(depositPaise / 0.3),
     depositPaise,

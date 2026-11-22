@@ -20,6 +20,7 @@ import { reservations, users }            from "@/lib/db/schema";
 import type { ShippingAddress }           from "@/lib/db/schema";
 import { createReservation, type ReservationLine } from "@/lib/reservations/create";
 import { TappedOutError }                 from "@/lib/reservations/capacity";
+import { checkReferral }                  from "@/lib/referrals/check";
 import { auth }                           from "@/auth";
 
 const bodySchema = z.object({
@@ -33,6 +34,7 @@ const bodySchema = z.object({
     state:   z.string().min(2),
     pincode: z.string().regex(/^\d{6}$/, "Invalid pincode"),
   }),
+  referralCode: z.string().trim().length(8).optional(),
   items: z
     .array(z.object({ slug: z.string(), size: z.string(), qty: z.number().int().positive().max(10) }))
     .min(1)
@@ -100,22 +102,24 @@ export async function POST(request: Request) {
   const depositPaise = depositPaiseFor(subtotalPaise);
   const balancePaise = subtotalPaise - depositPaise;
 
-  // ── No database ─────────────────────────────────────────────────────────
+  // No database → no reservation. Never take money without a record of it (in any environment).
   if (!dbReady()) {
-    // Stub reservations exist for `next dev` only. Never take money without a record of it.
-    if (process.env.NODE_ENV !== "development") {
-      return NextResponse.json({ error: "Reservations are temporarily unavailable." }, { status: 503 });
+    return NextResponse.json({ error: "Reservations are temporarily unavailable." }, { status: 503 });
+  }
+
+  // Referral: must exist and must not be the buyer's own (email, phone or account).
+  const userId = await currentUserId();
+  let referralCode: string | null = null;
+  if (parsed.data.referralCode) {
+    const verdict = await checkReferral(db, parsed.data.referralCode, { email, phone, userId });
+    if (!verdict.ok) {
+      return NextResponse.json(
+        { error: verdict.reason === "self_referral" ? "You can't use your own referral code." : "That referral code doesn't exist.",
+          code: verdict.reason === "self_referral" ? "SELF_REFERRAL" : "UNKNOWN_REFERRAL" },
+        { status: 400 },
+      );
     }
-    console.log("[reserve:dev] DB not set — returning stub reservation");
-    let rpOrder: { id: string; amount: number };
-    try {
-      rpOrder = await createRazorpayOrder(depositPaise, `dev-${Date.now()}`);
-    } catch {
-      rpOrder = { id: `order_dev_${Date.now()}`, amount: depositPaise };
-    }
-    return NextResponse.json({
-      reservationId: `dev-${Date.now()}`, razorpayOrderId: rpOrder.id, depositPaise, keyId: getPublicKeyId(),
-    });
+    referralCode = verdict.code;
   }
 
   // 3. Reserve (capacity-checked, transactional)
@@ -124,7 +128,7 @@ export async function POST(request: Request) {
   try {
     ({ reservationId, orderNumber } = await createReservation(
       {
-        userId: await currentUserId(),
+        userId, referralCode,
         email, name, phone, address: address as ShippingAddress,
         lines, subtotalPaise, depositPaise, balancePaise,
       },

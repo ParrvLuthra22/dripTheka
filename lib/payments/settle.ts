@@ -9,7 +9,7 @@
 
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { db, type Tx } from "@/lib/db/client";
-import { paymentEvents, pourProgress, reservationItems, reservations } from "@/lib/db/schema";
+import { paymentEvents, pourProgress, referralRedemptions, referrals, reservationItems, reservations } from "@/lib/db/schema";
 import { POUR_SLUG } from "@/lib/config";
 import { checkPaidOrder, type PaymentRejection, type RazorpayOrderLike } from "./check";
 
@@ -50,7 +50,20 @@ export async function markDepositPaid(tx: Tx, reservationId: string, paymentId: 
     .returning({ id: reservations.id });
   if (!row) return false;
   await bumpProgress(tx, await unitsOf(tx, reservationId));
+  await redeemReferral(tx, reservationId);
   return true;
+}
+
+/** Count the reservation's referral code once. UNIQUE(reservation_id) makes a replay a no-op. */
+async function redeemReferral(tx: Tx, reservationId: string): Promise<void> {
+  const [r] = await tx.select({ code: reservations.referralCode }).from(reservations).where(eq(reservations.id, reservationId)).limit(1);
+  if (!r?.code) return;
+  const inserted = await tx.insert(referralRedemptions)
+    .values({ reservationId, code: r.code })
+    .onConflictDoNothing({ target: referralRedemptions.reservationId })
+    .returning({ id: referralRedemptions.id });
+  if (inserted.length === 0) return;
+  await tx.update(referrals).set({ redemptions: sql`${referrals.redemptions} + 1` }).where(eq(referrals.code, r.code));
 }
 
 /** pending → failed. The row is kept. */
@@ -85,11 +98,9 @@ export type ConfirmOutcome =
  * Settle a payment the browser says succeeded. The caller has ALREADY verified the
  * Razorpay signature. This binds the payment to the reservation, re-checks the order
  * with Razorpay (server-side) and flips the status. Idempotent.
- *
- * `devStub`: `next dev` only — skips the Razorpay fetch for `order_dev_*` orders.
  */
 export async function settleConfirmedPayment(
-  args: { reservationId: string; orderId: string; paymentId: string; devStub?: boolean },
+  args: { reservationId: string; orderId: string; paymentId: string },
   deps: { fetchOrder: FetchOrder },
 ): Promise<ConfirmOutcome> {
   const [r] = await db.select().from(reservations).where(eq(reservations.id, args.reservationId)).limit(1);
@@ -101,9 +112,7 @@ export async function settleConfirmedPayment(
   if ((PAID_STATUSES as readonly string[]).includes(r.status)) return { ok: true, changed: false, reservation: r };
   if (!(PAYABLE_STATUSES as readonly string[]).includes(r.status)) return { ok: false, reason: "not_payable" };
 
-  const rzp: RazorpayOrderLike = args.devStub
-    ? { id: r.razorpayOrderId, amount: r.depositPaise, amount_paid: r.depositPaise, currency: "INR", status: "paid" }
-    : await deps.fetchOrder(args.orderId); // network errors propagate → caller answers 5xx, webhook will catch up
+  const rzp: RazorpayOrderLike = await deps.fetchOrder(args.orderId); // network errors propagate → caller answers 5xx, webhook will catch up
 
   const check = checkPaidOrder(rzp, r, args.orderId);
   if (!check.ok) return { ok: false, reason: check.reason };

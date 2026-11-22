@@ -1,16 +1,18 @@
 // GET /api/admin/stats — internal dashboard data.
 //
-// Protected by ADMIN_SECRET env var. Returns aggregate metrics:
+// Protected by ADMIN_SECRET, sent as `Authorization: Bearer <secret>` (never in the URL —
+// query strings end up in logs, history and referrers). Returns aggregate metrics:
 //   - Total reservations by status
 //   - Total deposit collected (paise)
 //   - Recent regulars (last 10)
 //   - Pour progress
 //   - Revenue breakdown
 //
-// Usage: curl "http://localhost:3000/api/admin/stats?secret=YOUR_SECRET"
+// Usage: curl -H "Authorization: Bearer $ADMIN_SECRET" http://localhost:3000/api/admin/stats
 // Set ADMIN_SECRET in .env.local to enable.
 
 import { NextResponse } from "next/server";
+import { timingSafeEqual, createHash } from "node:crypto";
 
 export const dynamic = "force-dynamic";
 
@@ -20,18 +22,20 @@ const dbReady = () =>
      process.env.DATABASE_URL !== "REPLACE_ME");
 
 export async function GET(request: Request) {
-  // Auth check
-  const { searchParams } = new URL(request.url);
-  const secret = searchParams.get("secret");
+  // Auth check — Bearer header only. A `?secret=` query string is ignored.
   const adminSecret = process.env.ADMIN_SECRET;
 
   if (!adminSecret || adminSecret === "REPLACE_ME") {
-    // No secret configured — block in production, allow in development
-    if (process.env.NODE_ENV === "production") {
+    // No secret configured — block everywhere except local `next dev`.
+    if (process.env.NODE_ENV !== "development") {
       return NextResponse.json({ error: "ADMIN_SECRET not configured" }, { status: 403 });
     }
-  } else if (secret !== adminSecret) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  } else {
+    const m = /^Bearer (.+)$/.exec(request.headers.get("authorization") ?? "");
+    const digest = (v: string) => createHash("sha256").update(v).digest();
+    if (!m || !timingSafeEqual(digest(m[1]), digest(adminSecret))) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
   }
 
   if (!dbReady()) {

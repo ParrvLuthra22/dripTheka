@@ -112,11 +112,11 @@ export const regulars = pgTable("regulars", {
 });
 
 // ── reservations ──────────────────────────────────────────────────────────
-// A reservation = one deposit-based pre-order. Order number format: DT-2026-XXXXX.
+// A reservation = one deposit-based pre-order. Order number format: DT-XXXXXXXXXX.
 
 export const reservations = pgTable("reservations", {
   id:                 uuid("id").primaryKey().defaultRandom(),
-  orderNumber:        text("order_number").notNull().unique(),   // DT-YYYY-NNNNN
+  orderNumber:        text("order_number").notNull().unique(),   // DT-XXXXXXXXXX
   userId:             text("user_id").references(() => users.id, { onDelete: "set null" }), // nullable — guest checkout
   email:              text("email").notNull(),
   name:               text("name").notNull(),
@@ -128,6 +128,7 @@ export const reservations = pgTable("reservations", {
   // `pending:<reservation id>` until the Razorpay order exists, so the unique index below holds.
   razorpayOrderId:    text("razorpay_order_id").notNull(),
   razorpayPaymentId:  text("razorpay_payment_id"),              // set after payment
+  referralCode:       text("referral_code"),                     // referrer's code, validated at reserve time
   status:             reservationStatusEnum("status").notNull().default("pending"),
   createdAt:          timestamp("created_at").defaultNow().notNull(),
   updatedAt:          timestamp("updated_at").defaultNow().notNull(),
@@ -181,6 +182,20 @@ export const referrals = pgTable("referrals", {
   redemptions: integer("redemptions").notNull().default(0),
   createdAt:   timestamp("created_at").defaultNow().notNull(),
 });
+
+// ── referral_redemptions ──────────────────────────────────────────────────
+// One row per reservation that used a referral code, written in the same transaction
+// that marks the deposit paid. UNIQUE(reservation_id) = at most one redemption per reservation.
+
+export const referralRedemptions = pgTable("referral_redemptions", {
+  id:            uuid("id").primaryKey().defaultRandom(),
+  reservationId: uuid("reservation_id").notNull().references(() => reservations.id, { onDelete: "cascade" }),
+  code:          text("code").notNull().references(() => referrals.code, { onDelete: "cascade" }),
+  createdAt:     timestamp("created_at").defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("referral_redemptions_reservation_unique").on(t.reservationId),
+  index("referral_redemptions_code_idx").on(t.code),
+]);
 
 // ── reserve_count_cache ───────────────────────────────────────────────────
 // Cached reservation count per product — updated after each deposit_paid event.

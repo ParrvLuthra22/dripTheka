@@ -13,7 +13,7 @@ interface Props {
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const params      = await searchParams;
-  const orderNumber = params.orderNumber ?? params.orderId ?? "DT-2026-XXXXX";
+  const orderNumber = params.orderNumber ?? params.orderId ?? "DT-XXXXXXXXXX";
   const deposit     = params.deposit ?? "0";
   const total       = params.total   ?? "0";
 
@@ -41,7 +41,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 
 export default async function CheckoutSuccessPage({ searchParams }: Props) {
   const params      = await searchParams;
-  const orderNumber = params.orderNumber ?? params.orderId ?? "DT-2026-00001";
+  const orderNumber = params.orderNumber ?? params.orderId ?? "DT-XXXXXXXXXX";
   const deposit     = Number(params.deposit ?? 0);
   const total       = Number(params.total   ?? 0);
 

@@ -43,28 +43,13 @@ export interface RazorpayOrderResult {
   amount: number; // paise
 }
 
-/**
- * Create a Razorpay order.
- *
- * In development without credentials:
- *   returns a fake `order_dev_*` ID so the checkout page can be tested
- *   without a real Razorpay account.
- *
- * In production: throws if credentials are missing.
- */
+/** Create a Razorpay order. Throws if credentials are missing — there is no stub mode. */
 export async function createRazorpayOrder(
   amount:  number,          // paise
   receipt: string,          // e.g. reservation ID
   notes?:  Record<string, string>,
 ): Promise<RazorpayOrderResult> {
-  if (!isConfigured()) {
-    // Stub orders exist ONLY for `next dev`. Anywhere else, missing keys are an error.
-    if (process.env.NODE_ENV !== "development") {
-      throw new Error("Razorpay credentials not configured");
-    }
-    console.log(`[razorpay:dev] stub order — ₹${amount / 100}, receipt=${receipt}`);
-    return { id: `order_dev_${Date.now()}`, amount };
-  }
+  if (!isConfigured()) throw new Error("Razorpay credentials not configured");
 
   const auth = Buffer.from(
     `${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_KEY_SECRET}`
@@ -93,7 +78,7 @@ export async function createRazorpayOrder(
  * Verify a Razorpay payment signature.
  * HMAC-SHA256(orderId + "|" + paymentId) using RAZORPAY_KEY_SECRET.
  *
- * Returns `false` when credentials are missing (dev stub IDs bypass this).
+ * Returns `false` when credentials are missing. There is no bypass.
  */
 export function verifyPaymentSignature(
   orderId:   string,

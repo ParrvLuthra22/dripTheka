@@ -78,20 +78,20 @@ test("capacity is per colourway: a full slug doesn't block another", async () =>
 // ── order numbers ─────────────────────────────────────────────────────────
 
 test("order number collision: retries with a fresh number instead of failing", async () => {
-  await seedReservation({ orderNumber: "DT-2026-COLLIDEME1" });
-  const seq = ["DT-2026-COLLIDEME1", "DT-2026-COLLIDEME1", "DT-2026-FRESHNUMBR2"];
+  await seedReservation({ orderNumber: "DT-COLLIDEME1" });
+  const seq = ["DT-COLLIDEME1", "DT-COLLIDEME1", "DT-FRESHNUMBR2"];
   let calls = 0;
   const res = await createReservation(input("oc"), { capacityOf: () => 10, generateOrderNumber: () => seq[calls++] });
-  assert.equal(res.orderNumber, "DT-2026-FRESHNUMBR2");
+  assert.equal(res.orderNumber, "DT-FRESHNUMBR2");
   assert.equal(calls, 3);
-  const { rows } = await db.execute(sql`SELECT count(*)::int AS n FROM reservations WHERE order_number = 'DT-2026-COLLIDEME1'`);
+  const { rows } = await db.execute(sql`SELECT count(*)::int AS n FROM reservations WHERE order_number = 'DT-COLLIDEME1'`);
   assert.equal((rows[0] as { n: number }).n, 1);
 });
 
 test("order number collision: gives up with an error (and writes nothing) if it can never get a unique number", async () => {
-  await seedReservation({ orderNumber: "DT-2026-ALWAYSTAKEN" });
+  await seedReservation({ orderNumber: "DT-ALWAYSTAKEN" });
   await assert.rejects(
-    createReservation(input("oc2"), { capacityOf: () => 10, generateOrderNumber: () => "DT-2026-ALWAYSTAKEN", maxOrderNumberAttempts: 3 }),
+    createReservation(input("oc2"), { capacityOf: () => 10, generateOrderNumber: () => "DT-ALWAYSTAKEN", maxOrderNumberAttempts: 3 }),
     /unique order number/,
   );
   const { rows } = await db.execute(sql`SELECT count(*)::int AS n FROM reservation_items WHERE product_slug = 'oc2'`);
@@ -99,6 +99,6 @@ test("order number collision: gives up with an error (and writes nothing) if it 
 });
 
 test("DB enforces unique order numbers", async () => {
-  await seedReservation({ orderNumber: "DT-2026-UNIQUECHECK" });
-  await assert.rejects(seedReservation({ orderNumber: "DT-2026-UNIQUECHECK" }));
+  await seedReservation({ orderNumber: "DT-UNIQUECHECK" });
+  await assert.rejects(seedReservation({ orderNumber: "DT-UNIQUECHECK" }));
 });

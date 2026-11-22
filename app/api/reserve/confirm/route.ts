@@ -1,8 +1,7 @@
 // POST /api/reserve/confirm — called by the browser after Razorpay Checkout succeeds.
 //
 //   1. Validate body
-//   2. ALWAYS verify the Razorpay signature (HMAC of order_id|payment_id).
-//      The only exception is `next dev` with a stub `order_dev_*` order.
+//   2. ALWAYS verify the Razorpay signature (HMAC of order_id|payment_id). No bypass, in any environment.
 //   3. settleConfirmedPayment(): the order must be the one stored on THIS
 //      reservation; Razorpay is asked (server-side) for the order, whose amount
 //      must equal the deposit, currency INR, status paid; then pending → deposit_paid.
@@ -38,19 +37,12 @@ export async function POST(request: Request) {
   }
   const { reservationId, razorpay_payment_id, razorpay_order_id, razorpay_signature } = parsed.data;
 
-  // Stub orders are minted only by `next dev` without Razorpay keys; they can never exist elsewhere.
-  const devStub = process.env.NODE_ENV === "development" && razorpay_order_id.startsWith("order_dev_");
-
-  if (!devStub && !verifyPaymentSignature(razorpay_order_id, razorpay_payment_id, razorpay_signature)) {
+  if (!verifyPaymentSignature(razorpay_order_id, razorpay_payment_id, razorpay_signature)) {
     console.warn("[confirm] Invalid Razorpay signature for order:", razorpay_order_id);
     return NextResponse.json({ error: "Invalid payment signature" }, { status: 400 });
   }
 
   if (!dbReady()) {
-    if (devStub) {
-      console.log(`[confirm:dev] stub payment accepted, reservationId=${reservationId}`);
-      return NextResponse.json({ ok: true, orderNumber: `DT-${new Date().getFullYear()}-DEV01` });
-    }
     return NextResponse.json({ error: "Reservations are temporarily unavailable." }, { status: 503 });
   }
 
@@ -60,7 +52,7 @@ export async function POST(request: Request) {
 
   try {
     const outcome = await settleConfirmedPayment(
-      { reservationId, orderId: razorpay_order_id, paymentId: razorpay_payment_id, devStub },
+      { reservationId, orderId: razorpay_order_id, paymentId: razorpay_payment_id },
       { fetchOrder: fetchRazorpayOrder },
     );
 

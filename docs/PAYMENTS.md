@@ -39,14 +39,14 @@ Each event is processed once: its `X-Razorpay-Event-Id` is stored in `payment_ev
 
 | Var | Needed for | Notes |
 |---|---|---|
-| `DATABASE_URL` | everything | Neon URL in prod (WebSocket pool, transactions). Any other host uses `pg`. |
+| `DATABASE_URL` | everything | Neon **pooled** URL (host has `-pooler`) in prod. One node-postgres `Pool` per instance, registered with `attachDatabasePool` on Vercel (Neon's current Fluid-compute guidance). |
 | `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` / `NEXT_PUBLIC_RAZORPAY_KEY_ID` | orders, confirm, order fetch | `rzp_test_*` while testing, `rzp_live_*` in prod. |
 | **`RAZORPAY_WEBHOOK_SECRET`** | webhook | **New.** The secret you type into the Razorpay dashboard webhook form (below). Not the API key secret. Without it the webhook answers `503`. |
 | **`RECEIPT_TOKEN_SECRET`** | signed receipt links | **New.** Any long random string (`openssl rand -base64 32`). Falls back to `AUTH_SECRET`. Rotating it invalidates old receipt links (logged-in owners can still see their orders). |
 | `RAZORPAY_API_BASE` | tests only | Honoured only if it points at `localhost`/`127.0.0.1`. Used to run end-to-end tests against a local Razorpay stub. Leave unset. |
 | `TEST_DATABASE_URL` | `pnpm test:payments` | Local/branch DB only — see Tests. |
 
-Missing Razorpay keys are an error everywhere except `next dev` (where stub `order_dev_*` orders still work; they're rejected in production builds). With no `DATABASE_URL`, reserve/confirm answer `503` outside `next dev` — the app never takes money without a record of it.
+There is **no stub / bypass mode** in any environment: missing Razorpay keys are an error, `confirm` always verifies the signature, and with no `DATABASE_URL` reserve/confirm answer `503` — the app never takes money without a record of it.
 
 ## Razorpay dashboard setup (do this in Test mode first, then Live)
 
@@ -89,4 +89,4 @@ docker exec dt-pg createdb -U postgres drip_test
 TEST_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54329/drip_test pnpm test:payments
 ```
 
-Covered: amount / order-id mismatch (including "pay a cheap order, confirm an expensive one"), idempotent and concurrent confirm, replayed and concurrently-delivered webhooks, closed-tab recovery, failed/refund events, capacity race for the last slot, pending-hold expiry, order-number collision retry, signed receipt tokens.
+Covered: referral self-checks (email/phone/user) and one redemption per reservation, admin auth (Bearer only; db-setup/db-test 404 in production), no `order_dev_` bypass, amount / order-id mismatch (including "pay a cheap order, confirm an expensive one"), idempotent and concurrent confirm, replayed and concurrently-delivered webhooks, closed-tab recovery, failed/refund events, capacity race for the last slot, pending-hold expiry, order-number collision retry, signed receipt tokens.

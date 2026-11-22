@@ -1,15 +1,14 @@
-// Order numbers: DT-<year>-<10 chars>. The 10 chars come from an alphabet with
-// no look-alikes (no 0/O, 1/I, L) — 31^10 ≈ 8×10^14 values — drawn from a CSPRNG,
-// so they are neither guessable nor sequential. Uniqueness is enforced by the DB
-// (UNIQUE order_number); `insertWithUniqueOrderNumber` retries on collision.
+// Order numbers: DT-<10 chars>. The 10 chars come from a 32-letter alphabet with the
+// look-alikes removed (no 0, 1, I, O) — 32^10 ≈ 1.1×10^15 values — drawn with
+// crypto.randomInt, so they are neither guessable nor sequential. Uniqueness is
+// enforced by the DB (UNIQUE order_number); `insertWithUniqueOrderNumber` retries on collision.
 
 import { randomInt } from "node:crypto";
 
-export const ORDER_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+export const ORDER_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 export const ORDER_SUFFIX_LENGTH = 10;
 
 export function generateOrderNumber(): string {
-  const year = new Date().getFullYear();
   const suffix = Array.from({ length: ORDER_SUFFIX_LENGTH }, () => ORDER_ALPHABET[randomInt(ORDER_ALPHABET.length)]).join("");
-  return `DT-${year}-${suffix}`;
+  return `DT-${suffix}`;
 }

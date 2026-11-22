@@ -11,7 +11,7 @@ export const runtime = "edge";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const orderNumber = searchParams.get("orderNumber") ?? "DT-2026-XXXXX";
+  const orderNumber = searchParams.get("orderNumber") ?? "DT-XXXXXXXXXX";
   const deposit     = searchParams.get("deposit") ?? "0";
   const total       = searchParams.get("total")   ?? "0";
 

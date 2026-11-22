@@ -11,7 +11,7 @@ Where v2 sits: `app/(bar)/` = v2 (`/` Wall + Entry, `/product/[slug]`, `/story`)
 
 ## 1. API routes (`app/api/**`)
 
-Auth key: **none** = anyone on the internet; **session** = NextAuth session (matches by session email); **secret** = `?secret=` query param vs `ADMIN_SECRET`; **dev-only** = returns 404 when `NODE_ENV=production`.
+Auth key: **none** = anyone on the internet; **session** = NextAuth session (matches by session email); **secret** = `Authorization: Bearer` vs `ADMIN_SECRET`; **dev-only** = returns 404 when `NODE_ENV=production`.
 
 "DB-less mode": almost every route checks `dbReady()` (DATABASE_URL set and not `REPLACE_ME`/`placeholder`) and degrades to a stub when false. This is deliberate for local dev but see §8 — several stubs return fake *success* data.
 
@@ -26,7 +26,7 @@ Auth key: **none** = anyone on the internet; **session** = NextAuth session (mat
 | `/api/account/orders` | GET | session | Signed-in user's last 20 reservations, **matched by `reservations.email = session email`** (not `user_id`). | → `[{id, orderNumber, status, depositPaise, balancePaise, createdAt}]` (401 if signed out) | `reservations` |
 | `/api/account/referrals` | GET | session | The user's referral code, redemption count, and first-name + city of people they referred. | → `{code, redemptions, redeemedBy[]}` | `regulars`, `referrals` |
 | `/api/auth/[...nextauth]` | GET/POST | — | NextAuth v5 handlers (Google). See §5. | — | `users`, `accounts` (adapter; JWT sessions) |
-| `/api/admin/stats` | GET | secret (`?secret=`) | Internal dashboard JSON: reservations by status + deposit totals, last 10 regulars, `pour_progress`, top products by qty/revenue. If `ADMIN_SECRET` is unset it is **open in dev, 403 in prod**. | → aggregate JSON | `reservations`, `reservation_items`, `regulars`, `pour_progress` |
+| `/api/admin/stats` | GET | secret (Bearer header) | Internal dashboard JSON: reservations by status + deposit totals, last 10 regulars, `pour_progress`, top products by qty/revenue. If `ADMIN_SECRET` is unset it is **open in dev, 403 in prod**. | → aggregate JSON | `reservations`, `reservation_items`, `regulars`, `pour_progress` |
 | `/api/admin/db-setup` | GET | dev-only | DB health check; seeds `pour_progress`/`reserve_count_cache` if empty. | → table-existence + counts | `pour_progress`, `regulars`, `reservations`, `reserve_count_cache` |
 | `/api/db-test` | GET | dev-only | Dumps `pour_progress`. | → rows | `pour_progress` |
 | `/api/razorpay` | POST | none | **Legacy, unused.** Creates a Razorpay order for a *client-supplied* `depositAmount`. Nothing in the app calls it. | `{depositAmount,totalAmount,email,phone?,items[]}` → `{orderId, amount}` | none |
