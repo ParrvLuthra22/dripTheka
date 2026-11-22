@@ -160,7 +160,7 @@ export const lang = {
         action:    "Join the Regulars →",
         actionHref: "/regulars",
       },
-      storyLink: { label: "Our story", href: "/story" },
+      storyLink: { label: "Our story", href: "/story", line: "How the theka got its shutter." },
     },
   },
 

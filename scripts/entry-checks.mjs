@@ -801,10 +801,129 @@ for (const [tag, opts] of [["1440x900", DESKTOP], ["390x844", MOBILE]]) {
     await cdp.send("Input.synthesizeScrollGesture", { x: 195, y: 600, yDistance: -500, speed: 1500 });
     await page.waitForTimeout(1800);
     check(`${tag}: mobile — scrolling the Wall never leaves it (no gesture)`, new URL(page.url()).pathname === "/");
-    await page.click("[class*=storyLink]");
+    // the fixed link is hidden on phones; the in-flow row (under the enamel sign) is the way there
+    check(`${tag}: mobile — the fixed "Our story ↓" is hidden`, await page.evaluate(() => getComputedStyle(document.querySelector("[class*=storyWrap]")).display === "none"));
+    await page.evaluate(() => { const sc = document.querySelector("[data-wall-scroller]"); sc.scrollTop = sc.scrollHeight; });
+    await page.waitForTimeout(400);
+    await page.click("[data-decor=story]");
     await page.waitForURL("**/story", { timeout: 6000 });
-    check(`${tag}: mobile — the "Our story ↓" link goes to /story`, true);
+    check(`${tag}: mobile — the in-flow "Our story ↓" row goes to /story`, true);
   }
+  await ctx.close();
+}
+}
+
+// ═════════════════════════════════════════════════════════════════════════════════════════
+// 10. performance: the Wall's imagery is held while the Entry plays; mobile decor / header
+// ═════════════════════════════════════════════════════════════════════════════════════════
+if (on(10)) {
+const HELD = /\/theka\/wall\/(pour001\/|wall\.webp)|logo_neon/;
+const NOIDLE = () => { window.requestIdleCallback = () => 0; window.cancelIdleCallback = () => {}; }; // isolate the timeline path from idle-after-LCP
+const wallImgs = (page) => page.evaluate(() => [...document.querySelectorAll("[data-wall-scroller] img")].map((i) => ({ src: i.getAttribute("src"), kind: i.hasAttribute("data-fit") ? "fit" : i.hasAttribute("data-sh") ? "sh" : "neon" })));
+const bgLoaded = (page) => page.evaluate(() => getComputedStyle(document.querySelector("[class*=app] > [class*=bg]")).backgroundImage.includes("wall.webp"));
+const kalamLoaded = (page) => page.evaluate(() => [...document.fonts].some((f) => /kalam/i.test(f.family) && f.status === "loaded"));
+{
+  // fresh visit, desktop: nothing of the Wall downloads until the timeline passes 1.2s / 3.8s
+  const { ctx, page } = await open(DESKTOP, { init: NOIDLE });
+  const reqs = []; page.on("request", (r) => { if (HELD.test(r.url())) reqs.push({ url: r.url(), t: Date.now() }); });
+  await ready(page); await page.waitForTimeout(800);
+  const imgs0 = await wallImgs(page);
+  check("perf: while the Entry plays, none of the Wall's <img> has a src (7 tees + 7 shadows + neon)", imgs0.length === 15 && imgs0.every((i) => i.src === null), JSON.stringify(imgs0.filter((i) => i.src).slice(0, 2)));
+  check("perf: …and no tee / shadow / neon / plaster request has gone out", reqs.length === 0, reqs.map((r) => r.url).join(","));
+  const boxes0 = await wallItems(page);
+  check("perf: …the held tees keep their boxes (layout reserved, so no shift)", boxes0.length === 7 && boxes0.every((b) => b.w > 50 && b.h > 50), JSON.stringify(boxes0[0]));
+  check("perf: …the plaster and Kalam are held too", !(await bgLoaded(page)) && !(await kalamLoaded(page)));
+  await goTo(page, 0.08); await settle(page, 0.08);          // ≈ 0.8s: still before the aerial
+  check("perf: timeline 0.8s (< 1.2s): still held", (await wallImgs(page)).every((i) => i.src === null) && reqs.length === 0);
+  await goTo(page, 0.15); await settle(page, 0.15);          // ≈ 1.5s: the aerial
+  await page.waitForTimeout(1200);
+  const imgs1 = await wallImgs(page);
+  const fits = imgs1.filter((i) => i.kind === "fit"), shs = imgs1.filter((i) => i.kind === "sh");
+  check("perf: timeline 1.5s (> 1.2s): the current colourway's backs (7) + shadows (7) have a src", fits.length === 7 && fits.every((i) => /\/b0\d_/.test(i.src)) && shs.length === 7 && shs.every((i) => i.src), JSON.stringify(imgs1.slice(0, 2)));
+  check("perf: …the neon is still held, and no front / other-colourway request went out", imgs1.find((i) => i.kind === "neon").src === null && !reqs.some((r) => /logo_neon|\/f_/.test(r.url)), reqs.map((r) => r.url.split("/").pop()).join(","));
+  check("perf: …the plaster is still held (it opens with the street, not the aerial)", !(await bgLoaded(page)));
+  await goTo(page, 0.42); await settle(page, 0.42);          // ≈ 4.3s: the street
+  await page.waitForTimeout(1200);
+  check("perf: timeline 4.3s (> 3.8s): the neon loads", (await wallImgs(page)).find((i) => i.kind === "neon").src === "/brand/logo_neon.png" && reqs.some((r) => /logo_neon/.test(r.url)));
+  check("perf: …and Kalam (the rate board) and the plaster with it", (await kalamLoaded(page)) && (await bgLoaded(page)));
+  const fronts = reqs.filter((r) => /\/f_/.test(r.url));
+  check("perf: …fronts and other colourways are still not requested during the Entry", fronts.length === 0, fronts.map((r) => r.url).join(","));
+  await goTo(page, 1); await waitLive(page); await page.waitForTimeout(500);
+  const sizeAfter = await wallItems(page);
+  check("perf: going live keeps the tee boxes put (CLS ≈ 0)", sizeAfter.every((b, i) => Math.abs(b.w - boxes0[i].w) < 1 && Math.abs(b.h - boxes0[i].h) < 1 && Math.abs(b.y - boxes0[i].y) < 1));
+  await ctx.close();
+}
+{
+  // idle after LCP opens the art without any scrolling; the hard cap is 4s
+  const { ctx, page } = await open(DESKTOP);
+  await ready(page);
+  await page.waitForFunction(() => [...document.querySelectorAll("[data-fit]")].every((i) => i.getAttribute("src")), null, { timeout: 8000 });
+  check("perf: on idle after LCP the Wall's backs load even if the visitor never scrolls", (await tlp(page)) < 0.01, `tl ${(await tlp(page))?.toFixed(3)}`);
+  await ctx.close();
+}
+{
+  // returning visitor / deep link: everything immediately, no flash of held imagery
+  for (const [what, url, entered] of [["returning visitor", "/", true], ["?fit= deep link", "/?fit=its-done-bro-ink", false]]) {
+    const { ctx, page } = await open(DESKTOP, { url, entered });
+    await page.waitForSelector("[data-wall-scroller] button[data-slug]"); await waitLive(page);
+    const t = await wallImgs(page);
+    // (a zoomed deep link leaves the off-screen tees (index ≥ 4) to the existing IntersectionObserver lazy-load, as before)
+    const missing = t.filter((i) => !i.src);
+    check(`perf: ${what} — nothing is held back: every Wall image (incl. the neon) has its src at once${url === "/" ? "" : " (bar the off-screen lazy tees)"}`, t.length === 15 && t.find((i) => i.kind === "neon").src && (url === "/" ? missing.length === 0 : missing.length <= 6 && t[1].src && t[2].src), JSON.stringify(missing));
+    check(`perf: ${what} — plaster and Kalam load`, (await bgLoaded(page)) && (await page.waitForFunction(() => [...document.fonts].some((f) => /kalam/i.test(f.family) && f.status === "loaded"), null, { timeout: 6000 }).then(() => true, () => false)));
+    await ctx.close();
+  }
+}
+{
+  // live: fronts / other colourways wait for a product view (or idle); opening a view warms them
+  const { ctx, page } = await open(DESKTOP, { entered: true, init: NOIDLE });
+  const reqs = []; page.on("request", (r) => { if (/\/theka\/wall\/pour001\//.test(r.url())) reqs.push(r.url()); });
+  await page.waitForSelector("[data-wall-scroller] button[data-slug]"); await waitLive(page); await page.waitForTimeout(1500);
+  const n0 = reqs.length;
+  check("perf: live, no idle yet — only the current backs + shadows are fetched (≤ 14)", n0 <= 14 && !reqs.some((u) => /\/f_/.test(u)), `${n0} requests`);
+  await openItem(page, 0); await page.waitForTimeout(1500);
+  check("perf: opening a product view warms the fronts + other colourways", reqs.length > n0, `${n0} → ${reqs.length}`);
+  await ctx.close();
+}
+for (const [tag, vw, vh] of [["390x844", 390, 844], ["375x812", 375, 812]]) {
+  const opts = { viewport: { width: vw, height: vh }, deviceScaleFactor: 2, isMobile: true, hasTouch: true };
+  const { ctx, page, problems } = await open(opts, { entered: true, lights: true });
+  await page.waitForSelector("[data-wall-scroller] button[data-slug]"); await waitLive(page); await page.waitForTimeout(2500);
+  const rects = (sel) => page.evaluate((sel) => [...document.querySelectorAll(sel)].map((e) => { const r = e.getBoundingClientRect(), sc = document.querySelector("[data-wall-scroller]").scrollTop; return { x: r.left, y: r.top + sc, w: r.width, h: r.height, stem: parseFloat(getComputedStyle(e).getPropertyValue("--stem")) }; }), sel);
+  const hit = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+  const lamps = await rects("[data-lamp]"), neonR = (await rects("[data-decor=neon]"))[0], tees = await rects("[data-wall-scroller] button[data-slug]");
+  check(`${tag}: every lamp hangs on a 24px cord (row 1 included — no 400px ceiling cord)`, lamps.length === 7 && lamps.every((l) => l.stem === 24), lamps.map((l) => l.stem).join(","));
+  const bad = lamps.slice(0, 2).filter((l) => { const cord = { x: l.x + l.w / 2 - 1, y: l.y - l.stem, w: 2, h: l.stem }; return hit(cord, neonR) || hit(l, neonR); });
+  check(`${tag}: no row-1 lamp body or cord touches the neon`, bad.length === 0, JSON.stringify({ neonR, lamps: lamps.slice(0, 2) }));
+  check(`${tag}: no lamp overlaps a tee`, lamps.every((l) => tees.every((t) => !hit(l, t))));
+  await shot2(page, `wall-mobile-top-${tag}`);
+  // header: Collection · Our Story · Bag, no overlaps, Try the Look desktop-only
+  const hd = await page.evaluate(() => {
+    const R = (e) => { const r = e.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height, vis: getComputedStyle(e).display !== "none" }; };
+    const h = document.querySelector("header[data-nodrag]");
+    const items = { logo: h.querySelector("[class*=logo]"), collection: h.querySelector("nav button"), story: h.querySelector("nav a[href='/story']"), look: h.querySelector("nav a[href='/try-the-look']"), bag: h.querySelector("a[href='/cart']") };
+    return Object.fromEntries(Object.entries(items).map(([k, e]) => [k, e && R(e)]));
+  });
+  check(`${tag}: header shows "Our Story" next to Collection; "Try the Look" is desktop-only`, hd.story?.vis && hd.story.w > 0 && hd.look && !hd.look.vis, JSON.stringify({ story: hd.story, look: hd.look }));
+  const seq = ["logo", "collection", "story", "bag"].map((k) => hd[k]);
+  check(`${tag}: header items don't overlap each other and fit inside ${vw}px`, seq.every((a, i) => i === 0 || seq[i - 1].x + seq[i - 1].w <= a.x + 0.5) && seq[3].x + seq[3].w <= vw, seq.map((r) => `${Math.round(r.x)}–${Math.round(r.x + r.w)}`).join(" "));
+  // the story row: in the scroll flow under the enamel sign
+  await page.evaluate(() => { const sc = document.querySelector("[data-wall-scroller]"); sc.scrollTop = sc.scrollHeight; });
+  await page.waitForTimeout(500);
+  const row = (await rects("[data-decor=story]"))[0], enamel = (await rects("[data-decor=enamel]"))[0];
+  const rowVis = await page.evaluate(() => { const r = document.querySelector("[data-decor=story]").getBoundingClientRect(); return { top: r.top, bottom: r.bottom, vh: innerHeight, scrollH: document.querySelector("[data-wall-scroller]").scrollHeight, scrollMax: document.querySelector("[data-wall-scroller]").scrollTop }; });
+  check(`${tag}: "Our story ↓" is in the scroll flow, under the enamel sign, fully on screen at the end of the Wall`, row.y >= enamel.y + enamel.h - 1 && rowVis.top >= 0 && rowVis.bottom <= rowVis.vh, JSON.stringify({ row, enamel, rowVis }));
+  check(`${tag}: …it's a ≥ 44px tap target and the fixed version is hidden`, row.h >= 44 && (await page.evaluate(() => getComputedStyle(document.querySelector("[class*=storyWrap]")).display === "none")), `h ${row.h}`);
+  const txt = await page.evaluate(() => document.querySelector("[data-decor=story]").innerText.replace(/\s+/g, " "));
+  check(`${tag}: …it reads "Our story ↓" with a short line`, /Our story ↓/i.test(txt) && txt.length > 14, txt);
+  await shot2(page, `wall-mobile-bottom-${tag}`);
+  // nothing overlaps at the bottom either
+  const rest = await page.evaluate(() => [...document.querySelectorAll("[data-decor=rate],[data-decor=enamel],[data-decor=story],[data-decor=teaser]")].map((e) => { const r = e.getBoundingClientRect(); return { k: e.dataset.decor, x: r.left, y: r.top, w: r.width, h: r.height }; }));
+  const clash = [];
+  rest.forEach((a, i) => rest.slice(i + 1).forEach((b) => { if (hit(a, b)) clash.push(`${a.k}×${b.k}`); }));
+  check(`${tag}: rate list, enamel sign, teaser and story row don't overlap`, clash.length === 0, clash.join(","));
+  check(`${tag}: no horizontal overflow`, await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+  check(`${tag}: no hydration warnings`, problems.length === 0, problems[0]);
   await ctx.close();
 }
 }

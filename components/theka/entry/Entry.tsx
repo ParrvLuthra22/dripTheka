@@ -53,6 +53,8 @@ interface EntryProps {
   startLive?: boolean;
   /** The Wall is live (true) or dormant (false). */
   onLive: (live: boolean) => void;
+  /** Timeline playhead in seconds, whenever it moves (the Wall unlocks its imagery by it). */
+  onTime?: (t: number) => void;
 }
 
 const ENTRY_ASSETS = ["/theka/entry/aerial.jpg", "/theka/entry/store_cut.webp", "/theka/entry/shutter.jpg", "/theka/entry/scooter.png"];
@@ -68,12 +70,13 @@ function parkPageScroll(on: boolean, root: HTMLElement) {
   if (on) root.setAttribute("aria-hidden", "true"); else root.removeAttribute("aria-hidden");
 }
 
-export function Entry({ ref, playing, reduced: rm, startLive = false, onLive }: EntryProps) {
+export function Entry({ ref, playing, reduced: rm, startLive = false, onLive, onTime }: EntryProps) {
   const journey = playing && !rm;
   const rootRef = useRef<HTMLDivElement>(null);
   const skyRef = useRef<SkyHandle>(null);
   const liveRef = useRef(onLive);
-  useLayoutEffect(() => { liveRef.current = onLive; });
+  const timeRef = useRef(onTime);
+  useLayoutEffect(() => { liveRef.current = onLive; timeRef.current = onTime; });
   const exitRef = useRef<() => void>(() => {});
   useImperativeHandle(ref, () => ({ exitUp: () => exitRef.current() }), []);
 
@@ -159,7 +162,11 @@ export function Entry({ ref, playing, reduced: rm, startLive = false, onLive }: 
       let keep = 0; // scroll progress just before a refresh re-measures the track
       const tl: gsap.core.Timeline = gsap.timeline({
         defaults: { ease: "none" },
-        onUpdate: () => { const p = tl.progress(); if (!live && p >= 0.999) setLive(true); else if (live && p < 0.985) setLive(false); },
+        onUpdate: () => {
+          const p = tl.progress();
+          if (!live && p >= 0.999) setLive(true); else if (live && p < 0.985) setLive(false);
+          timeRef.current?.(tl.time());
+        },
         scrollTrigger: {
           trigger: track, start: "top top", end: "bottom bottom", scrub: 1.1,
           onUpdate: (st) => { bar.style.width = `${st.progress * 100}%`; },

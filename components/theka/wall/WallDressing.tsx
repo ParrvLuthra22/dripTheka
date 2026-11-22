@@ -4,6 +4,7 @@
 // wallDecorDom.ts (the same way the tees are) from computeDecor(), and the neon is flickered by
 // wallNeon.ts. The rate list reads price / GSM / deposit from the product data.
 
+import Link from "next/link";
 import { formatPrice } from "@/lib/utils/format";
 import { lang } from "@/lib/theka/lang";
 import { Ledge } from "./Ledge";
@@ -21,9 +22,13 @@ interface WallDressingProps {
   gsm: number;
   depositPercent: number;
   onTeaser: () => void;
+  /** "Our story ↓" (the mobile in-flow row): fade to the story room. */
+  onStory: () => void;
+  /** The neon wordmark's image may download (the Entry has reached the street, or the Wall is live). */
+  neonLoad?: boolean;
 }
 
-export function WallDressing({ n, hover, price, gsm, depositPercent, onTeaser }: WallDressingProps) {
+export function WallDressing({ n, hover, price, gsm, depositPercent, onTeaser, onStory, neonLoad = true }: WallDressingProps) {
   const idx = Array.from({ length: n }, (_, i) => i);
   return (
     <>
@@ -33,7 +38,7 @@ export function WallDressing({ n, hover, price, gsm, depositPercent, onTeaser }:
       <div className={s.neonwrap} data-decor="neon" data-on="false" aria-hidden="true">
         <div className={s.neonglow} />
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className={s.neonlogo} src="/brand/logo_neon.png" alt="" width={1200} height={416} draggable={false} decoding="async" loading="lazy" fetchPriority="low" />
+        <img className={s.neonlogo} src={neonLoad ? "/brand/logo_neon.png" : undefined} alt="" width={1200} height={416} draggable={false} decoding="async" loading="lazy" fetchPriority="low" />
       </div>
       <div className={`${s.deco} ${s.enamel2}`} data-decor="enamel" aria-hidden="true">
         <i style={{ left: 6, top: 6 }} /><i style={{ right: 6, top: 6 }} /><i style={{ left: 6, bottom: 6 }} /><i style={{ right: 6, bottom: 6 }} />
@@ -64,6 +69,17 @@ export function WallDressing({ n, hover, price, gsm, depositPercent, onTeaser }:
         </svg>
         <span className={s.paperLabel}>{D.teaser.tag}<small>{D.teaser.sub}</small></span>
       </button>
+      {/* Phones: "Our story ↓" scrolls with the Wall, under the enamel sign (the fixed one is hidden < 821px). */}
+      <Link
+        href={D.storyLink.href}
+        prefetch={false}
+        className={`${s.deco} ${s.storyRow}`}
+        data-decor="story"
+        onClick={(e) => { e.preventDefault(); onStory(); }}
+      >
+        <span className={`${s.srLabel} ${s.mono}`}>{D.storyLink.label} <span aria-hidden="true">↓</span></span>
+        <span className={s.srLine}>{D.storyLink.line}</span>
+      </Link>
       {idx.map((i) => (
         <div key={`l${i}`} className={s.lampfx} data-lamp={i} aria-hidden="true" />
       ))}

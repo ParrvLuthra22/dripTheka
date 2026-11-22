@@ -16,10 +16,15 @@
 //   play        a fresh visit: the journey from the clouds.
 //   start-live  returning visitor / ?fit= deep link: the Entry jumps to the end of its track and is
 //               live before first paint; the Wall's own lights-on (or deep-link zoom) plays.
+//
+// Imagery: the Wall holds its <img>s (no src) while the Entry plays, so it can't compete with the Entry's
+// first paint. `load` opens the gates (wallLoad.ts): the Entry's timeline passing 1.2s / 3.8s, idle after
+// LCP, or live. start-live opens everything before first paint.
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { WallDesign } from "@/data/pour-001";
 import { TheWall } from "../wall/TheWall";
+import { LOAD_ALL, LOAD_HOLD, afterLcpIdle, loadAtTime, openGates, type WallLoad } from "../wall/wallLoad";
 import { Entry, type EntryHandle } from "./Entry";
 import { ENTRY_SKIP_CLASS, markEntered, shouldPlayEntry } from "./entryGate";
 
@@ -30,6 +35,7 @@ export function Home({ designs }: { designs: WallDesign[] }) {
   const [live, setLive] = useState(false);
   // Read on the client only; the server and the first client render both assume false.
   const [reduced, setReduced] = useState(false);
+  const [load, setLoad] = useState<WallLoad>(LOAD_HOLD);
   const entry = useRef<EntryHandle>(null);
 
   // Decide before first paint (children's layout effects have already held the Wall).
@@ -40,19 +46,27 @@ export function Home({ designs }: { designs: WallDesign[] }) {
     /* eslint-disable react-hooks/set-state-in-effect -- sessionStorage/URL/media are only readable on the client */
     setReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
     setPhase(play ? "play" : "start-live");
+    if (!play) setLoad(LOAD_ALL); // returning visitor / deep link: nothing to hold back
     /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
   const onLive = (on: boolean) => {
-    if (on) markEntered();
+    if (on) { markEntered(); setLoad(LOAD_ALL); }
     setLive(on);
   };
+  // The Entry's playhead: 1.2s = the aerial (backs + shadows), 3.8s = the street (neon).
+  const onTime = useCallback((t: number) => setLoad((prev) => openGates(prev, loadAtTime(t))), []);
+
+  // Scrolling is what moves the timeline, so a visitor who lingers on the sky would otherwise never reach
+  // 1.2s: open the art on idle after LCP as well.
+  useEffect(() => afterLcpIdle(() => setLoad((prev) => openGates(prev, { art: true }))), []);
 
   return (
     <>
       <TheWall
         designs={designs}
         dormant={!live}
+        load={load}
         handoff={phase === "play"}
         onExitUp={reduced ? undefined : () => entry.current?.exitUp()}
       />
@@ -62,6 +76,7 @@ export function Home({ designs }: { designs: WallDesign[] }) {
         reduced={reduced}
         startLive={phase === "start-live"}
         onLive={onLive}
+        onTime={onTime}
       />
     </>
   );

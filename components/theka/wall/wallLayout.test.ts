@@ -40,14 +40,14 @@ test("desktop: the short row is centred on the viewport", () => {
   close((L.items[0].cx + L.items[3].cx) / 2, 720);
 });
 
-test("mobile 390×844, 7 items: 2 per row, last row LEFT-aligned, w = .84·pitch, top 250, gap h + 70", () => {
+test("mobile 390×844, 7 items: 2 per row, last row LEFT-aligned, w = .84·pitch, top 300, gap h + 70", () => {
   const L = computeLayout(390, 844, 7);
   assert.equal(L.mob, true);
   assert.equal(L.cols, 2);
   const pitch = (390 - 32) / 2;
   close(L.items[0].w, pitch * 0.84);
   close(L.items[0].h, L.items[0].w / AR);
-  close(L.items[0].ly, 250 + L.items[0].h);
+  close(L.items[0].ly, 300 + L.items[0].h);
   close(L.items[2].ly - L.items[0].ly, L.items[0].h + 70);
   assert.deepEqual(L.items.map((b) => b.row), [0, 0, 1, 1, 2, 2, 3]);
   assert.deepEqual(L.items.map((b) => b.inRow), [2, 2, 2, 2, 2, 2, 1]);
@@ -55,8 +55,8 @@ test("mobile 390×844, 7 items: 2 per row, last row LEFT-aligned, w = .84·pitch
   close(L.items[1].cx, 195 + pitch / 2);
   close(L.items[6].cx, 16 + pitch / 2); // lone last item stays in column 0 (the teaser takes the free slot)
   close(L.items[6].cx, L.items[0].cx);
-  // yb = top + rows·gap + 40; the world ends 300 below it
-  close(L.worldHeight, 250 + 4 * (L.items[0].h + 70) + 40 + 300);
+  // yb = top + rows·gap + 40; the world ends MOBILE_TAIL (380) below it: enamel sign + the in-flow story row
+  close(L.worldHeight, 300 + 4 * (L.items[0].h + 70) + 40 + 380);
   assert.equal(L.scrollable, true);
   assert.deepEqual(L.hello, { left: 16, top: 74 });
 });

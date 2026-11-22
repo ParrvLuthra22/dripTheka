@@ -11,21 +11,23 @@ export interface DecorEls {
   enamel: HTMLElement;
   rate: HTMLElement;
   teaser: HTMLElement;
+  /** Mobile story row (always in the DOM; CSS shows it under 821px). */
+  story: HTMLElement;
   lamps: HTMLElement[];
   cones: HTMLElement[];
 }
 
 export function findDecor(root: HTMLElement, n: number): DecorEls | null {
   const neon = q(root, '[data-decor="neon"]'), enamel = q(root, '[data-decor="enamel"]');
-  const rate = q(root, '[data-decor="rate"]'), teaser = q(root, '[data-decor="teaser"]');
+  const rate = q(root, '[data-decor="rate"]'), teaser = q(root, '[data-decor="teaser"]'), story = q(root, '[data-decor="story"]');
   const lamps = Array.from({ length: n }, (_, i) => q(root, `[data-lamp="${i}"]`));
   const cones = Array.from({ length: n }, (_, i) => q(root, `[data-cone="${i}"]`));
-  if (!neon || !enamel || !rate || !teaser || lamps.some((e) => !e) || cones.some((e) => !e)) return null;
-  return { neon, enamel, rate, teaser, lamps: lamps as HTMLElement[], cones: cones as HTMLElement[] };
+  if (!neon || !enamel || !rate || !teaser || !story || lamps.some((e) => !e) || cones.some((e) => !e)) return null;
+  return { neon, enamel, rate, teaser, story, lamps: lamps as HTMLElement[], cones: cones as HTMLElement[] };
 }
 
 /** Everything the camera should fade out with the other tees when a fit is isolated (mobile). */
-export const decorAll = (e: DecorEls): HTMLElement[] => [e.neon, e.enamel, e.rate, e.teaser, ...e.cones, ...e.lamps];
+export const decorAll = (e: DecorEls): HTMLElement[] => [e.neon, e.enamel, e.rate, e.teaser, e.story, ...e.cones, ...e.lamps];
 
 const px = (v: number) => `${v}px`;
 
@@ -37,6 +39,7 @@ export function applyDecor(e: DecorEls, d: Decor): void {
   if (d.teaser) {
     Object.assign(e.teaser.style, { display: "", left: px(d.teaser.left), top: px(d.teaser.top), width: px(d.teaser.width), height: px(d.teaser.height) });
   } else e.teaser.style.display = "none";
+  if (d.storyRow) Object.assign(e.story.style, { left: px(d.storyRow.left), top: px(d.storyRow.top), width: px(d.storyRow.width), height: px(d.storyRow.height) });
   d.lamps.forEach((l, i) => {
     Object.assign(e.lamps[i].style, { left: px(l.x), top: px(l.top) });
     e.lamps[i].style.setProperty("--stem", px(l.stem));

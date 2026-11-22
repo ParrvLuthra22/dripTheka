@@ -1,5 +1,6 @@
 // Header — the brand's glass mark (/brand/logo_glass.png) + DRIP THEKA, centre "Collection¹⁰" (→ "← Collection"
-// in product view) · Try the Look, right Bag (n). Matches the reference exactly.
+// in product view) · Our Story · Try the Look (desktop only), right Bag (n). Matches the reference, plus
+// "Our Story" kept on phones.
 
 import Link from "next/link";
 import type { Ref } from "react";
@@ -50,7 +51,7 @@ export function WallHeader({ ref, zoomed, total, bagCount, bagNumRef, onBack, on
             onStory();
           }}
         >{H.story}</Link>
-        <Link href={H.lookHref} prefetch={false} className={s.tl}>{H.look}</Link>
+        <Link href={H.lookHref} prefetch={false} className={`${s.tl} ${s.hideMob}`}>{H.look}</Link>
       </nav>
       <Link href="/cart" prefetch={false} className={s.bag} aria-label={H.bagAria(bagCount)}>
         {H.bag} (<b ref={bagNumRef}>{bagCount}</b>)

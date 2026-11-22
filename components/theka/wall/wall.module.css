@@ -21,12 +21,13 @@
 .mono { font-family: var(--mono); text-transform: uppercase; letter-spacing: .08em; }
 
 /* ---------- the room ---------- */
-.bg { position: fixed; inset: -3%; background: #5c5555 url(/theka/wall/wall.webp) center/cover no-repeat; transform-origin: 50% 50%; }
+.bg { position: fixed; inset: -3%; background: #5c5555 center/cover no-repeat; transform-origin: 50% 50%; }
 .light { position: fixed; inset: 0; pointer-events: none; z-index: 2;
   background:
     radial-gradient(55% 60% at 18% 12%, rgba(255,222,200,.22), transparent 70%),
     radial-gradient(40% 40% at 90% 100%, rgba(244,165,44,.06), transparent 70%),
     radial-gradient(130% 95% at 50% 42%, transparent 40%, rgba(12,9,9,.62) 100%); }
+.bg[data-art] { background-image: url(/theka/wall/wall.webp); } /* held under the Entry until wallLoad opens `art` */
 .scroller { position: fixed; inset: 0; overflow-x: hidden; overflow-y: hidden; z-index: 1; scrollbar-width: none; }
 .scroller::-webkit-scrollbar { display: none; }
 /* No will-change here on purpose: Chrome would keep the low-res raster after the zoom. */
@@ -165,8 +166,9 @@
 /* until applyDecor() has positioned them (layout effect) the dressing is not painted: no layout shift on first load */
 .world:not([data-laid]) :is(.deco, .neonwrap, .cone, .lampfx) { visibility: hidden; }
 
-.rateboard { padding: 14px 16px 16px; border-radius: 5px; color: #eeeae0; font-family: var(--font-kalam), Kalam, cursive; transform: rotate(-1.5deg);
+.rateboard { padding: 14px 16px 16px; border-radius: 5px; color: #eeeae0; font-family: cursive; transform: rotate(-1.5deg);
   background: radial-gradient(120% 90% at 30% 20%,#2f3a33,#1d2420 70%); box-shadow: 0 0 0 7px #3a2a1e, 0 0 0 8px #1c140e, 0 24px 40px rgba(0,0,0,.5); pointer-events: none; }
+.world[data-kalam] .rateboard { font-family: var(--font-kalam), Kalam, cursive; } /* Kalam downloads only once the Entry reaches the street */
 .rateboard h6 { font-size: 17px; font-weight: 700; text-align: center; line-height: 1; margin-bottom: 6px; }
 .rateboard ul { list-style: none; margin: 0; padding: 0; }
 .rateboard li { list-style: none; display: flex; gap: 6px; align-items: baseline; font-size: 13.5px; line-height: normal; padding: 2px 0; }
@@ -197,6 +199,13 @@
 .storyLink { pointer-events: auto; font-size: 9px; color: var(--mut); display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 10px; transition: color .3s; }
 .storyLink:hover, .storyLink:focus-visible { color: var(--txt); }
 .storyLink span { font-size: 12px; animation: bob 2s ease-in-out infinite; }
+/* Phones: the same link, in the Wall's scroll flow under the enamel sign (positioned by wallDecorDom). */
+.storyRow { display: none; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-align: center; color: var(--txt);
+  border-top: 1px solid var(--faint); border-bottom: 1px solid var(--faint); -webkit-tap-highlight-color: rgba(239,235,230,.12); }
+.srLabel { font-size: 11px; display: flex; gap: 6px; align-items: baseline; }
+.srLabel span { font-size: 13px; animation: bob 2s ease-in-out infinite; }
+.srLine { font-size: 12px; color: var(--mut); }
+.storyRow:focus-visible { outline: 2px solid var(--txt); outline-offset: 2px; }
 @keyframes bob { 50% { transform: translateY(4px); } }
 .leave { position: fixed; inset: 0; z-index: 60; background: #1e1a1b; opacity: 0; pointer-events: none; visibility: hidden; }
 .toast a { pointer-events: auto; margin-left: 10px; color: var(--blue); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
@@ -206,7 +215,9 @@
   .header { padding: 16px 16px; background: linear-gradient(rgba(30,26,27,.75), transparent); }
   .logo { font-size: 15px; }
   .center { position: static; transform: none; gap: 18px; margin-left: auto; margin-right: 18px; font-size: 11px; }
-  .center .tl { display: none; }
+  .center .tl.hideMob { display: none; }
+  .storyWrap { display: none; }
+  .storyRow { display: flex; }
   .tag, .foot { display: none; }
   .hello .eb { font-size: 9px; }
   .info { left: 16px; right: 16px; top: 64px; max-width: none; }

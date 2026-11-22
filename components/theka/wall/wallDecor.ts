@@ -19,8 +19,10 @@ export interface Decor {
   /** One per fit: lamp body centre-x / top, and the stem length above it. */
   lamps: { x: number; top: number; stem: number }[];
   cones: { left: number; top: number; width: number; height: number }[];
-  /** Estimated painted boxes of the dressing (neon, enamel, rate, teaser) — for overlap checks only. */
-  rects: { neon: Rect; enamel: Rect; rate: Rect; teaser: Rect | null };
+  /** Mobile only: the in-flow "Our story ↓" row under the enamel sign (desktop keeps the fixed link). */
+  storyRow: { left: number; top: number; width: number; height: number } | null;
+  /** Estimated painted boxes of the dressing (neon, enamel, rate, teaser, story row) — for overlap checks only. */
+  rects: { neon: Rect; enamel: Rect; rate: Rect; teaser: Rect | null; storyRow: Rect | null };
 }
 
 /** logo_neon.png is 1200 × 416. */
@@ -30,6 +32,8 @@ export const LAMP = { w: 30, h: 15 };
 /** Estimated sizes of the text-driven pieces (padding + type in wall.html), used for `rects` only. */
 export const ENAMEL_EST = { w: 236, h: 64 };
 export const RATE_EST_H = 145;
+/** Mobile story row: gap under the enamel sign, and its height (a comfortable tap target). */
+export const STORY_ROW = { gap: 28, h: 56, maxW: 320 };
 
 export function computeDecor(layout: Layout, vw: number, vh: number): Decor {
   const { items, mob, cols } = layout;
@@ -38,6 +42,7 @@ export function computeDecor(layout: Layout, vw: number, vh: number): Decor {
   const first = items[0];
 
   let neon: Decor["neon"], enamel: Decor["enamel"], rate: Decor["rate"], teaser: Decor["teaser"];
+  let storyRow: Decor["storyRow"] = null;
 
   if (!mob) {
     const mx = vw * 0.1;
@@ -64,26 +69,30 @@ export function computeDecor(layout: Layout, vw: number, vh: number): Decor {
     const yb = MOBILE_TOP + rows * gap + 40;
     rate = { left: vw / 2 - 120, top: yb, width: 240 };
     enamel = { left: vw / 2 - 125, top: yb + 190, width: 250 };
+    const sw = Math.min(vw - 2 * mx, STORY_ROW.maxW);
+    storyRow = { left: vw / 2 - sw / 2, top: enamel.top + ENAMEL_EST.h + STORY_ROW.gap, width: sw, height: STORY_ROW.h };
   }
 
   const lamps: Decor["lamps"] = [];
   const cones: Decor["cones"] = [];
   for (const it of items) {
     const lt = mob ? it.ly - it.h - 46 : it.row ? vh * 0.545 + 22 : vh * 0.085;
-    // lower rows hang from the ledge above
-    const stem = it.row ? (mob ? 24 : 18) : 400;
+    // Lower rows hang from the ledge above. On phones the first row has no ledge above it and a 400px
+    // cord would cross the neon, so it hangs from just above its tee on the same short 24px cord.
+    const stem = mob ? 24 : it.row ? 18 : 400;
     lamps.push({ x: it.cx, top: lt, stem });
     cones.push({ left: it.cx - it.w * 0.95, top: lt + 12, width: it.w * 1.9, height: it.ly - lt - 8 });
   }
 
   const ew = enamel.width ?? ENAMEL_EST.w;
   return {
-    neon, enamel, rate, teaser, lamps, cones,
+    neon, enamel, rate, teaser, lamps, cones, storyRow,
     rects: {
       neon: { x: neon.cx - neon.w / 2, y: neon.cy - neon.h / 2, w: neon.w, h: neon.h },
       enamel: { x: enamel.left, y: enamel.top, w: ew, h: ENAMEL_EST.h },
       rate: { x: rate.left, y: rate.top, w: rate.width, h: RATE_EST_H },
       teaser: teaser && { x: teaser.left, y: teaser.top, w: teaser.width, h: teaser.height },
+      storyRow: storyRow && { x: storyRow.left, y: storyRow.top, w: storyRow.width, h: storyRow.height },
     },
   };
 }

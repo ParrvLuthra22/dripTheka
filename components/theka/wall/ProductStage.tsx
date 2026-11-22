@@ -163,7 +163,7 @@ export function ProductStage({ design, product: initial, index, total, cells, ar
   return (
     <div ref={rootRef} className={`${s.app} ${s.page}`} data-product-stage>
       <div ref={sceneRef} className={s.scene}>
-        <div className={s.bg} />
+        <div className={s.bg} data-art="" />
         <div className={s.world} style={cellStyle(main)}>
           {cells.map((c) => {
             const isMain = c.design === design;

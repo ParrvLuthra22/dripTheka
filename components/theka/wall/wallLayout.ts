@@ -8,9 +8,18 @@
 /** Default aspect ratio (w/h) of a product box; a product can override it via `wall.ar`. */
 export const AR = 1.0;
 export const MOBILE_MAX = 820;
-/** Mobile: side margin and the y where the first row's tees start (room for the neon above). */
+/**
+ * Mobile: side margin and the y where the first row's tees start. The neon wordmark's box ends at y≈224;
+ * the first row's lamps hang 46px above their tees on a 24px cord (like every lower row), so the tees start
+ * low enough (300) that the lamp bodies and cords sit clear under the neon.
+ */
 export const MOBILE_MX = 16;
-export const MOBILE_TOP = 250;
+export const MOBILE_TOP = 300;
+/**
+ * Mobile: px from the rate list's top (yb) to the end of the world. The enamel sign sits 190 below yb
+ * (≈64 tall), the in-flow "Our story ↓" row 28 under it (56 tall), then ~42 of room.
+ */
+export const MOBILE_TAIL = 380;
 
 export interface Box {
   /** Horizontal centre. */
@@ -99,8 +108,8 @@ export function computeLayout(vw: number, vh: number, products: number | readonl
   return {
     items, mob, vw, vh, cols,
     // rows end at top + rows·gap; the rate list sits 40px below (yb), the enamel sign 190px under that,
-    // and the world ends 300px under yb (wall.html layout())
-    worldHeight: top + rows * (h0 + 70) + 40 + 300,
+    // then the story row; the world ends MOBILE_TAIL under yb (wall.html used 300 before the story row)
+    worldHeight: top + rows * (h0 + 70) + 40 + MOBILE_TAIL,
     scrollable: true,
     hello: { left: 16, top: 74 },
   };

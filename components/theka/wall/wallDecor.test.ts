@@ -1,8 +1,8 @@
 // Run with:  pnpm test   (node's built-in runner — Node ≥ 22.18 strips TS types)
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { computeLayout } from "./wallLayout.ts";
-import { computeDecor, LAMP, NEON_AR, type Rect } from "./wallDecor.ts";
+import { computeLayout, MOBILE_TAIL } from "./wallLayout.ts";
+import { computeDecor, ENAMEL_EST, LAMP, NEON_AR, STORY_ROW, type Rect } from "./wallDecor.ts";
 
 const close = (a: number, b: number, eps = 1e-6) =>
   assert.ok(Math.abs(a - b) < eps, `${a} ≉ ${b}`);
@@ -15,7 +15,7 @@ test("mobile: the short last row stays left-aligned (col 0), full rows keep both
   assert.deepEqual(L.items.map((b) => b.row), [0, 0, 1, 1, 2, 2, 3]);
   close(L.items[6].cx, 16 + pitch / 2);
   close(L.items[6].cx, L.items[4].cx);
-  close(L.items[0].ly, 250 + L.items[0].h);
+  close(L.items[0].ly, 300 + L.items[0].h);
 });
 
 test("mobile: the teaser takes the free slot beside the last tee (col 1 of the last row)", () => {
@@ -55,7 +55,7 @@ test("neon, enamel, lamps, cones: reference numbers", () => {
   close(D.neon.h, D.neon.w / NEON_AR);
   close(D.enamel.left, 1440 * 0.79); close(D.enamel.top, 900 * 0.15);
   // row 1 lamps hang from the ceiling (0.085vh, 400px stem); row 2 from under row 1's ledge (0.545vh + 22, 18px stem)
-  close(D.lamps[0].top, 900 * 0.085); assert.equal(D.lamps[0].stem, 400);
+  close(D.lamps[0].top, 900 * 0.085); assert.equal(D.lamps[0].stem, 400); // desktop: unchanged
   close(D.lamps[4].top, 900 * 0.545 + 22); assert.equal(D.lamps[4].stem, 18);
   close(D.lamps[2].x, L.items[2].cx);
   // cone: a 1.9·w trapezoid from the lamp to the ledge
@@ -64,13 +64,43 @@ test("neon, enamel, lamps, cones: reference numbers", () => {
   close(c.top, D.lamps[0].top + 12); close(c.height, it.ly - D.lamps[0].top - 8);
   // mobile
   const M = computeLayout(390, 844, 7), MD = computeDecor(M, 390, 844);
-  close(MD.lamps[0].top, M.items[0].ly - M.items[0].h - 46); assert.equal(MD.lamps[0].stem, 400);
-  assert.equal(MD.lamps[2].stem, 24);
+  // phones: every lamp, row 1 included, hangs from just above its tee on a short 24px cord (no 400px ceiling cord)
+  close(MD.lamps[0].top, M.items[0].ly - M.items[0].h - 46);
+  assert.deepEqual(MD.lamps.map((l) => l.stem), Array(7).fill(24));
   close(MD.neon.cy, 182); close(MD.neon.w, Math.min(390 * 0.62, 300));
-  const yb = 250 + 4 * (M.items[0].h + 70) + 40;
+  const yb = 300 + 4 * (M.items[0].h + 70) + 40;
   close(MD.rate.top, yb); close(MD.rate.width, 240); close(MD.rate.left, 195 - 120);
   close(MD.enamel.top, yb + 190); close(MD.enamel.width!, 250);
-  close(M.worldHeight, yb + 300);
+  close(M.worldHeight, yb + MOBILE_TAIL);
+});
+
+test("mobile: row-1 lamps and their cords stay clear of the neon", () => {
+  for (const [vw, vh] of [[390, 844], [375, 812]] as const) {
+    const L = computeLayout(vw, vh, 7), D = computeDecor(L, vw, vh);
+    D.lamps.slice(0, L.cols).forEach((l, i) => {
+      const cord: Rect = { x: l.x - 1, y: l.top - l.stem, w: 2, h: l.stem };
+      const body: Rect = { x: l.x - LAMP.w / 2, y: l.top, w: LAMP.w, h: LAMP.h };
+      assert.ok(!hit(cord, D.rects.neon), `lamp ${i} cord crosses the neon at ${vw}×${vh}`);
+      assert.ok(!hit(body, D.rects.neon), `lamp ${i} body overlaps the neon at ${vw}×${vh}`);
+    });
+  }
+});
+
+test("mobile: 'Our story ↓' is an in-flow row under the enamel sign; desktop has none", () => {
+  for (const [vw, vh] of [[390, 844], [375, 812]] as const) {
+    const L = computeLayout(vw, vh, 7), D = computeDecor(L, vw, vh);
+    const r = D.storyRow!;
+    assert.ok(r, "story row exists on mobile");
+    close(r.left + r.width / 2, vw / 2);                       // centred
+    close(r.top, D.enamel.top + ENAMEL_EST.h + STORY_ROW.gap);  // right under the enamel sign
+    close(r.height, STORY_ROW.h);
+    assert.ok(r.height >= 44, "tap target ≥ 44px");
+    assert.ok(r.left >= 16 && r.left + r.width <= vw - 16, "inside the wall margins");
+    assert.ok(!hit(D.rects.storyRow!, D.rects.enamel), "clear of the enamel sign");
+    assert.ok(!hit(D.rects.storyRow!, D.rects.rate), "clear of the rate list");
+    assert.ok(r.top + r.height < L.worldHeight, "inside the scroll flow (the world is tall enough)");
+  }
+  assert.equal(computeDecor(computeLayout(1440, 900, 7), 1440, 900).storyRow, null);
 });
 
 for (const [vw, vh] of SIZES) {
@@ -79,7 +109,7 @@ for (const [vw, vh] of SIZES) {
     const D = computeDecor(L, vw, vh);
     const tees: Rect[] = L.items.map((b) => ({ x: b.cx - b.w / 2, y: b.ly - b.h, w: b.w, h: b.h }));
     const pieces: [string, Rect | null][] = [
-      ["neon", D.rects.neon], ["enamel", D.rects.enamel], ["rate list", D.rects.rate], ["teaser", D.rects.teaser],
+      ["neon", D.rects.neon], ["enamel", D.rects.enamel], ["rate list", D.rects.rate], ["teaser", D.rects.teaser], ["story row", D.rects.storyRow],
       ...D.lamps.map((l, i): [string, Rect] => [`lamp ${i}`, { x: l.x - LAMP.w / 2, y: l.top, w: LAMP.w, h: LAMP.h }]),
     ];
     for (const [name, r] of pieces) {

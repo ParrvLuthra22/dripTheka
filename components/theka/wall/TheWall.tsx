@@ -33,6 +33,7 @@ import {
   AR, bgScale, cameraTarget, computeLayout, isRowJump, scrollAfterClose, type Layout,
 } from "./wallLayout";
 import { createWallStore, type Side } from "./wallStore";
+import { LOAD_ALL, type WallLoad } from "./wallLoad";
 import s from "./wall.module.css";
 
 const W = lang.wall;
@@ -69,9 +70,11 @@ interface TheWallProps {
   handoff?: boolean;
   /** Visitor scrolled up at the top of the Wall: walk back out. Home flips `dormant`. */
   onExitUp?: () => void;
+  /** Which imagery may download yet (wallLoad.ts). Default: all of it. While closed the <img>s have no src. */
+  load?: WallLoad;
 }
 
-export function TheWall({ designs, dormant = false, handoff = false, onExitUp }: TheWallProps) {
+export function TheWall({ designs, dormant = false, handoff = false, onExitUp, load = LOAD_ALL }: TheWallProps) {
   const n = designs.length;
   const [store] = useState(() => createWallStore(n));
   const view = useSyncExternalStore(store.subscribe, store.get, store.get);
@@ -465,7 +468,15 @@ export function TheWall({ designs, dormant = false, handoff = false, onExitUp }:
       designs.forEach((d) => d.products.forEach((p) => {
         warm.add(p.wall.front); warm.add(p.wall.frontShadow); warm.add(p.wall.back); warm.add(p.wall.backShadow);
       }));
-      warm.forEach((src) => { const im = new Image(); im.src = src; });
+      warm.forEach((src) => { const im = new Image(); (im as HTMLImageElement & { fetchPriority: string }).fetchPriority = "low"; im.src = src; });
+    };
+    // …or on idle once the Wall is live (never while it is held under the Entry).
+    let warmIdle = 0;
+    const warmWhenIdle = () => {
+      if (warmed || warmIdle) return;
+      warmIdle = typeof requestIdleCallback === "function"
+        ? requestIdleCallback(warmFronts, { timeout: 4000 })
+        : window.setTimeout(warmFronts, 1500);
     };
 
     // ── start ──────────────────────────────────────────────────────────────
@@ -541,6 +552,7 @@ export function TheWall({ designs, dormant = false, handoff = false, onExitUp }:
       const first = !woke;
       woke = true;
       if (first && !handoffNow) start(); else revealChrome();
+      warmWhenIdle();
     };
 
     lifecycle.current = { wake, sleep };
@@ -561,6 +573,7 @@ export function TheWall({ designs, dormant = false, handoff = false, onExitUp }:
       clearTimeout(rt);
       clearTimeout(neonTimer);
       clearTimeout(leaveTimer);
+      if (warmIdle) { if (typeof cancelIdleCallback === "function") cancelIdleCallback(warmIdle); clearTimeout(warmIdle); }
       removeEventListener("pageshow", onPageShow);
       neon.dispose();
       intro?.kill();
@@ -577,9 +590,9 @@ export function TheWall({ designs, dormant = false, handoff = false, onExitUp }:
 
   return (
     <div className={s.app} data-entering={dormant ? "" : undefined} inert={dormant} aria-hidden={dormant ? true : undefined} style={dormant ? { pointerEvents: "none" } : undefined}>
-      <div ref={bgRef} className={s.bg} />
+      <div ref={bgRef} className={s.bg} data-art={load.neon ? "" : undefined} />
       <div ref={scrollerRef} className={s.scroller} data-wall-scroller>
-        <div ref={worldRef} className={s.world}>
+        <div ref={worldRef} className={s.world} data-kalam={load.neon ? "" : undefined}>
           <div ref={helloRef} className={s.hello}>
             <div className={`${s.eb} ${s.mono}`}>{W.hello.eyebrow}</div>
             <h2>{W.hello.title}</h2>
@@ -591,6 +604,8 @@ export function TheWall({ designs, dormant = false, handoff = false, onExitUp }:
             gsm={designs[0].gsm}
             depositPercent={designs[0].products[0].depositPercent}
             onTeaser={() => api.current?.teaser()}
+            onStory={() => api.current?.story()}
+            neonLoad={load.neon}
           />
           {designs.map((d, i) => (
             <WallItem
@@ -598,6 +613,7 @@ export function TheWall({ designs, dormant = false, handoff = false, onExitUp }:
               ref={(el) => { itemRefs.current[i] = el; }}
               product={d.products[view.art[i] ?? 0]}
               deferArt={i >= FIRST_SCREEN}
+              hold={!load.art}
               on={view.hover === i}
               showFront={view.side === "front" && view.cur === i}
               onEnter={() => api.current?.hover(i)}

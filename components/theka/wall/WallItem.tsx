@@ -37,9 +37,11 @@ interface WallItemProps {
    * is >1000px anyway.
    */
   deferArt?: boolean;
+  /** Wall only: the Entry is still playing — render no `src` at all (the box stays sized, so no layout shift). */
+  hold?: boolean;
 }
 
-export function WallItem({ ref, product, on, showFront, onEnter, onLeave, onClick, style, priority, lazy, tabIndex, main, deferArt }: WallItemProps) {
+export function WallItem({ ref, product, on, showFront, onEnter, onLeave, onClick, style, priority, lazy, tabIndex, main, deferArt, hold }: WallItemProps) {
   const { wall } = product;
   const own = useRef<HTMLButtonElement | null>(null);
   const [armed, setArmed] = useState(!deferArt);
@@ -64,7 +66,7 @@ export function WallItem({ ref, product, on, showFront, onEnter, onLeave, onClic
     if (typeof ref === "function") ref(el);
     else if (ref) (ref as { current: HTMLButtonElement | null }).current = el;
   };
-  const art = (src: string) => (armed ? src : undefined);
+  const art = (src: string) => (armed && !hold ? src : undefined);
 
   return (
     <button
