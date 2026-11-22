@@ -18,9 +18,10 @@ import {
   primaryKey,
   index,
   uniqueIndex,
+  check,
 } from "drizzle-orm/pg-core";
 import type { AdapterAccountType } from "next-auth/adapters";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 
 // ── NextAuth v5 tables ────────────────────────────────────────────────────
@@ -182,6 +183,44 @@ export const referrals = pgTable("referrals", {
   redemptions: integer("redemptions").notNull().default(0),
   createdAt:   timestamp("created_at").defaultNow().notNull(),
 });
+
+// ── pour_designs ──────────────────────────────────────────────────────────
+// ONE GLASS PER DESIGN. A design's colourways share it. `cap` is seeded from lib/config
+// (POUR.capPerDesign / capOverrides) the first time the design is touched and is the
+// authority afterwards. Reserving locks this row (SELECT … FOR UPDATE), so the capacity
+// check and the insert are atomic per design.
+//   open       — selling
+//   tapped     — paid units reached cap (set when the paying transaction commits)
+//   refilling  — set by a human: closed for now, the refill list gets told when it reopens
+
+export const pourDesigns = pgTable("pour_designs", {
+  pourId:   text("pour_id").notNull(),
+  designId: text("design_id").notNull(),
+  cap:      integer("cap").notNull(),
+  status:   text("status").$type<"open" | "tapped" | "refilling">().notNull().default("open"),
+}, (t) => [
+  primaryKey({ columns: [t.pourId, t.designId] }),
+  check("pour_designs_status_check", sql`${t.status} IN ('open', 'tapped', 'refilling')`),
+  check("pour_designs_cap_check", sql`${t.cap} >= 0`),
+]);
+
+// ── ops_alerts ────────────────────────────────────────────────────────────
+// Things a human must act on. Today: 'overfill' — a payment landed after its hold expired
+// and pushed a design past its cap, so someone has to refund. Surfaced in /api/admin/stats.
+
+export const opsAlerts = pgTable("ops_alerts", {
+  id:            uuid("id").primaryKey().defaultRandom(),
+  kind:          text("kind").notNull(),
+  designId:      text("design_id"),
+  reservationId: uuid("reservation_id").references(() => reservations.id, { onDelete: "set null" }),
+  message:       text("message").notNull(),
+  detail:        jsonb("detail").$type<Record<string, unknown>>(),
+  createdAt:     timestamp("created_at").defaultNow().notNull(),
+  resolvedAt:    timestamp("resolved_at"),
+}, (t) => [
+  uniqueIndex("ops_alerts_kind_reservation_design_unique").on(t.kind, t.reservationId, t.designId),
+  index("ops_alerts_open_idx").on(t.resolvedAt, t.createdAt),
+]);
 
 // ── referral_redemptions ──────────────────────────────────────────────────
 // One row per reservation that used a referral code, written in the same transaction

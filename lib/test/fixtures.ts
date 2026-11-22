@@ -49,3 +49,19 @@ export async function reservedCount(): Promise<number> {
 
 export const paidOrder = (id: string, amount: number) =>
   ({ id, amount, amount_paid: amount, currency: "INR", status: "paid" });
+
+import type { CreateReservationInput } from "@/lib/reservations/create";
+
+/** A one-line cart for createReservation. */
+export const reservationInput = (slug: string, qty = 1, email = "x@example.com", userId: string | null = null): CreateReservationInput => ({
+  userId, email, name: "Test Buyer", phone: "9876543210",
+  address: { line1: "12 Test Street", city: "Delhi", state: "Delhi", pincode: "110001" },
+  lines: [{ productSlug: slug, productName: "Tee", size: "M", qty, unitPricePaise: 129900, lineTotalPaise: 129900 * qty }],
+  subtotalPaise: 129900 * qty, depositPaise: Math.round(129900 * qty * 0.3), balancePaise: 129900 * qty - Math.round(129900 * qty * 0.3),
+});
+
+/** A multi-line cart: [slug, qty][]. */
+export const cartInput = (lines: [string, number][], email = "x@example.com"): CreateReservationInput => {
+  const base = reservationInput(lines[0][0], lines[0][1], email);
+  return { ...base, lines: lines.map(([slug, qty]) => ({ productSlug: slug, productName: "Tee", size: "M", qty, unitPricePaise: 129900, lineTotalPaise: 129900 * qty })) };
+};

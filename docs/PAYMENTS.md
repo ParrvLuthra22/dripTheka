@@ -65,15 +65,18 @@ Razorpay can't reach `localhost`. To test webhooks locally use a tunnel (`ngrok`
 2. Run the migration **before** the new code serves traffic: `pnpm db:migrate` (`drizzle/0001_payments_hardening.sql`). It is idempotent, so it's safe on a database created with `db:push`. It: adds the NextAuth tables, `reservations.user_id` (+ backfill by email), the `failed` status, `payment_events`, unique indexes on `razorpay_order_id` / `razorpay_payment_id`, and rewrites old `'pending'` placeholder order ids so the unique index can be built.
 3. Add the dashboard webhook.
 
-## Stock / capacity
-- Capacity is **per colourway** (each colourway is its own product slug): `capacity` on the product in `data/pour-001.ts`, default `DEFAULT_COLOURWAY_CAPACITY = 100` in `lib/config.ts`. **Placeholder — set real numbers per product.**
-- A unit counts when its reservation is `deposit_paid` / `drop_unlocked` / `fulfilled`, or `pending` and younger than `PENDING_HOLD_MINUTES` (30). Older pending rows stop holding a slot automatically (nothing needs to clean them up).
-- `/api/reserve` answers `409 {"error":"tapped_out","slug":…}` when the request would exceed capacity. Checks run under a Postgres advisory lock in the same transaction as the insert, so two people racing for the last unit can't both get it.
-- Known edge: a customer who pays *after* their 30-minute hold expired is still recorded as paid (we never discard money). If that pushes a colourway over capacity, you'll need to refund one by hand — watch for it in the logs of busy drops.
+## Stock / capacity — one glass per design
+- Each **design** has ONE glass; its colourways share it (Bad Influence Cobalt and Pink fill the same glass). 14 colourway slugs → 7 designs (`lib/pour/designs.ts`, checked against `docs/reference/pour001/designs.json` by a test).
+- Table `pour_designs (pour_id, design_id, cap, status 'open'|'tapped'|'refilling')`, PK `(pour_id, design_id)`. A row is created the first time a design is touched, with `cap` from `lib/config` (`POUR.capPerDesign` = 50, **placeholder — founders to confirm**; per-design override in `POUR.capOverrides`). After that the row's `cap` is the authority — to change a live cap: `UPDATE pour_designs SET cap = 80 WHERE design_id = 'janwar';`.
+- **Reserving locks the design row** (`SELECT … FOR UPDATE`, sorted design order, same transaction as the insert), so two people racing for the last slot — in different colourways — can't both win.
+- A unit counts when its reservation is `deposit_paid` / `drop_unlocked` / `fulfilled`, or `pending` and younger than `POUR.holdMinutes` (30). Older pending rows stop holding a slot automatically.
+- `/api/reserve` answers `409 {"error":"tapped_out","design":…,"slug":…}` when the request would exceed the glass (or the glass is `tapped`/`refilling`).
+- When **paid** quantity reaches `cap`, the paying transaction sets `status = 'tapped'`. A full refund that leaves room reopens it. `refilling` is set by hand.
+- **Late payment edge:** a customer who pays *after* their 30-minute hold expired is still recorded as paid (we never discard money). If that pushes a design past its cap, the same transaction writes an `ops_alerts` row (`kind='overfill'`), the server logs `[ops] OVERFILL …` at error level, and `GET /api/admin/stats` lists it under `opsAlerts.open` — **a human must refund the excess**. Mark it handled with `UPDATE ops_alerts SET resolved_at = now() WHERE id = …`.
 - Per-size `stock` in the product data is still static (only `0` blocks a size). Per-size inventory is not tracked.
 
 ## Config
-`lib/config.ts` is the one place for `DROP_DATE`, `DEPOSIT_PERCENT` (30), `depositPaiseFor()`, `DEFAULT_COLOURWAY_CAPACITY`, `PENDING_HOLD_MINUTES`. `DROP_DATE` is currently `2026-09-01` — already in the past; set the real date there.
+`lib/config.ts` exports `POUR` (`id`, `closesAt`, `depositPct`, `capPerDesign`, `capOverrides`, `lastCallAt`, `holdMinutes`, `balance`) plus `depositPaiseFor()`, `capFor()`, `isPourClosed()`. `closesAt` and `capPerDesign` are placeholders (`TODO founders`). After `closesAt`, `POST /api/reserve` answers `410 {code:"POUR_CLOSED"}`; payments already in flight still settle.
 
 ## Receipts
 The success redirect carries `?t=<token>`, an HMAC of the order number + email (`lib/orders/receiptToken.ts`). `GET /api/reserve/receipt/:orderNumber` returns the order only with a valid token **or** a signed-in owner (same `user_id` or email). Otherwise it answers `404`, same as a nonexistent order.

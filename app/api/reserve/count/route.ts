@@ -8,7 +8,8 @@ import { NextResponse } from "next/server";
 import { eq }           from "drizzle-orm";
 import { db, dbReady }  from "@/lib/db/client";
 import { pourProgress } from "@/lib/db/schema";
-import { POUR }         from "@/lib/config";
+import { POUR, capFor } from "@/lib/config";
+import { pourTotalCap } from "@/lib/pour/designs";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,7 @@ export async function GET() {
     let [row] = await db.select().from(pourProgress).where(eq(pourProgress.pourSlug, POUR.id)).limit(1);
 
     if (!row) {
-      await db.insert(pourProgress).values({ pourSlug: POUR.id, reserved: 0, target: 100 }).onConflictDoNothing();
+      await db.insert(pourProgress).values({ pourSlug: POUR.id, reserved: 0, target: pourTotalCap(capFor) }).onConflictDoNothing();
       [row] = await db.select().from(pourProgress).where(eq(pourProgress.pourSlug, POUR.id)).limit(1);
       if (!row) return unavailable();
     }

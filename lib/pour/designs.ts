@@ -41,3 +41,13 @@ export const POUR_DESIGNS: PourDesign[] = (() => {
 })();
 
 export const isKnownDesign = (id: string): boolean => slugsByDesign.has(id);
+
+/** Colourway slugs sharing the glass that `slug` pours into (an unknown slug is its own glass). */
+export const glassKeyOf = (slug: string): string => designOf(slug) ?? slug;
+export const glassSlugs = (design: string): string[] => {
+  const s = slugsOfDesign(design);
+  return s.length ? s : [design];
+};
+
+/** Sum of every wall design's seeded cap — the default `target` of the pour-wide fill bar. */
+export const pourTotalCap = (cap: (design: string) => number): number => POUR_DESIGNS.reduce((t, d) => t + cap(d.id), 0);

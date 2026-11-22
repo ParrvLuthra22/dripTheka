@@ -1,6 +1,9 @@
 import "@/lib/test/setupDb";
 import { resetDb } from "@/lib/test/setupDb";
 import { test, before, afterEach } from "node:test";
+import { sql } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import { opsAlerts } from "@/lib/db/schema";
 import assert from "node:assert/strict";
 
 before(resetDb);
@@ -38,4 +41,19 @@ test("admin/db-setup and db-test answer 404 in production", async () => {
   const probe = await import("@/app/api/db-test/route");
   assert.equal((await setup.GET()).status, 404);
   assert.equal((await probe.GET()).status, 404);
+});
+
+test("admin/stats surfaces unresolved ops alerts (the overfill → refund case) and the glasses", async () => {
+  env.ADMIN_SECRET = "s3cret-value";
+  await db.execute(sql`TRUNCATE ops_alerts, pour_designs CASCADE`);
+  await db.insert(opsAlerts).values([
+    { kind: "overfill", designId: "janwar", message: "OVERFILL: janwar has 51 paid units for a cap of 50.", detail: { cap: 50, paid: 51, over: 1 } },
+    { kind: "overfill", designId: "aap-zara", message: "old one", resolvedAt: new Date() },
+  ]);
+  const res = await stats({ authorization: "Bearer s3cret-value" });
+  const body = await res.json() as { opsAlerts: { openCount: number; open: { designId: string; message: string }[] }; glasses: unknown[] };
+  assert.equal(body.opsAlerts.openCount, 1);
+  assert.equal(body.opsAlerts.open[0].designId, "janwar");
+  assert.match(body.opsAlerts.open[0].message, /OVERFILL/);
+  assert.ok(Array.isArray(body.glasses));
 });

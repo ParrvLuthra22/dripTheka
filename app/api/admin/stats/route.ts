@@ -13,6 +13,7 @@
 
 import { NextResponse } from "next/server";
 import { timingSafeEqual, createHash } from "node:crypto";
+import { POUR } from "@/lib/config";
 
 export const dynamic = "force-dynamic";
 
@@ -47,8 +48,8 @@ export async function GET(request: Request) {
 
   try {
     const { db }            = await import("@/lib/db/client");
-    const { reservations, regulars, pourProgress, reservationItems } = await import("@/lib/db/schema");
-    const { eq, sql, desc } = await import("drizzle-orm");
+    const { reservations, regulars, pourProgress, reservationItems, opsAlerts, pourDesigns } = await import("@/lib/db/schema");
+    const { eq, sql, desc, isNull } = await import("drizzle-orm");
 
     // Run all queries in parallel
     const [
@@ -56,6 +57,8 @@ export async function GET(request: Request) {
       recentRegulars,
       pourRow,
       itemStats,
+      openAlerts,
+      glassRows,
     ] = await Promise.all([
       // Reservations grouped by status
       db.select({
@@ -82,7 +85,7 @@ export async function GET(request: Request) {
       // Pour progress
       db.select()
       .from(pourProgress)
-      .where(eq(pourProgress.pourSlug, "001"))
+      .where(eq(pourProgress.pourSlug, POUR.id))
       .limit(1),
 
       // Top products by reservation count
@@ -95,6 +98,12 @@ export async function GET(request: Request) {
       .groupBy(reservationItems.productSlug)
       .orderBy(sql`sum(${reservationItems.qty}) desc`)
       .limit(10),
+
+      // Things a human must act on (e.g. a late payment that overfilled a glass → refund one)
+      db.select().from(opsAlerts).where(isNull(opsAlerts.resolvedAt)).orderBy(desc(opsAlerts.createdAt)),
+
+      // One glass per design: cap + status
+      db.select().from(pourDesigns).where(eq(pourDesigns.pourId, POUR.id)),
     ]);
 
     // Aggregate
@@ -106,7 +115,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       timestamp: new Date().toISOString(),
-      pour: pourRow[0] ?? { pourSlug: "001", reserved: 0, target: 100, unlockedAt: null },
+      pour: pourRow[0] ?? { pourSlug: POUR.id, reserved: 0, target: 0, unlockedAt: null },
       reservations: {
         total:           totalReservations,
         depositCollected,
@@ -118,6 +127,9 @@ export async function GET(request: Request) {
         recent: recentRegulars,
       },
       products: itemStats,
+      glasses: glassRows,
+      // Unresolved ops alerts. Non-empty = someone needs to act (see `message`).
+      opsAlerts: { openCount: openAlerts.length, open: openAlerts },
     });
 
   } catch (err) {

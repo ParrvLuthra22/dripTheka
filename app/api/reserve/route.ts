@@ -13,8 +13,7 @@ import { NextResponse }  from "next/server";
 import { z }             from "zod";
 import { eq, sql }       from "drizzle-orm";
 import { POUR_001, isPouring } from "@/data/pour-001";
-import { depositPaiseFor, capFor, isPourClosed } from "@/lib/config";
-import { designOf }                   from "@/lib/pour/designs";
+import { depositPaiseFor, isPourClosed } from "@/lib/config";
 import { createRazorpayOrder, getPublicKeyId } from "@/lib/razorpay/client";
 import { db, dbReady }                    from "@/lib/db/client";
 import { reservations, users }            from "@/lib/db/schema";
@@ -138,13 +137,10 @@ export async function POST(request: Request) {
         email, name, phone, address: address as ShippingAddress,
         lines, subtotalPaise, depositPaise, balancePaise,
       },
-      {
-        capacityOf: (slug) => capFor(designOf(slug) ?? slug),
-      },
     ));
   } catch (err) {
     if (err instanceof TappedOutError) {
-      return NextResponse.json({ error: "tapped_out", slug: err.slug }, { status: 409 });
+      return NextResponse.json({ error: "tapped_out", slug: err.slug, design: err.design }, { status: 409 });
     }
     console.error("[reserve] Error:", err);
     return NextResponse.json({ error: "Failed to create reservation. Please try again." }, { status: 500 });

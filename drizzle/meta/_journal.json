@@ -22,6 +22,13 @@
       "when": 1795346839423,
       "tag": "0002_referral_redemptions",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795347148246,
+      "tag": "0003_pour_designs_ops_alerts",
+      "breakpoints": true
     }
   ]
 }

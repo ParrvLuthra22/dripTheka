@@ -10,14 +10,16 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { db, type Tx } from "@/lib/db/client";
 import { paymentEvents, pourProgress, referralRedemptions, referrals, reservationItems, reservations } from "@/lib/db/schema";
-import { POUR } from "@/lib/config";
+import { POUR, capFor } from "@/lib/config";
+import { pourTotalCap } from "@/lib/pour/designs";
+import { PAID_STATUSES, afterPaid, afterRefund } from "@/lib/reservations/capacity";
 import { checkPaidOrder, type PaymentRejection, type RazorpayOrderLike } from "./check";
 
 export type ReservationRow = typeof reservations.$inferSelect;
 export type FetchOrder = (orderId: string) => Promise<RazorpayOrderLike>;
 
 /** Statuses meaning "the deposit has been received". */
-export const PAID_STATUSES = ["deposit_paid", "drop_unlocked", "fulfilled"] as const;
+export { PAID_STATUSES };
 const PAYABLE_STATUSES = ["pending", "failed"] as const;
 
 // ── primitives ────────────────────────────────────────────────────────────
@@ -34,7 +36,7 @@ async function bumpProgress(tx: Tx, delta: number): Promise<void> {
   if (delta === 0) return;
   await tx
     .insert(pourProgress)
-    .values({ pourSlug: POUR.id, reserved: Math.max(delta, 0), target: 100 })
+    .values({ pourSlug: POUR.id, reserved: Math.max(delta, 0), target: pourTotalCap(capFor) })
     .onConflictDoUpdate({
       target: pourProgress.pourSlug,
       set:    { reserved: sql`GREATEST(${pourProgress.reserved} + ${delta}, 0)` },
@@ -47,10 +49,11 @@ export async function markDepositPaid(tx: Tx, reservationId: string, paymentId: 
     .update(reservations)
     .set({ status: "deposit_paid", razorpayPaymentId: paymentId, updatedAt: sql`now()` })
     .where(and(eq(reservations.id, reservationId), inArray(reservations.status, [...PAYABLE_STATUSES])))
-    .returning({ id: reservations.id });
+    .returning({ id: reservations.id, orderNumber: reservations.orderNumber });
   if (!row) return false;
   await bumpProgress(tx, await unitsOf(tx, reservationId));
   await redeemReferral(tx, reservationId);
+  await afterPaid(tx, reservationId, row.orderNumber); // tap the glass at cap; alert a human if this overfilled it
   return true;
 }
 
@@ -85,6 +88,7 @@ export async function markRefunded(tx: Tx, reservationId: string): Promise<boole
     .returning({ id: reservations.id });
   if (!row) return false;
   await bumpProgress(tx, -(await unitsOf(tx, reservationId)));
+  await afterRefund(tx, reservationId); // a tapped glass with room reopens
   return true;
 }
 
