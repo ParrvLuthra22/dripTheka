@@ -14,7 +14,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { formatPrice } from "@/lib/utils/format";
-import { DROP_DATE } from "@/lib/config";
+import { pourClosesAt } from "@/lib/config";
 import { copy } from "@/data/copy";
 import { getSessionWisdom } from "@/lib/utils/copy";
 
@@ -213,7 +213,7 @@ export function Receipt({
         hour: "2-digit", minute: "2-digit", hour12: true,
       }).toUpperCase();
 
-  const dropDateStr = DROP_DATE.toLocaleDateString("en-IN", {
+  const dropDateStr = pourClosesAt().toLocaleDateString("en-IN", {
     day: "numeric", month: "long", year: "numeric",
   }).toUpperCase();
 
@@ -341,7 +341,7 @@ export function Receipt({
                 {copy.language.pour001.en} · {copy.language.pour001.hi}
               </CentreLabel>
               <CentreLabel>
-                {copy.language.openingNight.en} · {dropDateStr}
+                Pour closes · {dropDateStr}
               </CentreLabel>
             </div>
 

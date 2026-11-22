@@ -1,7 +1,7 @@
 // Pour #001 — hardcoded V1, maps 1:1 to future Neon schema
 // Schema shape: see lib/db/schema.ts
 
-import { DEPOSIT_PERCENT, DEFAULT_COLOURWAY_CAPACITY, depositPaiseFor } from "../lib/config"; // relative: next.config.ts loads this file without the @/ alias
+import { DEPOSIT_PERCENT, depositPaiseFor } from "../lib/config"; // relative: next.config.ts loads this file without the @/ alias
 
 export type Size = "XS" | "S" | "M" | "L" | "XL" | "XXL";
 export type FitType = "boxy" | "oversized" | "regular" | "slim";
@@ -65,8 +65,6 @@ export interface Product {
   frontIsStandIn?: true;
   isLimited: boolean;
   totalUnits: number;
-  /** Max units of THIS colourway that can be reserved (paid + fresh pending). Default: DEFAULT_COLOURWAY_CAPACITY. */
-  capacity?: number;
 }
 
 /** A product that has real wall cutouts — the only kind The Wall shows. */
@@ -204,7 +202,6 @@ const WALL_TEES: Product[] = DESIGNS.flatMap((d, di) =>
       imageAlt: `${d.name} tee, ${c.label}`,
       isLimited: true,
       totalUnits: 200,
-      capacity: DEFAULT_COLOURWAY_CAPACITY,
       wall: {
         front:       `${WALL_DIR}/${c.front}.webp`,
         frontShadow: `${WALL_DIR}/${c.front}_sh.webp`,
@@ -518,5 +515,4 @@ export const BARTENDERS_PICK: BartendersPickData = {
   date: "2026-06-01T00:00:00+05:30",
 };
 
-/** Reservable units for a colourway/product. */
-export const capacityOf = (p: Product): number => p.capacity ?? DEFAULT_COLOURWAY_CAPACITY;
+// Capacity is per DESIGN (colourways share one glass) — see lib/pour/designs.ts and lib/config.ts.

@@ -10,7 +10,7 @@ import { useCartStore } from "@/lib/store/cart";
 import { useHasHydrated } from "@/lib/store/useHasHydrated";
 import { formatPrice } from "@/lib/utils/format";
 import { CountUp }     from "@/components/motion/CountUp";
-import { DROP_DATE } from "@/lib/config";
+import { pourClosesAt } from "@/lib/config";
 import { ProductIllustration } from "@/components/sections/ProductIllustration";
 import { PriceTag } from "@/components/ui/PriceTag";
 import { cn } from "@/lib/utils/cn";
@@ -327,9 +327,9 @@ function CartView() {
                 </div>
               </div>
 
-              {/* Opening Night date */}
+              {/* Pour close date */}
               <p className="font-mono text-[9px] text-(--ink)/30 uppercase tracking-[0.12em] leading-relaxed">
-                Opening Night est. {fmtDate(DROP_DATE)}
+                Pour closes {fmtDate(pourClosesAt())}
               </p>
 
               {/* CTA */}

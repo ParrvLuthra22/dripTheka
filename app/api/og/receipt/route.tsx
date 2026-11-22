@@ -5,7 +5,7 @@
 // shows in the preview. Same thermal-printer aesthetic, adapted to 16:9.
 
 import { ImageResponse } from "next/og";
-import { DROP_DATE } from "@/lib/config";
+import { pourClosesAt } from "@/lib/config";
 
 export const runtime = "edge";
 
@@ -18,7 +18,7 @@ export async function GET(request: Request) {
   const depositINR = `₹${(Number(deposit) / 100).toLocaleString("en-IN")}`;
   const totalINR   = `₹${(Number(total)   / 100).toLocaleString("en-IN")}`;
 
-  const dropDateStr = DROP_DATE.toLocaleDateString("en-IN", {
+  const dropDateStr = pourClosesAt().toLocaleDateString("en-IN", {
     day: "numeric", month: "long", year: "numeric",
   }).toUpperCase();
 
@@ -76,7 +76,7 @@ export async function GET(request: Request) {
               POUR #001 · pehla pyaala
             </div>
             <div style={{ fontSize: 13, color: "#14151860", fontFamily: "monospace" }}>
-              OPENING NIGHT · {dropDateStr}
+              POUR CLOSES · {dropDateStr}
             </div>
           </div>
 

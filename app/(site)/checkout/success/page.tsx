@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DROP_DATE } from "@/lib/config";
+import { pourClosesAt } from "@/lib/config";
 import { SuccessClient } from "./SuccessClient";
 
 interface Props {
@@ -45,7 +45,7 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
   const deposit     = Number(params.deposit ?? 0);
   const total       = Number(params.total   ?? 0);
 
-  const dropStr = DROP_DATE.toLocaleDateString("en-IN", {
+  const dropStr = pourClosesAt().toLocaleDateString("en-IN", {
     weekday: "long", day: "numeric", month: "long", year: "numeric",
   });
 

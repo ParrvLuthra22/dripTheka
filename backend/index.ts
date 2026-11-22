@@ -29,7 +29,7 @@ export { subscribeToList } from "@/lib/klaviyo/index";
 
 // ── Static data (server-safe) ─────────────────────────────────────────────
 export { POUR_001 } from "@/data/pour-001";
-export { DROP_DATE, DEPOSIT_PERCENT } from "@/lib/config";
+export { POUR, pourClosesAt, isPourClosed, DEPOSIT_PERCENT } from "@/lib/config";
 export { BUILDING_POSTS, getBuildingPost, getAdjacentPosts } from "@/data/building";
 export { LEGAL_DOCS, getLegalDoc } from "@/data/legal";
 

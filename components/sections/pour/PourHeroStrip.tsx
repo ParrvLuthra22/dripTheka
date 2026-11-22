@@ -8,13 +8,13 @@ import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import { ChalkMark } from "@/components/ui/ChalkMark";
 import { POUR_001, POURING_LISTING } from "@/data/pour-001";
-import { DROP_DATE } from "@/lib/config";
+import { pourClosesAt } from "@/lib/config";
 import { copy } from "@/data/copy";
 
 type TimeLeft = { days: number; hours: number; mins: number } | null;
 
 function computeTimeLeft(): TimeLeft {
-  const diff = DROP_DATE.getTime() - Date.now();
+  const diff = pourClosesAt().getTime() - Date.now();
   if (diff <= 0) return null;
   return {
     days:  Math.floor(diff / 86_400_000),
@@ -85,12 +85,9 @@ export function PourHeroStrip() {
         <div className="text-right">
           {timeLeft ? (
             <>
-              {/* "Opening Night · doors khulne wale hain · 14D 06H 22M" */}
+              {/* "Pour closes in · 14D 06H 22M" */}
               <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-[#E4E2DD]/40 mb-1">
-                {copy.language.openingNight.en}
-                <span className="lowercase italic opacity-60 tracking-normal not-uppercase ml-1">
-                  · {copy.language.openingNight.hi}
-                </span>
+                Pour closes in
               </p>
               <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-[#E4E2DD] tabular-nums">
                 {String(timeLeft.days).padStart(2, "0")}D&nbsp;
@@ -104,10 +101,7 @@ export function PourHeroStrip() {
                 Status
               </p>
               <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-[#004AAD] bg-[#E4E2DD] px-2 py-0.5 flex items-center gap-1.5">
-                {copy.language.nowPouring.en}
-                <span className="lowercase italic opacity-60 tracking-normal not-uppercase text-[9px]">
-                  · {copy.language.nowPouring.hi}
-                </span>
+                Pour closed
               </p>
             </>
           )}

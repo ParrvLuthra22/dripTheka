@@ -10,7 +10,7 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { db, type Tx } from "@/lib/db/client";
 import { paymentEvents, pourProgress, referralRedemptions, referrals, reservationItems, reservations } from "@/lib/db/schema";
-import { POUR_SLUG } from "@/lib/config";
+import { POUR } from "@/lib/config";
 import { checkPaidOrder, type PaymentRejection, type RazorpayOrderLike } from "./check";
 
 export type ReservationRow = typeof reservations.$inferSelect;
@@ -34,7 +34,7 @@ async function bumpProgress(tx: Tx, delta: number): Promise<void> {
   if (delta === 0) return;
   await tx
     .insert(pourProgress)
-    .values({ pourSlug: POUR_SLUG, reserved: Math.max(delta, 0), target: 100 })
+    .values({ pourSlug: POUR.id, reserved: Math.max(delta, 0), target: 100 })
     .onConflictDoUpdate({
       target: pourProgress.pourSlug,
       set:    { reserved: sql`GREATEST(${pourProgress.reserved} + ${delta}, 0)` },

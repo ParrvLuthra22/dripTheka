@@ -8,7 +8,7 @@ import { NextResponse } from "next/server";
 import { eq }           from "drizzle-orm";
 import { db, dbReady }  from "@/lib/db/client";
 import { pourProgress } from "@/lib/db/schema";
-import { POUR_SLUG }    from "@/lib/config";
+import { POUR }         from "@/lib/config";
 
 export const dynamic = "force-dynamic";
 
@@ -19,11 +19,11 @@ export async function GET() {
   if (!dbReady()) return unavailable();
 
   try {
-    let [row] = await db.select().from(pourProgress).where(eq(pourProgress.pourSlug, POUR_SLUG)).limit(1);
+    let [row] = await db.select().from(pourProgress).where(eq(pourProgress.pourSlug, POUR.id)).limit(1);
 
     if (!row) {
-      await db.insert(pourProgress).values({ pourSlug: POUR_SLUG, reserved: 0, target: 100 }).onConflictDoNothing();
-      [row] = await db.select().from(pourProgress).where(eq(pourProgress.pourSlug, POUR_SLUG)).limit(1);
+      await db.insert(pourProgress).values({ pourSlug: POUR.id, reserved: 0, target: 100 }).onConflictDoNothing();
+      [row] = await db.select().from(pourProgress).where(eq(pourProgress.pourSlug, POUR.id)).limit(1);
       if (!row) return unavailable();
     }
 

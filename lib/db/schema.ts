@@ -74,7 +74,7 @@ export const usersRelations = relations(users, ({ many }) => ({
 // ── Enums ─────────────────────────────────────────────────────────────────
 
 export const reservationStatusEnum = pgEnum("reservation_status", [
-  "pending",       // deposit order created, payment not confirmed (holds stock for PENDING_HOLD_MINUTES)
+  "pending",       // deposit order created, payment not confirmed (holds stock for POUR.holdMinutes)
   "deposit_paid",  // Razorpay payment verified
   "drop_unlocked", // pour is live — balance payment link sent
   "fulfilled",     // shipped

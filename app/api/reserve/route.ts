@@ -12,8 +12,9 @@
 import { NextResponse }  from "next/server";
 import { z }             from "zod";
 import { eq, sql }       from "drizzle-orm";
-import { POUR_001, isPouring, capacityOf } from "@/data/pour-001";
-import { depositPaiseFor }                from "@/lib/config";
+import { POUR_001, isPouring } from "@/data/pour-001";
+import { depositPaiseFor, capFor, isPourClosed } from "@/lib/config";
+import { designOf }                   from "@/lib/pour/designs";
 import { createRazorpayOrder, getPublicKeyId } from "@/lib/razorpay/client";
 import { db, dbReady }                    from "@/lib/db/client";
 import { reservations, users }            from "@/lib/db/schema";
@@ -60,6 +61,11 @@ async function currentUserId(): Promise<string | null> {
 }
 
 export async function POST(request: Request) {
+  // 0. The pour closes at POUR.closesAt. (Payments for existing holds still settle — only NEW reservations stop.)
+  if (isPourClosed()) {
+    return NextResponse.json({ code: "POUR_CLOSED", error: "This pour has closed." }, { status: 410 });
+  }
+
   // 1. Validate
   let raw: unknown;
   try { raw = await request.json(); } catch {
@@ -133,10 +139,7 @@ export async function POST(request: Request) {
         lines, subtotalPaise, depositPaise, balancePaise,
       },
       {
-        capacityOf: (slug) => {
-          const p = POUR_001.products.find((x) => x.slug === slug);
-          return p ? capacityOf(p) : 0;
-        },
+        capacityOf: (slug) => capFor(designOf(slug) ?? slug),
       },
     ));
   } catch (err) {
