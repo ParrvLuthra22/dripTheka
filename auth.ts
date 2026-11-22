@@ -59,6 +59,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth(async () => {
       error:   "/login",
     },
 
+    events: {
+      // Link guest orders placed with this (Google-verified) email to the account.
+      async signIn({ user }) {
+        if (!dbReady() || !user?.id || !user.email) return;
+        try {
+          const { db }           = await import("@/lib/db/client");
+          const { reservations } = await import("@/lib/db/schema");
+          const { and, isNull, sql } = await import("drizzle-orm");
+          await db
+            .update(reservations)
+            .set({ userId: user.id })
+            .where(and(isNull(reservations.userId), sql`lower(${reservations.email}) = ${user.email.toLowerCase()}`));
+        } catch (e) {
+          console.error("[auth] could not link orders to account:", e);
+        }
+      },
+    },
+
     callbacks: {
       // On sign-in, stamp the user id into the token so it survives in the JWT.
       async jwt({ token, user }) {

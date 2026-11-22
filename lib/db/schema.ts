@@ -16,6 +16,8 @@ import {
   jsonb,
   boolean,
   primaryKey,
+  index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import type { AdapterAccountType } from "next-auth/adapters";
 import { relations } from "drizzle-orm";
@@ -72,12 +74,13 @@ export const usersRelations = relations(users, ({ many }) => ({
 // ── Enums ─────────────────────────────────────────────────────────────────
 
 export const reservationStatusEnum = pgEnum("reservation_status", [
-  "pending",       // deposit order created, payment not confirmed
+  "pending",       // deposit order created, payment not confirmed (holds stock for PENDING_HOLD_MINUTES)
   "deposit_paid",  // Razorpay payment verified
   "drop_unlocked", // pour is live — balance payment link sent
   "fulfilled",     // shipped
   "refunded",      // deposit refunded
   "cancelled",     // order cancelled
+  "failed",        // Razorpay reported payment.failed (row kept; can still flip to deposit_paid on a retry)
 ]);
 
 // ── Shared types ──────────────────────────────────────────────────────────
@@ -122,12 +125,19 @@ export const reservations = pgTable("reservations", {
   subtotalPaise:      integer("subtotal_paise").notNull(),       // full order value
   depositPaise:       integer("deposit_paise").notNull(),        // 30% charged now
   balancePaise:       integer("balance_paise").notNull(),        // 70% on drop
+  // `pending:<reservation id>` until the Razorpay order exists, so the unique index below holds.
   razorpayOrderId:    text("razorpay_order_id").notNull(),
   razorpayPaymentId:  text("razorpay_payment_id"),              // set after payment
   status:             reservationStatusEnum("status").notNull().default("pending"),
   createdAt:          timestamp("created_at").defaultNow().notNull(),
   updatedAt:          timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => [
+  uniqueIndex("reservations_razorpay_order_id_unique").on(t.razorpayOrderId),
+  uniqueIndex("reservations_razorpay_payment_id_unique").on(t.razorpayPaymentId),
+  index("reservations_email_idx").on(t.email),
+  index("reservations_user_id_idx").on(t.userId),
+  index("reservations_status_created_idx").on(t.status, t.createdAt),
+]);
 
 // ── reservation_items ─────────────────────────────────────────────────────
 // Line items for a reservation. One row per (product + size) combo.
@@ -143,6 +153,20 @@ export const reservationItems = pgTable("reservation_items", {
   qty:            integer("qty").notNull(),
   unitPricePaise: integer("unit_price_paise").notNull(),
   lineTotalPaise: integer("line_total_paise").notNull(),        // unitPrice × qty
+}, (t) => [
+  index("reservation_items_slug_idx").on(t.productSlug),
+  index("reservation_items_reservation_idx").on(t.reservationId),
+]);
+
+// ── payment_events ────────────────────────────────────────────────────────
+// Razorpay webhook event ids we have already processed (retries are no-ops).
+// Inserted in the SAME transaction as the state change it caused.
+
+export const paymentEvents = pgTable("payment_events", {
+  id:        text("id").primaryKey(),        // X-Razorpay-Event-Id
+  event:     text("event").notNull(),        // e.g. payment.captured
+  outcome:   text("outcome").notNull(),      // what we did, e.g. "marked_paid", "rejected:amount_mismatch"
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // ── referrals ─────────────────────────────────────────────────────────────
@@ -244,4 +268,5 @@ export type NewReservationItem = InferInsertModel<typeof reservationItems>;
 export type Referral           = InferSelectModel<typeof referrals>;
 export type NewReferral        = InferInsertModel<typeof referrals>;
 export type PourProgress       = InferSelectModel<typeof pourProgress>;
+export type PaymentEvent        = InferSelectModel<typeof paymentEvents>;
 export type ReserveCountCache  = InferSelectModel<typeof reserveCountCache>;

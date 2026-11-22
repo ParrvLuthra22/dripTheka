@@ -71,9 +71,12 @@ export function FillBar() {
 
   const animatedPct = useRef(0);
   const hasAnimated = useRef(false);
+  const hasData     = useRef(false);
 
   const [data,    setData]    = useState<CountData>({ reserved: 0, total: 100 });
   const [loading, setLoading] = useState(true);
+  // No real numbers (API 503 / offline) → hide the glass rather than show a fake fill.
+  const [unavailable, setUnavailable] = useState(false);
 
   // Animate fill from current animated position to target
   const animateTo = useCallback((targetPct: number) => {
@@ -104,10 +107,15 @@ export function FillBar() {
       try {
         const d = await fetchCount();
         if (!cancelled) {
+          hasData.current = true;
           setData(d);
           setLoading(false);
+          setUnavailable(false);
         }
-      } catch { /* silent — show last known state */ }
+      } catch {
+        // Keep the last real numbers if we have them; otherwise hide the glass.
+        if (!cancelled && !hasData.current) setUnavailable(true);
+      }
     };
 
     load();
@@ -138,6 +146,8 @@ export function FillBar() {
 
   const pct     = data.reserved / data.total;
   const pctStr  = (pct * 100).toFixed(0);
+
+  if (unavailable) return null;
 
   return (
     <section

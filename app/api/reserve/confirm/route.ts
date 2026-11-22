@@ -1,20 +1,22 @@
-// POST /api/reserve/confirm — verify Razorpay payment and finalise reservation.
+// POST /api/reserve/confirm — called by the browser after Razorpay Checkout succeeds.
 //
-// Flow:
-//   1. Validate body (Zod)
-//   2. Verify Razorpay HMAC-SHA256 signature
-//   3. Load reservation from DB (ensure it exists and is still "pending")
-//   4. Update reservation → status: deposit_paid, razorpay_payment_id set
-//   5. Atomically increment pour_progress.reserved by total qty
-//   6. Fire Klaviyo "reservation_confirmed" event (non-blocking)
-//   7. Return { ok: true, orderNumber }
+//   1. Validate body
+//   2. ALWAYS verify the Razorpay signature (HMAC of order_id|payment_id).
+//      The only exception is `next dev` with a stub `order_dev_*` order.
+//   3. settleConfirmedPayment(): the order must be the one stored on THIS
+//      reservation; Razorpay is asked (server-side) for the order, whose amount
+//      must equal the deposit, currency INR, status paid; then pending → deposit_paid.
+//   4. Idempotent: confirming again changes nothing and still answers ok.
+//
+// The webhook (/api/razorpay/webhook) does the same settlement if this call never arrives.
 
-import { NextResponse }          from "next/server";
-import { z }                     from "zod";
-import { verifyPaymentSignature } from "@/lib/razorpay/client";
-import { sendOrderConfirmationEmail } from "@/lib/email";
-
-// ── Schema ────────────────────────────────────────────────────────────────
+import { NextResponse, after } from "next/server";
+import { z }             from "zod";
+import { verifyPaymentSignature, fetchRazorpayOrder } from "@/lib/razorpay/client";
+import { dbReady }       from "@/lib/db/client";
+import { settleConfirmedPayment } from "@/lib/payments/settle";
+import { notifyDepositPaid }      from "@/lib/payments/notify";
+import { makeReceiptToken }       from "@/lib/orders/receiptToken";
 
 const bodySchema = z.object({
   reservationId:       z.string().min(1),
@@ -23,184 +25,70 @@ const bodySchema = z.object({
   razorpay_signature:  z.string().min(1),
 });
 
-// ── DB ready? ─────────────────────────────────────────────────────────────
-
-const dbReady = () =>
-  !!(process.env.DATABASE_URL &&
-     !process.env.DATABASE_URL.includes("placeholder") &&
-     process.env.DATABASE_URL !== "REPLACE_ME");
-
-// ── Klaviyo "reservation_confirmed" event ─────────────────────────────────
-
-async function trackKlaviyoReservation(opts: {
-  email:       string;
-  orderNumber: string;
-  depositPaise: number;
-  balancePaise: number;
-}) {
-  const key = process.env.KLAVIYO_PRIVATE_KEY;
-  if (!key || key === "REPLACE_ME") return; // not configured
-
-  try {
-    await fetch("https://a.klaviyo.com/api/events/", {
-      method:  "POST",
-      headers: {
-        revision:       "2024-10-15",
-        "content-type": "application/json",
-        Authorization:  `Klaviyo-API-Key ${key}`,
-      },
-      body: JSON.stringify({
-        data: {
-          type: "event",
-          attributes: {
-            metric: {
-              data: { type: "metric", attributes: { name: "reservation_confirmed" } },
-            },
-            profile: {
-              data: { type: "profile", attributes: { email: opts.email } },
-            },
-            properties: {
-              order_number:  opts.orderNumber,
-              deposit_paise: opts.depositPaise,
-              balance_paise: opts.balancePaise,
-            },
-            time: new Date().toISOString(),
-          },
-        },
-      }),
-    });
-  } catch (e) {
-    console.warn("[klaviyo] Failed to track reservation_confirmed:", e);
-  }
-}
-
-// ── Handler ───────────────────────────────────────────────────────────────
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function POST(request: Request) {
-  // 1. Validate
-  const raw    = await request.json() as unknown;
+  let raw: unknown;
+  try { raw = await request.json(); } catch {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
   const parsed = bodySchema.safeParse(raw);
   if (!parsed.success) {
-    return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Invalid request" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid request" }, { status: 400 });
   }
   const { reservationId, razorpay_payment_id, razorpay_order_id, razorpay_signature } = parsed.data;
 
-  // 2. Verify signature
-  //    Dev bypass: order IDs starting with "order_dev_" skip verification
-  const isDev = razorpay_order_id.startsWith("order_dev_");
-  if (!isDev) {
-    const valid = verifyPaymentSignature(razorpay_order_id, razorpay_payment_id, razorpay_signature);
-    if (!valid) {
-      console.warn("[confirm] Invalid Razorpay signature for order:", razorpay_order_id);
-      return NextResponse.json({ error: "Invalid payment signature" }, { status: 400 });
+  // Stub orders are minted only by `next dev` without Razorpay keys; they can never exist elsewhere.
+  const devStub = process.env.NODE_ENV === "development" && razorpay_order_id.startsWith("order_dev_");
+
+  if (!devStub && !verifyPaymentSignature(razorpay_order_id, razorpay_payment_id, razorpay_signature)) {
+    console.warn("[confirm] Invalid Razorpay signature for order:", razorpay_order_id);
+    return NextResponse.json({ error: "Invalid payment signature" }, { status: 400 });
+  }
+
+  if (!dbReady()) {
+    if (devStub) {
+      console.log(`[confirm:dev] stub payment accepted, reservationId=${reservationId}`);
+      return NextResponse.json({ ok: true, orderNumber: `DT-${new Date().getFullYear()}-DEV01` });
     }
+    return NextResponse.json({ error: "Reservations are temporarily unavailable." }, { status: 503 });
   }
 
-  // ── Dev mode: no DB ─────────────────────────────────────────────────────
-  if (!dbReady() || isDev) {
-    console.log(`[confirm:dev] Payment confirmed (dev mode), reservationId=${reservationId}`);
-    return NextResponse.json({
-      ok:          true,
-      orderNumber: isDev ? `DT-${new Date().getFullYear()}-DEV01` : `DT-DEV`,
-    });
+  if (!UUID.test(reservationId)) {
+    return NextResponse.json({ error: "Reservation not found" }, { status: 404 });
   }
 
-  // ── Production path ──────────────────────────────────────────────────────
   try {
-    const { db }                                         = await import("@/lib/db/client");
-    const { reservations, reservationItems, pourProgress } = await import("@/lib/db/schema");
-    const { eq, sum, sql }                               = await import("drizzle-orm");
+    const outcome = await settleConfirmedPayment(
+      { reservationId, orderId: razorpay_order_id, paymentId: razorpay_payment_id, devStub },
+      { fetchOrder: fetchRazorpayOrder },
+    );
 
-    // 3. Load reservation
-    const [reservation] = await db
-      .select()
-      .from(reservations)
-      .where(eq(reservations.id, reservationId))
-      .limit(1);
-
-    if (!reservation) {
-      return NextResponse.json({ error: "Reservation not found" }, { status: 404 });
-    }
-
-    // Guard: idempotency — already confirmed?
-    if (reservation.status === "deposit_paid") {
-      return NextResponse.json({ ok: true, orderNumber: reservation.orderNumber });
-    }
-
-    // 4. Update reservation status
-    await db
-      .update(reservations)
-      .set({
-        status:             "deposit_paid",
-        razorpayPaymentId:  razorpay_payment_id,
-        updatedAt:          new Date(),
-      })
-      .where(eq(reservations.id, reservationId));
-
-    // 5. Compute total quantity from line items, then atomically increment pour_progress
-    const [qtyRow] = await db
-      .select({ total: sum(reservationItems.qty) })
-      .from(reservationItems)
-      .where(eq(reservationItems.reservationId, reservationId));
-
-    const totalQty = Number(qtyRow?.total ?? 0);
-
-    if (totalQty > 0) {
-      await db
-        .update(pourProgress)
-        .set({
-          reserved:  sql`${pourProgress.reserved} + ${totalQty}`,
-          // updatedAt is implicit (the row reflects the latest update time)
-        })
-        .where(eq(pourProgress.pourSlug, "001"));
-    }
-
-    // 6. Klaviyo event (non-blocking — don't fail confirm if this errors)
-    void trackKlaviyoReservation({
-      email:        reservation.email,
-      orderNumber:  reservation.orderNumber,
-      depositPaise: reservation.depositPaise,
-      balancePaise: reservation.balancePaise,
-    });
-
-    // 6b. Order confirmation email via Resend (non-blocking)
-    void (async () => {
-      try {
-        const lineItems = await db
-          .select({
-            productName:    reservationItems.productName,
-            size:           reservationItems.size,
-            qty:            reservationItems.qty,
-            lineTotalPaise: reservationItems.lineTotalPaise,
-          })
-          .from(reservationItems)
-          .where(eq(reservationItems.reservationId, reservationId));
-
-        await sendOrderConfirmationEmail({
-          to:            reservation.email,
-          customerName:  reservation.name,
-          orderNumber:   reservation.orderNumber,
-          items:         lineItems,
-          subtotalPaise: reservation.subtotalPaise,
-          depositPaise:  reservation.depositPaise,
-          balancePaise:  reservation.balancePaise,
-        });
-      } catch (e) {
-        console.warn("[confirm] Failed to send order confirmation email:", e);
+    if (!outcome.ok) {
+      if (outcome.reason === "not_found") {
+        return NextResponse.json({ error: "Reservation not found" }, { status: 404 });
       }
-    })();
+      // Signature was valid but the payment doesn't match this reservation — tampering or a bug. Never mark paid.
+      console.error(`[confirm] REJECTED reservation=${reservationId} order=${razorpay_order_id} reason=${outcome.reason}`);
+      return NextResponse.json({ error: "Payment could not be verified for this reservation.", reason: outcome.reason }, { status: 409 });
+    }
 
-    // 7. Done
-    return NextResponse.json({ ok: true, orderNumber: reservation.orderNumber });
+    if (outcome.changed) after(() => notifyDepositPaid(outcome.reservation));
+
+    let receiptToken: string | undefined;
+    try {
+      receiptToken = makeReceiptToken(outcome.reservation.orderNumber, outcome.reservation.email);
+    } catch (e) {
+      console.error("[confirm] receipt token unavailable:", e);
+    }
+    return NextResponse.json({ ok: true, orderNumber: outcome.reservation.orderNumber, receiptToken });
 
   } catch (err) {
-    console.error("[confirm] DB error:", err);
+    // Razorpay or the DB is unreachable. The payment is safe at Razorpay; the webhook records it.
+    console.error("[confirm] error:", err);
     return NextResponse.json(
-      { error: "Failed to confirm reservation. Contact support with your payment ID." },
-      { status: 500 }
+      { error: "We're confirming your payment. If you were charged you don't need to pay again — check your email shortly." },
+      { status: 502 },
     );
   }
 }

@@ -1,67 +1,41 @@
 // GET /api/reserve/count — live reservation progress for Pour #001.
 //
-// Reads from pour_progress table.
-// Auto-seeds the pour_progress row if it doesn't exist yet (first-run UX).
-// Falls back to hardcoded mock if DB is not connected.
-//
-// Cached for 10 seconds at the edge (ISR) so polls are cheap.
+// Reads pour_progress (auto-seeds the row on first call). NEVER invents numbers:
+// if the database isn't configured or the query fails, answer 503 and let the UI
+// hide the glass / counter instead of showing a made-up fill.
 
 import { NextResponse } from "next/server";
+import { eq }           from "drizzle-orm";
+import { db, dbReady }  from "@/lib/db/client";
+import { pourProgress } from "@/lib/db/schema";
+import { POUR_SLUG }    from "@/lib/config";
 
-export const revalidate = 10;
+export const dynamic = "force-dynamic";
 
-const dbReady = () =>
-  !!(process.env.DATABASE_URL &&
-     !process.env.DATABASE_URL.includes("placeholder") &&
-     process.env.DATABASE_URL !== "REPLACE_ME");
-
+const unavailable = () =>
+  NextResponse.json({ error: "unavailable" }, { status: 503, headers: { "Cache-Control": "no-store" } });
 
 export async function GET() {
-  if (!dbReady()) {
-    return NextResponse.json({ reserved: 38, total: 100, pct: 0.38 });
-  }
+  if (!dbReady()) return unavailable();
 
   try {
-    const { db }         = await import("@/lib/db/client");
-    const { pourProgress } = await import("@/lib/db/schema");
-    const { eq }         = await import("drizzle-orm");
+    let [row] = await db.select().from(pourProgress).where(eq(pourProgress.pourSlug, POUR_SLUG)).limit(1);
 
-    let [row] = await db
-      .select()
-      .from(pourProgress)
-      .where(eq(pourProgress.pourSlug, "001"))
-      .limit(1);
-
-    // Auto-seed on first request if pour_progress doesn't exist yet
     if (!row) {
-      await db
-        .insert(pourProgress)
-        .values({ pourSlug: "001", reserved: 0, target: 100 })
-        .onConflictDoNothing();
-
-      // Also seed reserve_count_cache for all products
-      try {
-        const { reserveCountCache } = await import("@/lib/db/schema");
-        const { POURING_PRODUCTS }  = await import("@/data/pour-001");
-        await db
-          .insert(reserveCountCache)
-          .values(POURING_PRODUCTS.map(p => ({
-            productSlug:   p.slug,
-            reservedCount: 0,
-          })))
-          .onConflictDoNothing();
-      } catch { /* if cache already seeded, that's fine */ }
-
-      row = { pourSlug: "001", reserved: 0, target: 100, unlockedAt: null };
+      await db.insert(pourProgress).values({ pourSlug: POUR_SLUG, reserved: 0, target: 100 }).onConflictDoNothing();
+      [row] = await db.select().from(pourProgress).where(eq(pourProgress.pourSlug, POUR_SLUG)).limit(1);
+      if (!row) return unavailable();
     }
 
     const { reserved, target: total } = row;
     const pct = total > 0 ? +(reserved / total).toFixed(4) : 0;
 
-    return NextResponse.json({ reserved, total, pct });
-
+    return NextResponse.json(
+      { reserved, total, pct },
+      { headers: { "Cache-Control": "public, s-maxage=10, stale-while-revalidate=30" } },
+    );
   } catch (err) {
     console.error("[reserve/count] DB error:", err);
-    return NextResponse.json({ reserved: 38, total: 100, pct: 0.38 });
+    return unavailable();
   }
 }

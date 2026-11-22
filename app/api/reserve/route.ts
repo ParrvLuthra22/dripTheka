@@ -1,24 +1,26 @@
 // POST /api/reserve — create a reservation + Razorpay deposit order.
 //
 // Flow:
-//   1. Validate body (Zod)
-//   2. Look up prices from /data/pour-001.ts (hardcoded V1 source of truth)
-//   3. Compute subtotal / deposit (30%) / balance (70%) in paise
-//   4. Insert reservations row (status: pending)
-//   5. Insert reservation_items rows
-//   6. Create Razorpay order (amount = depositPaise)
-//   7. Patch reservation with razorpay_order_id
-//   8. Return { reservationId, razorpayOrderId, depositPaise, keyId }
+//   1. Validate body (Zod); resolve products/sizes and price them server-side
+//   2. Deposit / balance from lib/config (paise)
+//   3. ONE transaction: capacity check ("tapped_out") → insert reservation
+//      (unique 10-char order number, retried on collision) → insert items
+//   4. Create the Razorpay order for the deposit; patch its id onto the row
+//      (if Razorpay fails the hold is released: row → cancelled)
+//   5. Return { reservationId, razorpayOrderId, depositPaise, keyId }
 
 import { NextResponse }  from "next/server";
 import { z }             from "zod";
-import crypto            from "crypto";
-import { POUR_001, isPouring } from "@/data/pour-001";
+import { eq, sql }       from "drizzle-orm";
+import { POUR_001, isPouring, capacityOf } from "@/data/pour-001";
+import { depositPaiseFor }                from "@/lib/config";
 import { createRazorpayOrder, getPublicKeyId } from "@/lib/razorpay/client";
-import { generateOrderNumber }                  from "@/lib/db/client";
-import type { ShippingAddress }                 from "@/lib/db/schema";
-
-// ── Zod schema ────────────────────────────────────────────────────────────
+import { db, dbReady }                    from "@/lib/db/client";
+import { reservations, users }            from "@/lib/db/schema";
+import type { ShippingAddress }           from "@/lib/db/schema";
+import { createReservation, type ReservationLine } from "@/lib/reservations/create";
+import { TappedOutError }                 from "@/lib/reservations/capacity";
+import { auth }                           from "@/auth";
 
 const bodySchema = z.object({
   email:   z.string().email(),
@@ -37,58 +39,73 @@ const bodySchema = z.object({
     .max(20),
 });
 
-// ── DB configured? ────────────────────────────────────────────────────────
-
-const dbReady = () =>
-  !!(process.env.DATABASE_URL &&
-     !process.env.DATABASE_URL.includes("placeholder") &&
-     process.env.DATABASE_URL !== "REPLACE_ME");
-
-// ── Handler ───────────────────────────────────────────────────────────────
+/** The signed-in user's id (must exist in `users`), or null for guests. */
+async function currentUserId(): Promise<string | null> {
+  try {
+    const session = await auth();
+    const id = session?.user?.id;
+    const email = session?.user?.email?.toLowerCase();
+    if (id) {
+      const [u] = await db.select({ id: users.id }).from(users).where(eq(users.id, id)).limit(1);
+      if (u) return u.id;
+    }
+    if (email) {
+      const [u] = await db.select({ id: users.id }).from(users).where(sql`lower(${users.email}) = ${email}`).limit(1);
+      if (u) return u.id;
+    }
+  } catch { /* no session / auth not configured → guest */ }
+  return null;
+}
 
 export async function POST(request: Request) {
   // 1. Validate
-  const raw    = await request.json() as unknown;
+  let raw: unknown;
+  try { raw = await request.json(); } catch {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
   const parsed = bodySchema.safeParse(raw);
   if (!parsed.success) {
-    return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Invalid request" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid request" }, { status: 400 });
   }
-  const { email, name, phone, address, items } = parsed.data;
+  const { name, phone, address, items } = parsed.data;
+  const email = parsed.data.email.trim().toLowerCase();
 
-  // 2. Resolve products + compute pricing
+  // 2. Resolve products + price (server-side prices only)
   let subtotalPaise = 0;
-  const lineItems: {
-    productSlug: string; productName: string;
-    size: string; qty: number;
-    unitPricePaise: number; lineTotalPaise: number;
-  }[] = [];
-
+  const lines: ReservationLine[] = [];
   for (const item of items) {
     const product = POUR_001.products.find((p) => p.slug === item.slug);
     if (!product) {
       return NextResponse.json({ error: `Product not found: ${item.slug}` }, { status: 400 });
     }
-    // Demo tees (placeholderArt) can be bagged but not reserved yet.
     if (!isPouring(product)) {
       return NextResponse.json({ error: "not_pouring_yet" }, { status: 409 });
     }
+    const variant = product.sizes.find((s) => s.size === item.size);
+    if (!variant) {
+      return NextResponse.json({ error: `Invalid size: ${item.size}` }, { status: 400 });
+    }
+    if (variant.stock <= 0) {
+      return NextResponse.json({ error: "tapped_out", slug: product.slug }, { status: 409 });
+    }
     const lineTotalPaise = product.price * item.qty;
     subtotalPaise += lineTotalPaise;
-    lineItems.push({
+    lines.push({
       productSlug: product.slug, productName: product.name,
       size: item.size, qty: item.qty,
       unitPricePaise: product.price, lineTotalPaise,
     });
   }
 
-  const depositPaise = Math.round(subtotalPaise * 0.3);
+  const depositPaise = depositPaiseFor(subtotalPaise);
   const balancePaise = subtotalPaise - depositPaise;
 
-  // ── Dev mode: no DB configured ───────────────────────────────────────────
+  // ── No database ─────────────────────────────────────────────────────────
   if (!dbReady()) {
+    // Stub reservations exist for `next dev` only. Never take money without a record of it.
+    if (process.env.NODE_ENV !== "development") {
+      return NextResponse.json({ error: "Reservations are temporarily unavailable." }, { status: 503 });
+    }
     console.log("[reserve:dev] DB not set — returning stub reservation");
     let rpOrder: { id: string; amount: number };
     try {
@@ -97,62 +114,49 @@ export async function POST(request: Request) {
       rpOrder = { id: `order_dev_${Date.now()}`, amount: depositPaise };
     }
     return NextResponse.json({
-      reservationId:   `dev-${Date.now()}`,
-      razorpayOrderId: rpOrder.id,
-      depositPaise,
-      keyId: getPublicKeyId(),
+      reservationId: `dev-${Date.now()}`, razorpayOrderId: rpOrder.id, depositPaise, keyId: getPublicKeyId(),
     });
   }
 
-  // ── Production path ───────────────────────────────────────────────────────
+  // 3. Reserve (capacity-checked, transactional)
+  let reservationId: string;
+  let orderNumber:   string;
   try {
-    const { db }                            = await import("@/lib/db/client");
-    const { reservations, reservationItems } = await import("@/lib/db/schema");
-    const { eq }                            = await import("drizzle-orm");
-
-    const reservationId = crypto.randomUUID();
-    const orderNumber   = generateOrderNumber(reservationId);
-
-    // 4. Insert reservation (razorpay_order_id placeholder filled in step 7)
-    await db.insert(reservations).values({
-      id: reservationId, orderNumber,
-      email, name, phone,
-      address:          address as ShippingAddress,
-      subtotalPaise, depositPaise, balancePaise,
-      razorpayOrderId:  "pending",
-      status:           "pending",
-    });
-
-    // 5. Insert line items
-    await db.insert(reservationItems).values(
-      lineItems.map((li) => ({ ...li, reservationId }))
-    );
-
-    // 6. Create Razorpay order
-    const rpOrder = await createRazorpayOrder(
-      depositPaise,
-      reservationId,
-      { email, orderNumber }
-    );
-
-    // 7. Patch reservation with real razorpay_order_id
-    await db.update(reservations)
-      .set({ razorpayOrderId: rpOrder.id })
-      .where(eq(reservations.id, reservationId));
-
-    // 8. Return
-    return NextResponse.json({
-      reservationId,
-      razorpayOrderId: rpOrder.id,
-      depositPaise,
-      keyId: getPublicKeyId(),
-    });
-
+    ({ reservationId, orderNumber } = await createReservation(
+      {
+        userId: await currentUserId(),
+        email, name, phone, address: address as ShippingAddress,
+        lines, subtotalPaise, depositPaise, balancePaise,
+      },
+      {
+        capacityOf: (slug) => {
+          const p = POUR_001.products.find((x) => x.slug === slug);
+          return p ? capacityOf(p) : 0;
+        },
+      },
+    ));
   } catch (err) {
+    if (err instanceof TappedOutError) {
+      return NextResponse.json({ error: "tapped_out", slug: err.slug }, { status: 409 });
+    }
     console.error("[reserve] Error:", err);
-    return NextResponse.json(
-      { error: "Failed to create reservation. Please try again." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to create reservation. Please try again." }, { status: 500 });
+  }
+
+  // 4. Razorpay order for the deposit
+  try {
+    const rpOrder = await createRazorpayOrder(depositPaise, reservationId, { email, orderNumber });
+    await db.update(reservations)
+      .set({ razorpayOrderId: rpOrder.id, updatedAt: sql`now()` })
+      .where(eq(reservations.id, reservationId));
+    return NextResponse.json({ reservationId, razorpayOrderId: rpOrder.id, depositPaise, keyId: getPublicKeyId() });
+  } catch (err) {
+    console.error("[reserve] Razorpay order failed:", err);
+    // Release the hold right away instead of leaving it for 30 minutes.
+    await db.update(reservations)
+      .set({ status: "cancelled", updatedAt: sql`now()` })
+      .where(eq(reservations.id, reservationId))
+      .catch((e) => console.error("[reserve] could not cancel hold:", e));
+    return NextResponse.json({ error: "Failed to create reservation. Please try again." }, { status: 500 });
   }
 }

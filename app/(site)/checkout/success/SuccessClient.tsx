@@ -79,7 +79,9 @@ export function SuccessClient({ orderNumber, deposit, total, dropStr }: SuccessC
       return () => cancelAnimationFrame(id);
     }
 
-    fetch(`/api/reserve/receipt/${orderNumber}`)
+    // The receipt link carries a signed token (?t=) — the order number alone isn't enough.
+    const token = new URLSearchParams(window.location.search).get("t");
+    fetch(`/api/reserve/receipt/${orderNumber}${token ? `?t=${encodeURIComponent(token)}` : ""}`)
       .then(async (r) => {
         if (!r.ok) throw new Error("not found");
         const d = await r.json() as {

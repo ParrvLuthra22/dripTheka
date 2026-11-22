@@ -10,7 +10,7 @@ import { useCartStore } from "@/lib/store/cart";
 import { useHasHydrated } from "@/lib/store/useHasHydrated";
 import { formatPrice } from "@/lib/utils/format";
 import { CountUp }     from "@/components/motion/CountUp";
-import { DROP_DATE } from "@/data/pour-001";
+import { DROP_DATE } from "@/lib/config";
 import { ProductIllustration } from "@/components/sections/ProductIllustration";
 import { PriceTag } from "@/components/ui/PriceTag";
 import { cn } from "@/lib/utils/cn";

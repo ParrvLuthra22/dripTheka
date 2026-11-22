@@ -7,7 +7,8 @@ import { useRef, useEffect, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import { ChalkMark } from "@/components/ui/ChalkMark";
-import { DROP_DATE, POUR_001, POURING_LISTING } from "@/data/pour-001";
+import { POUR_001, POURING_LISTING } from "@/data/pour-001";
+import { DROP_DATE } from "@/lib/config";
 import { copy } from "@/data/copy";
 
 type TimeLeft = { days: number; hours: number; mins: number } | null;

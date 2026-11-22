@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DROP_DATE } from "@/data/pour-001";
+import { DROP_DATE } from "@/lib/config";
 import { SuccessClient } from "./SuccessClient";
 
 interface Props {

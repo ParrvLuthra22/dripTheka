@@ -207,6 +207,9 @@ export default function CheckoutPage() {
         if (reserveRes.status === 409 && error === "not_pouring_yet") {
           throw new Error(copy.forms.errors.notPouringYet);
         }
+        if (reserveRes.status === 409 && error === "tapped_out") {
+          throw new Error(copy.forms.errors.tappedOut);
+        }
         throw new Error(error ?? copy.forms.errors.networkError);
       }
 
@@ -254,15 +257,17 @@ export default function CheckoutPage() {
           });
 
           if (confirmRes.ok) {
-            const { orderNumber } = await confirmRes.json() as { orderNumber: string };
+            const { orderNumber, receiptToken } = await confirmRes.json() as { orderNumber: string; receiptToken?: string };
             clearCart();
             router.push(
               `/checkout/success?orderNumber=${orderNumber}` +
+              (receiptToken ? `&t=${encodeURIComponent(receiptToken)}` : "") +
               `&deposit=${depositPaise}` +
               `&total=${totalFull()}`
             );
           } else {
-            setPayErr(copy.forms.errors.paymentFailed);
+            // 5xx = we couldn't verify yet (the webhook will record it); otherwise the payment was rejected.
+            setPayErr(confirmRes.status >= 500 ? copy.forms.errors.paymentVerifying : copy.forms.errors.paymentFailed);
             setLoading(false);
           }
         },

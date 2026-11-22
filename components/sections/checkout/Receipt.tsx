@@ -14,7 +14,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { formatPrice } from "@/lib/utils/format";
-import { DROP_DATE } from "@/data/pour-001";
+import { DROP_DATE } from "@/lib/config";
 import { copy } from "@/data/copy";
 import { getSessionWisdom } from "@/lib/utils/copy";
 

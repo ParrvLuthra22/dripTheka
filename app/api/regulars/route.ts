@@ -9,7 +9,9 @@
 
 import { NextResponse } from "next/server";
 import { z }            from "zod";
-import { generateReferralCode } from "@/lib/db/client";
+import { eq, sql }           from "drizzle-orm";
+import { db, dbReady, generateReferralCode } from "@/lib/db/client";
+import { regulars, referrals } from "@/lib/db/schema";
 
 const schema = z.object({
   email:       z.string().email("Invalid email"),
@@ -22,11 +24,6 @@ const schema = z.object({
   // Referral code that brought them in (optional)
   referred_by: z.string().length(8).toUpperCase().optional(),
 });
-
-const dbReady = () =>
-  !!(process.env.DATABASE_URL &&
-     !process.env.DATABASE_URL.includes("placeholder") &&
-     process.env.DATABASE_URL !== "REPLACE_ME");
 
 // Non-blocking Klaviyo subscribe — don't fail the sign-up if Klaviyo is down
 async function klaviyoSubscribe(email: string): Promise<void> {
@@ -74,79 +71,93 @@ export async function POST(request: Request) {
     );
   }
 
-  const { email, name, city, college, instagram, heard_from, source, referred_by } = parsed.data;
-
-  // Generate referral code for this new Regular
-  const referralCode = generateReferralCode();
+  const { name, city, college, instagram, heard_from, source, referred_by } = parsed.data;
+  const email = parsed.data.email.trim().toLowerCase();
 
   // ── DB path ─────────────────────────────────────────────────────────────
   if (dbReady()) {
     try {
-      const { db }               = await import("@/lib/db/client");
-      const { regulars, referrals } = await import("@/lib/db/schema");
-      const { eq }               = await import("drizzle-orm");
+      const findExisting = () =>
+        db.select({ referralCode: regulars.referralCode })
+          .from(regulars)
+          .where(sql`lower(${regulars.email}) = ${email}`)
+          .limit(1);
 
-      // Upsert regular — if email already exists, return existing referral code
-      const existing = await db
-        .select({ referralCode: regulars.referralCode, id: regulars.id })
-        .from(regulars)
-        .where(eq(regulars.email, email))
-        .limit(1);
-
-      if (existing.length > 0) {
-        // Already a Regular — return their existing code
+      // Already a Regular — return their existing code. (Never counts as a redemption.)
+      const [existing] = await findExisting();
+      if (existing) {
         void klaviyoSubscribe(email);
-        return NextResponse.json({
-          success:      true,
-          referralCode: existing[0].referralCode,
-          returning:    true,
-        });
+        return NextResponse.json({ success: true, referralCode: existing.referralCode, returning: true });
       }
 
-      // Insert new Regular
-      const [newRegular] = await db
-        .insert(regulars)
-        .values({
-          email,
-          name:           name    ?? "Unknown",
-          city:           city    ?? "Unknown",
-          college:        college  ?? null,
-          instagram:      instagram ?? null,
-          referralSource: heard_from ?? source ?? null,
-          referralCode,
-          referredBy:     referred_by ?? null,
-        })
-        .returning({ id: regulars.id });
+      // Only a code that exists counts, and nobody can redeem their own.
+      let referrerCode: string | null = null;
+      if (referred_by) {
+        const [ref] = await db
+          .select({ code: referrals.code, ownerEmail: referrals.ownerEmail })
+          .from(referrals)
+          .where(eq(referrals.code, referred_by))
+          .limit(1);
+        if (ref && ref.ownerEmail.trim().toLowerCase() !== email) referrerCode = ref.code;
+      }
 
-      // Create referrals ledger entry for this new code
-      if (newRegular) {
-        await db.insert(referrals).values({
-          code:       referralCode,
-          ownerEmail: email,
-          redemptions: 0,
+      // A fresh random code can (rarely) collide with an existing one: retry with a new one.
+      for (let attempt = 0; attempt < 6; attempt++) {
+        const referralCode = generateReferralCode();
+
+        const created = await db.transaction(async (tx) => {
+          const [row] = await tx
+            .insert(regulars)
+            .values({
+              email,
+              name:           name    ?? "Unknown",
+              city:           city    ?? "Unknown",
+              college:        college  ?? null,
+              instagram:      instagram ?? null,
+              referralSource: heard_from ?? source ?? null,
+              referralCode,
+              referredBy:     referrerCode,
+            })
+            .onConflictDoNothing() // email already inserted by a concurrent request, or code collision
+            .returning({ id: regulars.id });
+          if (!row) return false;
+
+          await tx.insert(referrals).values({ code: referralCode, ownerEmail: email, redemptions: 0 });
+
+          if (referrerCode) {
+            // Atomic increment — never `count`, never read-modify-write.
+            await tx
+              .update(referrals)
+              .set({ redemptions: sql`${referrals.redemptions} + 1` })
+              .where(eq(referrals.code, referrerCode));
+          }
+          return true;
         });
 
-        // Increment redemptions on the code that referred them
-        if (referred_by) {
-          await db
-            .update(referrals)
-            .set({ redemptions: db.$count(referrals, eq(referrals.code, referred_by)) })
-            .where(eq(referrals.code, referred_by));
+        if (created) {
+          void klaviyoSubscribe(email);
+          return NextResponse.json({ success: true, referralCode });
+        }
+
+        // Not created: either this email just got registered (race) or the code collided.
+        const [raced] = await findExisting();
+        if (raced) {
+          void klaviyoSubscribe(email);
+          return NextResponse.json({ success: true, referralCode: raced.referralCode, returning: true });
         }
       }
 
-      // Klaviyo (non-blocking)
-      void klaviyoSubscribe(email);
-
-      return NextResponse.json({ success: true, referralCode });
+      throw new Error("could not allocate a unique referral code");
 
     } catch (err) {
       console.error("[regulars] DB error:", err);
-      // Fall through to Klaviyo-only path
+      // Don't claim success with a referral code that isn't stored.
+      return NextResponse.json({ error: "Couldn't sign you up right now. Try again." }, { status: 500 });
     }
   }
 
-  // ── No DB / fallback path ────────────────────────────────────────────────
+  // ── No DB (local dev) ────────────────────────────────────────────────────
+  const referralCode = generateReferralCode();
   if (process.env.NODE_ENV === "development") {
     console.log("[regulars:dev]", { email, name, city, referralCode });
   }

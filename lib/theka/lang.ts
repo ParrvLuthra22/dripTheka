@@ -425,6 +425,8 @@ export const lang = {
       networkError:     "we're not online. neither are you, apparently.",
       notPouringYet:    "This one isn't pouring yet, coming soon, regular.",
       paymentFailed:    "the tap's jammed. try again.",
+      tappedOut:        "someone just took the last one. this colourway's tapped out.",
+      paymentVerifying: "we're still confirming your payment. don't pay twice, check your email in a minute.",
       emptyCartCheckout: "can't checkout an empty glass. seek help.",
       genericError:     "something broke. wasn't us. okay maybe it was.",
     },

@@ -1,21 +1,33 @@
-// GET /api/reserve/receipt/[orderNumber]
-// Returns full order data for the receipt page.
+// GET /api/reserve/receipt/[orderNumber]?t=<token>
+// Full order data for the receipt page.
 //
-// Access control: orderNumber is the authorization token for guest checkout.
-// The format DT-YYYY-XXXXX (5 hex chars) gives ~1M combinations — not
-// enumerable in practice. For logged-in users, session check is also fine.
+// Access: the order number alone is NOT enough. The caller must present either
+//   • t — a signed receipt token (HMAC of order number + email; see lib/orders/receiptToken.ts), or
+//   • a signed-in session that owns the order (user_id, or the same email).
+// Anything else gets the same 404 as a non-existent order.
 //
 // Returns: { order, items } or 404.
 
 import { NextResponse } from "next/server";
 
-const dbReady = () =>
-  !!(process.env.DATABASE_URL &&
-     !process.env.DATABASE_URL.includes("placeholder") &&
-     process.env.DATABASE_URL !== "REPLACE_ME");
+import { eq }                   from "drizzle-orm";
+import { db, dbReady }          from "@/lib/db/client";
+import { reservations, reservationItems } from "@/lib/db/schema";
+import { verifyReceiptToken }   from "@/lib/orders/receiptToken";
+import { auth }                 from "@/auth";
+
+async function sessionOwns(order: { userId: string | null; email: string }): Promise<boolean> {
+  try {
+    const session = await auth();
+    const u = session?.user;
+    if (!u) return false;
+    if (u.id && order.userId && u.id === order.userId) return true;
+    return !!u.email && u.email.toLowerCase() === order.email.toLowerCase();
+  } catch { return false; }
+}
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ orderNumber: string }> }
 ) {
   const { orderNumber } = await params;
@@ -28,17 +40,20 @@ export async function GET(
   }
 
   try {
-    const { db }                              = await import("@/lib/db/client");
-    const { reservations, reservationItems }   = await import("@/lib/db/schema");
-    const { eq }                              = await import("drizzle-orm");
-
     const [order] = await db
       .select()
       .from(reservations)
       .where(eq(reservations.orderNumber, orderNumber))
       .limit(1);
 
-    if (!order) {
+    let allowed = false;
+    if (order) {
+      const token = new URL(req.url).searchParams.get("t");
+      try { allowed = verifyReceiptToken(token, order.orderNumber, order.email); }
+      catch (e) { console.error("[receipt] token check unavailable:", e); }
+      if (!allowed) allowed = await sessionOwns(order);
+    }
+    if (!order || !allowed) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 

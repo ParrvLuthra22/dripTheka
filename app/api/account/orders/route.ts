@@ -2,10 +2,9 @@
 import { NextResponse } from "next/server";
 import { auth }         from "@/auth";
 
-const dbReady = () =>
-  !!(process.env.DATABASE_URL &&
-     !process.env.DATABASE_URL.includes("placeholder") &&
-     process.env.DATABASE_URL !== "REPLACE_ME");
+import { db, dbReady } from "@/lib/db/client";
+import { reservations } from "@/lib/db/schema";
+import { desc, or, eq, sql } from "drizzle-orm";
 
 export async function GET() {
   const session = await auth();
@@ -18,10 +17,6 @@ export async function GET() {
   }
 
   try {
-    const { db }           = await import("@/lib/db/client");
-    const { reservations } = await import("@/lib/db/schema");
-    const { eq, desc }     = await import("drizzle-orm");
-
     const orders = await db
       .select({
         id:           reservations.id,
@@ -32,7 +27,11 @@ export async function GET() {
         createdAt:    reservations.createdAt,
       })
       .from(reservations)
-      .where(eq(reservations.email, session.user.email))
+      // Linked to the account by user_id, or (older / guest orders) by email.
+      .where(or(
+        session.user.id ? eq(reservations.userId, session.user.id) : undefined,
+        sql`lower(${reservations.email}) = ${session.user.email.toLowerCase()}`,
+      ))
       .orderBy(desc(reservations.createdAt))
       .limit(20);
 

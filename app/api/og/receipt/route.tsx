@@ -5,7 +5,7 @@
 // shows in the preview. Same thermal-printer aesthetic, adapted to 16:9.
 
 import { ImageResponse } from "next/og";
-import { DROP_DATE } from "@/data/pour-001";
+import { DROP_DATE } from "@/lib/config";
 
 export const runtime = "edge";
 

@@ -1,6 +1,8 @@
 // Pour #001 — hardcoded V1, maps 1:1 to future Neon schema
 // Schema shape: see lib/db/schema.ts
 
+import { DEPOSIT_PERCENT, DEFAULT_COLOURWAY_CAPACITY, depositPaiseFor } from "../lib/config"; // relative: next.config.ts loads this file without the @/ alias
+
 export type Size = "XS" | "S" | "M" | "L" | "XL" | "XXL";
 export type FitType = "boxy" | "oversized" | "regular" | "slim";
 export type GarmentType = "tee" | "hoodie" | "cargo" | "jacket" | "set";
@@ -30,7 +32,7 @@ export interface Product {
   type: GarmentType;
   fit: FitType;
   price: number; // in INR paise (multiply by 100 for Razorpay)
-  depositPercent: 30;
+  depositPercent: number;
   colors: string[]; // hex
   colorNames: string[];
   sizes: SizeVariant[];
@@ -63,6 +65,8 @@ export interface Product {
   frontIsStandIn?: true;
   isLimited: boolean;
   totalUnits: number;
+  /** Max units of THIS colourway that can be reserved (paid + fresh pending). Default: DEFAULT_COLOURWAY_CAPACITY. */
+  capacity?: number;
 }
 
 /** A product that has real wall cutouts — the only kind The Wall shows. */
@@ -187,7 +191,7 @@ const WALL_TEES: Product[] = DESIGNS.flatMap((d, di) =>
       type: "tee",
       fit: "oversized",
       price: POUR_001_PRICE,
-      depositPercent: 30,
+      depositPercent: DEPOSIT_PERCENT,
       colors: [c.swatch],
       colorNames: [c.label],
       sizes: TEE_STOCK.map(([size, stock]) => ({ size, stock, sku: `${id.toUpperCase()}-${size}` })),
@@ -200,6 +204,7 @@ const WALL_TEES: Product[] = DESIGNS.flatMap((d, di) =>
       imageAlt: `${d.name} tee, ${c.label}`,
       isLimited: true,
       totalUnits: 200,
+      capacity: DEFAULT_COLOURWAY_CAPACITY,
       wall: {
         front:       `${WALL_DIR}/${c.front}.webp`,
         frontShadow: `${WALL_DIR}/${c.front}_sh.webp`,
@@ -232,7 +237,7 @@ export const POUR_001: Pour = {
       type: "tee",
       fit: "boxy",
       price: 249900, // ₹2,499
-      depositPercent: 30,
+      depositPercent: DEPOSIT_PERCENT,
       colors: ["#004AAD", "#E4E2DD", "#141518"],
       colorNames: ["Cobalt", "Cream", "Ink"],
       sizes: [
@@ -268,7 +273,7 @@ export const POUR_001: Pour = {
       type: "hoodie",
       fit: "oversized",
       price: 449900, // ₹4,499
-      depositPercent: 30,
+      depositPercent: DEPOSIT_PERCENT,
       colors: ["#141518", "#004AAD"],
       colorNames: ["Ink", "Cobalt"],
       sizes: [
@@ -302,7 +307,7 @@ export const POUR_001: Pour = {
       type: "cargo",
       fit: "regular",
       price: 379900, // ₹3,799
-      depositPercent: 30,
+      depositPercent: DEPOSIT_PERCENT,
       colors: ["#E4E2DD", "#141518"],
       colorNames: ["Cream", "Ink"],
       sizes: [
@@ -336,7 +341,7 @@ export const POUR_001: Pour = {
       type: "jacket",
       fit: "regular",
       price: 699900, // ₹6,999
-      depositPercent: 30,
+      depositPercent: DEPOSIT_PERCENT,
       colors: ["#004AAD"],
       colorNames: ["Cobalt"],
       sizes: [
@@ -368,7 +373,7 @@ export const POUR_001: Pour = {
       type: "set",
       fit: "boxy",
       price: 549900, // ₹5,499
-      depositPercent: 30,
+      depositPercent: DEPOSIT_PERCENT,
       colors: ["#E4E2DD"],
       colorNames: ["Cream"],
       sizes: [
@@ -401,7 +406,7 @@ export const POUR_001: Pour = {
       type: "tee", // using tee as closest type for accessories in V1
       fit: "regular",
       price: 149900, // ₹1,499
-      depositPercent: 30,
+      depositPercent: DEPOSIT_PERCENT,
       colors: ["#141518", "#004AAD", "#E4E2DD"],
       colorNames: ["Ink", "Cobalt", "Cream"],
       sizes: [
@@ -459,16 +464,12 @@ export function groupListing(products: readonly Product[]): ListingEntry[] {
 /** Shop listings: 7 design cards for Pour #001 + the 6 single products. */
 export const POURING_LISTING: ListingEntry[] = groupListing(POURING_PRODUCTS);
 
-// Opening Night date — drives the countdown in the pour page hero.
-// Change this to a real date when you set the drop.
-export const DROP_DATE = new Date("2026-09-01T18:00:00+05:30");
-
 export function getPriceDisplay(paise: number): string {
   return `₹${(paise / 100).toLocaleString("en-IN")}`;
 }
 
 export function getDepositAmount(paise: number): number {
-  return Math.round(paise * 0.3);
+  return depositPaiseFor(paise);
 }
 
 export function isTappedOut(variants: SizeVariant[]): boolean {
@@ -516,3 +517,6 @@ export const BARTENDERS_PICK: BartendersPickData = {
     "I designed three jackets before this hoodie happened by accident. Sometimes the side quest is the main quest.",
   date: "2026-06-01T00:00:00+05:30",
 };
+
+/** Reservable units for a colourway/product. */
+export const capacityOf = (p: Product): number => p.capacity ?? DEFAULT_COLOURWAY_CAPACITY;
