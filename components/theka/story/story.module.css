@@ -33,6 +33,7 @@
 .nav a.act { opacity: 1; }
 .nav a.act::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1.5px; background: var(--txt); }
 .bag { font-size: 12px; font-weight: 500; }
+button.bag { background: none; border: 0; padding: 0; color: inherit; font-family: inherit; cursor: pointer; }
 .vig { position: fixed; inset: 0; pointer-events: none; z-index: 20; background: radial-gradient(130% 95% at 50% 45%, transparent 45%, rgba(10,8,8,.7) 100%); }
 .prog { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 30; display: flex; align-items: center; gap: 10px; font-size: 9px; color: var(--mut); }
 .prog i { display: block; width: 90px; height: 1px; background: rgba(239,235,230,.2); position: relative; }

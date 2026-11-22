@@ -5,6 +5,8 @@
 // Grain, MorphingLogo, PintGlass, LoadingScreen…) — the wall uses the native
 // pointer and its plaster texture already carries the grain. No age block.
 
+import { TabHost } from "@/components/theka/tab/TabHost";
+
 export default function BarLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return <>{children}<TabHost /></>;
 }

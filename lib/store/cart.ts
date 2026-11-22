@@ -96,6 +96,6 @@ export const useCartStore = create<CartStore>()(
           0
         ),
     }),
-    { name: "drip-theka-cart" }
+    { name: "drip-theka-cart", partialize: (s) => ({ items: s.items }) }   // isOpen is per-visit, never persisted
   )
 );

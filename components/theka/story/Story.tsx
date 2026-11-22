@@ -235,7 +235,7 @@ export function Story() {
           <Link href="/story" className={s.act} aria-current="page">{H.story}</Link>
           <Link href={H.lookHref} prefetch={false}>{H.look}</Link>
         </nav>
-        <Link className={s.bag} href="/cart" prefetch={false} aria-label={H.bagAria(bagCount)}>{H.bag} ({bagCount})</Link>
+        <button type="button" className={s.bag} aria-label={H.bagAria(bagCount)} aria-haspopup="dialog" onClick={() => useCartStore.getState().openCart()}>{H.bag} ({bagCount})</button>
       </header>
       <div className={s.vig} />
       <div className={`${s.prog} ${s.mono}`} aria-hidden="true">

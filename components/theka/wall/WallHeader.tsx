@@ -4,6 +4,7 @@
 
 import Link from "next/link";
 import type { Ref } from "react";
+import { useCartStore } from "@/lib/store/cart";
 import { lang } from "@/lib/theka/lang";
 import s from "./wall.module.css";
 
@@ -53,9 +54,9 @@ export function WallHeader({ ref, zoomed, total, bagCount, bagNumRef, onBack, on
         >{H.story}</Link>
         <Link href={H.lookHref} prefetch={false} className={`${s.tl} ${s.hideMob}`}>{H.look}</Link>
       </nav>
-      <Link href="/cart" prefetch={false} className={s.bag} aria-label={H.bagAria(bagCount)}>
+      <button type="button" className={s.bag} aria-label={H.bagAria(bagCount)} aria-haspopup="dialog" onClick={() => useCartStore.getState().openCart()}>
         {H.bag} (<b ref={bagNumRef}>{bagCount}</b>)
-      </Link>
+      </button>
     </header>
   );
 }
